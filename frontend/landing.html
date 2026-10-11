@@ -68,8 +68,8 @@
     inset: 0;
     pointer-events: none;
     background-image:
-        linear-gradient(rgba(255, 255, 255, .03) 1px, transparent 1px), /* Opacidad ajustada a 0.03 */
-        linear-gradient(90deg, rgba(255, 255, 255, .03) 1px, transparent 1px); /* Opacidad ajustada a 0.03 */
+        linear-gradient(rgba(255, 255, 255, .03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .03) 1px, transparent 1px);
     background-size: 56px 56px;
     -webkit-mask-image: linear-gradient(90deg, transparent 35%, #000 100%);
             mask-image: linear-gradient(90deg, transparent 35%, #000 100%);
@@ -952,31 +952,30 @@
 
       <div class="beneficio-card">
 
-        <div class="beneficio-head">
-
-          <span class="beneficio-icon">
-            🕐
-          </span>
-
-          <h3
-            class="h6"
-            data-i18n="landing_support_title">
-
-            Atención 24/7
-
-          </h3>
-
+        <div class="beneficio-icon-wrapper">
+          🕐
         </div>
 
-        <p
-          class="small text-muted mb-0"
-          data-i18n="landing_support_text">
+        <div class="beneficio-content">
+            <h3
+              class="h6"
+              data-i18n="landing_support_title">
 
-          Chatbot institucional y pedidos disponibles
-          a cualquier hora, con escalamiento a un
-          agente humano cuando se necesita.
+              Atención 24/7
 
-        </p>
+            </h3>
+
+            <p
+              class="small text-muted mb-0"
+              data-i18n="landing_support_text">
+
+              Chatbot institucional y pedidos disponibles
+              a cualquier hora, con escalamiento a un
+              agente humano cuando se necesita.
+
+            </p>
+            <a href="#" class="beneficio-link">Más información →</a>
+        </div>
 
       </div>
 
@@ -987,31 +986,30 @@
 
       <div class="beneficio-card">
 
-        <div class="beneficio-head">
-
-          <span class="beneficio-icon">
-            🔒
-          </span>
-
-          <h3
-            class="h6"
-            data-i18n="landing_security_title">
-
-            Datos protegidos
-
-          </h3>
-
+        <div class="beneficio-icon-wrapper">
+          🔒
         </div>
 
-        <p
-          class="small text-muted mb-0"
-          data-i18n="landing_security_text">
+        <div class="beneficio-content">
+            <h3
+              class="h6"
+              data-i18n="landing_security_title">
 
-          Cada dato se clasifica y se cifra según
-          su nivel de sensibilidad, conforme a la
-          Ley 1581 de 2012.
+              Datos protegidos
 
-        </p>
+            </h3>
+
+            <p
+              class="small text-muted mb-0"
+              data-i18n="landing_security_text">
+
+              Cada dato se clasifica y se cifra según
+              su nivel de sensibilidad, conforme a la
+              Ley 1581 de 2012.
+
+            </p>
+            <a href="#" class="beneficio-link">Más información →</a>
+        </div>
 
       </div>
 
@@ -1022,30 +1020,29 @@
 
       <div class="beneficio-card">
 
-        <div class="beneficio-head">
-
-          <span class="beneficio-icon">
-            📦
-          </span>
-
-          <h3
-            class="h6"
-            data-i18n="landing_delivery_title">
-
-            Entrega directa
-
-          </h3>
-
+        <div class="beneficio-icon-wrapper">
+          📦
         </div>
 
-        <p
-          class="small text-muted mb-0"
-          data-i18n="landing_delivery_text">
+        <div class="beneficio-content">
+            <h3
+              class="h6"
+              data-i18n="landing_delivery_title">
 
-          Despacho a la instalación oficial registrada,
-          con seguimiento de pedido en tiempo real.
+              Entrega directa
 
-        </p>
+            </h3>
+
+            <p
+              class="small text-muted mb-0"
+              data-i18n="landing_delivery_text">
+
+              Despacho a la instalación oficial registrada,
+              con seguimiento de pedido en tiempo real.
+
+            </p>
+            <a href="#" class="beneficio-link">Más información →</a>
+        </div>
 
       </div>
 
@@ -1081,10 +1078,14 @@
       <div class="industria-item">
         <a href="index.html" class="industria-card">
           <img src="http://localhost:8081/img/camufajeSelva.jpg" alt="Camuflaje Selva" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
-          <span class="industria-texto">CAMUFLAJE<br>SELVA</span>
-        </a>
-        <a href="index.html" class="btn-industria">
-          Explorar <span class="flecha">→</span>
+          <div class="industria-texto">
+              <span class="subtitulo-industria">Equipamiento Táctico</span>
+              <span class="titulo-industria">CAMUFLAJE SELVA</span>
+              <div class="industria-meta">
+                  <span class="icono-lineal">→</span>
+                  <span class="flecha-nav">›</span>
+              </div>
+          </div>
         </a>
       </div>
     </div>
@@ -1093,10 +1094,14 @@
       <div class="industria-item">
         <a href="index.html" class="industria-card">
           <img src="http://localhost:8081/img/gala.jpg" alt="Gala" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
-          <span class="industria-texto">GALA</span>
-        </a>
-        <a href="index.html" class="btn-industria">
-          Explorar <span class="flecha">→</span>
+          <div class="industria-texto">
+              <span class="subtitulo-industria">Uniformes de Ceremonia</span>
+              <span class="titulo-industria">GALA</span>
+              <div class="industria-meta">
+                  <span class="icono-lineal">→</span>
+                  <span class="flecha-nav">›</span>
+              </div>
+          </div>
         </a>
       </div>
     </div>
@@ -1105,10 +1110,14 @@
       <div class="industria-item">
         <a href="index.html" class="industria-card">
           <img src="http://localhost:8081/img/Antidisturbios.jpg" alt="Antidisturbios" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
-          <span class="industria-texto">ANTIDISTURBIOS</span>
-        </a>
-        <a href="index.html" class="btn-industria">
-          Explorar <span class="flecha">→</span>
+          <div class="industria-texto">
+              <span class="subtitulo-industria">Control de Multitudes</span>
+              <span class="titulo-industria">ANTIDISTURBIOS</span>
+              <div class="industria-meta">
+                  <span class="icono-lineal">→</span>
+                  <span class="flecha-nav">›</span>
+              </div>
+          </div>
         </a>
       </div>
     </div>
@@ -1117,10 +1126,14 @@
       <div class="industria-item">
         <a href="index.html" class="industria-card">
           <img src="http://localhost:8081/img/Armada.jpg" alt="Armada" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
-          <span class="industria-texto">ARMADA</span>
-        </a>
-        <a href="index.html" class="btn-industria">
-          Explorar <span class="flecha">→</span>
+          <div class="industria-texto">
+              <span class="subtitulo-industria">Indumentaria Naval</span>
+              <span class="titulo-industria">ARMADA</span>
+              <div class="industria-meta">
+                  <span class="icono-lineal">→</span>
+                  <span class="flecha-nav">›</span>
+              </div>
+          </div>
         </a>
       </div>
     </div>
