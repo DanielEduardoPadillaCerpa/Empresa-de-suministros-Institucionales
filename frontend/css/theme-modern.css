@@ -147,13 +147,17 @@ a:hover { color: var(--si-green-700); }
 /* ---------- 4. Hero ---------- */
 .hero {
   position: relative; overflow: hidden; color: #fff !important;
+  /* Degradado profundo con imagen de fondo y overlay para legibilidad */
   background:
-    linear-gradient(115deg, rgba(7,28,48,.97) 0%, rgba(11,45,74,.93) 55%, rgba(15,58,95,.88) 100%) !important;
-  padding-top: 3.5rem !important; padding-bottom: 3.5rem !important;
+    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), /* Overlay para legibilidad del texto */
+    url('../img/image_ef634cec.jpg') center center / cover no-repeat, /* Imagen de fondo */
+    radial-gradient(circle at top left, var(--si-navy-900) 0%, var(--si-navy-950) 100%) !important; /* Degradado profundo como base */
+  padding-top: 5rem !important; /* Mayor espaciado */
+  padding-bottom: 5rem !important; /* Mayor espaciado */
 }
 .hero::before {
   content: ""; position: absolute; right: -8%; bottom: -40%; width: 520px; height: 520px;
-  background: conic-gradient(from 210deg, rgba(34,197,94,.55), rgba(22,163,74,0) 40%);
+  background: conic-gradient(from 210deg, rgba(0,200,83,.55), rgba(0,200,83,0) 40%); /* Ajuste de color */
   filter: blur(40px); pointer-events: none;
 }
 .hero::after {
@@ -161,10 +165,34 @@ a:hover { color: var(--si-green-700); }
   background: var(--si-grad-cta); opacity: 1;
 }
 .hero > .container { position: relative; z-index: 1; }
-.hero h1, .hero h2, .hero .display-serif { color: #fff; font-size: clamp(2rem, 4.2vw, 3.3rem); }
-.hero p, .hero p.lead { color: #c5d3e3 !important; max-width: 60ch; }
-.admin-page .admin-hero { background: transparent !important; }
-.admin-page .admin-hero h1, .admin-page .admin-hero p { color: var(--si-navy-900) !important; }
+.hero h1, .hero h2, .hero .display-serif {
+  color: #fff; /* Títulos en blanco */
+  font-size: clamp(2.8rem, 4.8vw, 4.2rem); /* Mayor tamaño */
+  font-weight: 800; /* Peso pesado */
+  letter-spacing: -.03em;
+  line-height: 1.15;
+  text-align: left; /* Alineado a la izquierda */
+}
+.hero p, .hero p.lead {
+  color: var(--si-text-on-dark) !important; /* Gris plata suave */
+  max-width: 65ch; /* Ancho máximo para legibilidad */
+  margin-left: 0; /* Alineado a la izquierda */
+  margin-right: auto;
+  text-align: left; /* Alineado a la izquierda */
+}
+.landing-hero-content {
+    max-width: 850px;
+    margin-left: 0; /* Asegurar alineación izquierda */
+    margin-right: auto;
+    text-align: left; /* Asegurar alineación izquierda del contenido */
+}
+.landing-hero-content .d-flex {
+    justify-content: flex-start !important; /* Alinear botones a la izquierda */
+}
+.landing-hero p.small {
+    text-align: left !important; /* Asegurar alineación izquierda del texto pequeño */
+    color: var(--si-text-on-dark) !important;
+}
 
 /* ---------- 5. Botones ---------- */
 .btn {
