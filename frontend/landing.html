@@ -17,50 +17,146 @@
 <style>
 
 /* =========================================================
-   LANDING PAGE
+   LANDING PAGE · TOKENS
    ========================================================= */
 
-body {
-    background: #f7f5ef;
+.landing-page {
+    --lp-navy: var(--navy-900, #071d37);
+    --lp-navy-2: #0b2a4d;
+    --lp-brass: var(--brass-600, #b08d57);
+    --lp-brass-light: var(--brass-500, #c5a66d);
+    --lp-slate: var(--slate-400, #94a3b8);
+    --lp-ink: #0b2340;
+    --lp-radius: 18px;
+    --lp-shadow-sm: 0 2px 10px rgba(11, 35, 64, .06);
+    --lp-shadow-md: 0 10px 28px rgba(11, 35, 64, .10);
+    --lp-shadow-lg: 0 22px 44px rgba(11, 35, 64, .18);
+
+    background: #f4f6fa;
 }
 
 
 /* =========================================================
-   HERO
+   HERO (ALINEADO A LA IZQUIERDA)
    ========================================================= */
 
-.landing-hero {
-    background:
-        linear-gradient(rgba(7, 29, 55, .94), rgba(7, 29, 55, .97)),
-        radial-gradient(circle at center, #183c64, #071d37);
+.landing-page .landing-hero {
+    position: relative;
+    overflow: hidden;
 
-    color: white;
-    min-height: 420px;
+    min-height: 580px;
+    padding: 96px 0 130px;
 
     display: flex;
     align-items: center;
 
-    border-top: 2px solid var(--brass-600);
+    color: #fff;
+    text-align: left;
+
+    background:
+        radial-gradient(820px 420px at 88% 8%, rgba(176, 141, 87, .24), transparent 62%),
+        radial-gradient(680px 420px at 0% 100%, rgba(24, 60, 100, .95), transparent 70%),
+        linear-gradient(135deg, #071d37 0%, #0b2a4d 55%, #071d37 100%);
+
+    border-top: 2px solid var(--lp-brass);
     border-bottom: 1px solid rgba(176, 141, 87, .45);
 }
 
-.landing-hero-content {
-    max-width: 850px;
-    margin: auto;
+.landing-page .landing-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: linear-gradient(90deg, transparent 35%, #000 100%);
+            mask-image: linear-gradient(90deg, transparent 35%, #000 100%);
 }
 
-.landing-hero h1 {
+.landing-page .landing-hero .container {
+    position: relative;
+    z-index: 2;
+}
+
+.landing-page .landing-hero-content {
+    max-width: 760px;
+    margin: 0;
+    text-align: left;
+}
+
+.landing-page .landing-hero .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+
+    margin-bottom: 1.25rem !important;
+
+    font-family: "Inter", sans-serif;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+
+    color: var(--lp-brass-light);
+}
+
+.landing-page .landing-hero .eyebrow::before {
+    content: "";
+    width: 44px;
+    height: 2px;
+    background: var(--lp-brass);
+    border-radius: 2px;
+}
+
+.landing-page .landing-hero h1 {
     font-family: "Source Serif 4", serif;
     font-weight: 700;
-    line-height: 1.2;
-    font-size: clamp(2.5rem, 3vw, 4rem);
+    line-height: 1.08;
+    letter-spacing: -.02em;
+    font-size: clamp(2.4rem, 5.2vw, 4.1rem);
+
+    margin-bottom: 1.5rem !important;
 }
 
-.landing-hero p {
-    max-width: 720px;
-    margin-left: auto;
-    margin-right: auto;
-    color: #d9e0e8;
+.landing-page .landing-hero h1 .hero-accent,
+.landing-page .landing-hero h1 span:last-child {
+    color: var(--lp-brass-light);
+    font-weight: 600;
+    font-style: italic;
+}
+
+.landing-page .landing-hero p.lead {
+    max-width: 620px;
+    margin: 0 0 2rem 0 !important;
+
+    font-family: "Inter", sans-serif;
+    font-size: 1.15rem;
+    line-height: 1.7;
+    font-weight: 400;
+
+    color: #cfd8e3;
+}
+
+.landing-page .hero-first-time {
+    margin: 1.5rem 0 1.25rem !important;
+    color: var(--lp-slate);
+    font-size: .92rem !important;
+}
+
+.landing-page .hero-first-time a {
+    color: var(--lp-brass-light);
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(197, 166, 109, .45);
+    padding-bottom: 1px;
+    transition: color .2s ease, border-color .2s ease;
+}
+
+.landing-page .hero-first-time a:hover {
+    color: #fff;
+    border-color: #fff;
 }
 
 
@@ -68,58 +164,133 @@ body {
    BOTONES HERO
    ========================================================= */
 
-.btn-catalogo {
-    background: var(--brass-600);
-    color: white;
-    border: 1px solid white;
+.landing-page .landing-hero .d-flex {
+    justify-content: flex-start !important;
+}
+
+.landing-page .btn-catalogo,
+.landing-page .btn-login {
+    padding: .85rem 1.9rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    letter-spacing: .01em;
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
+}
+
+.landing-page .btn-catalogo {
+    background: linear-gradient(135deg, var(--lp-brass-light), var(--lp-brass));
+    color: var(--lp-navy);
+    border: 1px solid rgba(255, 255, 255, .55);
     font-weight: 700;
+    box-shadow: 0 10px 24px rgba(176, 141, 87, .35);
 }
 
-.btn-catalogo:hover {
-    background: #c5a66d;
-    color: #071d37;
+.landing-page .btn-catalogo:hover {
+    background: #fff;
+    color: var(--lp-navy);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, .3);
 }
 
-.btn-login {
-    border: 1px solid white;
-    color: white;
+.landing-page .btn-login {
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .45);
+    color: #fff;
+    font-weight: 600;
+    -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
 }
 
-.btn-login:hover {
-    background: white;
-    color: #071d37;
+.landing-page .btn-login:hover {
+    background: #fff;
+    color: var(--lp-navy);
+    transform: translateY(-2px);
+}
+
+.landing-page .landing-hero .btn-outline-light {
+    padding: .8rem 1.75rem !important;
+    border-radius: 12px;
+    border-color: rgba(176, 141, 87, .7);
+    color: var(--lp-brass-light);
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    transition: transform .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+}
+
+.landing-page .landing-hero .btn-outline-light:hover {
+    background: var(--lp-brass);
+    border-color: var(--lp-brass);
+    color: var(--lp-navy);
+    transform: translateY(-2px);
 }
 
 
 /* =========================================================
-   BENEFICIOS
+   BENEFICIOS (ICONOS PEQUEÑOS)
    ========================================================= */
 
-.beneficios {
-    margin-top: 0;
+.landing-page .beneficios-section {
+    position: relative;
+    z-index: 3;
+    margin-top: -72px;
 }
 
-.beneficio-card {
+.landing-page .beneficio-card {
     height: 100%;
-    background: #fbfaf6;
-    border: 1px solid rgba(11, 35, 64, .13);
-    border-top: 3px solid var(--brass-600);
+    padding: 26px 24px;
 
-    padding: 28px 22px;
+    text-align: left;
 
-    text-align: center;
+    background: #fff;
+    border: 1px solid rgba(11, 35, 64, .08);
+    border-top: 3px solid var(--lp-brass);
+    border-radius: var(--lp-radius);
+    box-shadow: var(--lp-shadow-md);
 
-    transition: transform .2s ease, box-shadow .2s ease;
+    transition: transform .25s ease, box-shadow .25s ease;
 }
 
-.beneficio-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0,0,0,.08);
+.landing-page .beneficio-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--lp-shadow-lg);
 }
 
-.beneficio-icon {
-    font-size: 2rem;
-    margin-bottom: 8px;
+.landing-page .beneficio-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.landing-page .beneficio-icon {
+    flex: 0 0 auto;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+    margin: 0;
+
+    font-size: .95rem;
+    line-height: 1;
+
+    background: rgba(176, 141, 87, .14);
+    border-radius: 10px;
+}
+
+.landing-page .beneficio-card h3 {
+    margin: 0;
+    font-family: "Inter", sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--lp-ink);
+}
+
+.landing-page .beneficio-card p {
+    line-height: 1.6;
 }
 
 
@@ -127,101 +298,147 @@ body {
    TITULOS DE SECCION
    ========================================================= */
 
-.seccion-titulo {
+.landing-page .seccion-titulo {
     font-family: "Source Serif 4", serif;
     font-weight: 700;
-    color: var(--navy-900);
+    letter-spacing: .02em;
+    color: var(--lp-ink);
 }
 
-.seccion-subtitulo {
+.landing-page .seccion-titulo::after {
+    content: "";
+    display: block;
+    width: 56px;
+    height: 3px;
+    margin: .7rem auto 0;
+    background: var(--lp-brass);
+    border-radius: 3px;
+}
+
+.landing-page .seccion-subtitulo {
     color: #6c757d;
 }
 
 
 /* =========================================================
-   INDUSTRIAS
+   INDUSTRIAS (BOTON SUPERPUESTO)
    ========================================================= */
 
-.industrias-grid {
-    display: grid;
-
-    grid-template-columns:
-        1.25fr
-        1fr
-        1.25fr
-        1fr;
-
-    grid-template-rows: 190px;
-
-    gap: 10px;
+.landing-page .industria-item {
+    position: relative;
+    padding-bottom: 20px;
 }
 
-.industria-card {
+.landing-page .industria-card {
     position: relative;
-
-    overflow: hidden;
-
-    border-radius: 7px;
-
-    min-height: 150px;
-
-    background: #172b45;
-
-    text-decoration: none;
-
     display: flex;
     align-items: flex-end;
+
+    width: 100%;
+    aspect-ratio: 4 / 4.6;
+    min-height: 220px;
+
+    overflow: hidden;
+    text-decoration: none;
+
+    background: #172b45;
+    border-radius: var(--lp-radius);
+    box-shadow: var(--lp-shadow-md);
+
+    transition: box-shadow .3s ease, transform .3s ease;
 }
 
-.industria-card.grande {
-    grid-row: span 2;
+.landing-page .industria-card.image-missing {
+    background: linear-gradient(135deg, #0b2a4d, #183c64);
 }
 
-.industria-card.ancha {
-    grid-column: span 2;
-}
+.landing-page .industria-card img {
+    position: absolute;
+    inset: 0;
 
-.industria-card img {
     width: 100%;
     height: 100%;
-
     object-fit: cover;
 
-    position: absolute;
-    inset: 0;
-
-    transition: transform .35s ease;
+    transition: transform .5s ease;
 }
 
-.industria-card::after {
+.landing-page .industria-card::after {
     content: "";
-
     position: absolute;
     inset: 0;
-
-    background:
-        linear-gradient(
-            transparent 20%,
-            rgba(0,0,0,.75) 100%
-        );
+    background: linear-gradient(180deg, rgba(7, 29, 55, 0) 35%, rgba(7, 29, 55, .88) 100%);
+    transition: opacity .3s ease;
 }
 
-.industria-card:hover img {
-    transform: scale(1.05);
-}
-
-.industria-texto {
+.landing-page .industria-texto {
     position: relative;
     z-index: 2;
 
-    color: white;
+    padding: 20px 20px 34px;
 
-    font-size: 1.25rem;
+    color: #fff;
+    font-size: 1.2rem;
     font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: .02em;
+}
 
-    line-height: 1.05;
+.landing-page .industria-item:hover .industria-card {
+    transform: translateY(-4px);
+    box-shadow: var(--lp-shadow-lg);
+}
 
-    padding: 18px;
+.landing-page .industria-item:hover .industria-card img {
+    transform: scale(1.07);
+}
+
+.landing-page .btn-industria {
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    z-index: 5;
+    transform: translateX(-50%);
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: .6rem 1.4rem;
+    white-space: nowrap;
+
+    font-family: "Inter", sans-serif;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    text-decoration: none;
+
+    color: var(--lp-navy);
+    background: linear-gradient(135deg, var(--lp-brass-light), var(--lp-brass));
+    border: 2px solid #fff;
+    border-radius: 999px;
+    box-shadow: 0 8px 20px rgba(11, 35, 64, .25);
+
+    transition: transform .25s ease, background .25s ease, color .25s ease, box-shadow .25s ease;
+}
+
+.landing-page .btn-industria .flecha {
+    display: inline-block;
+    transition: transform .25s ease;
+}
+
+.landing-page .btn-industria:hover,
+.landing-page .industria-item:hover .btn-industria {
+    background: var(--lp-navy);
+    color: #fff;
+    transform: translateX(-50%) translateY(-3px);
+    box-shadow: 0 14px 28px rgba(11, 35, 64, .35);
+}
+
+.landing-page .btn-industria:hover .flecha,
+.landing-page .industria-item:hover .btn-industria .flecha {
+    transform: translateX(4px);
 }
 
 
@@ -229,112 +446,153 @@ body {
    PRODUCTOS POPULARES
    ========================================================= */
 
-.productos-populares {
+.landing-page .productos-populares {
     display: grid;
-
-    grid-template-columns:
-        repeat(4, 1fr);
-
-    gap: 10px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
 }
 
-.producto-popular {
-    background: white;
-
-    border: 1px solid #ddd;
-
-    border-radius: 5px;
-
+.landing-page .producto-popular {
+    background: #fff;
+    border: 1px solid rgba(11, 35, 64, .08);
+    border-radius: 16px;
+    box-shadow: var(--lp-shadow-sm);
     overflow: hidden;
 
-    transition:
-        transform .2s ease,
-        box-shadow .2s ease;
+    transition: transform .25s ease, box-shadow .25s ease;
 }
 
-.producto-popular:hover {
-    transform: translateY(-3px);
-
-    box-shadow:
-        0 7px 18px rgba(0,0,0,.10);
+.landing-page .producto-popular:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--lp-shadow-lg);
 }
 
-.producto-popular-img {
+.landing-page .producto-popular-img {
     width: 100%;
-    height: 175px;
-
+    height: 185px;
     object-fit: cover;
-
     background: #eee;
 }
 
-.producto-popular-body {
-    padding: 12px;
+.landing-page .producto-popular-body {
+    padding: 14px;
 }
 
-.producto-popular h3 {
-    font-size: .85rem;
+.landing-page .producto-popular h3 {
+    font-size: .9rem;
     font-weight: 700;
-
-    margin-bottom: 5px;
+    margin-bottom: 6px;
+    color: var(--lp-ink);
 }
 
-.producto-popular .precio {
+.landing-page .producto-popular .precio {
     font-weight: 700;
     color: #111;
 }
 
-.btn-producto {
+.landing-page .btn-producto {
     width: 100%;
+    margin-top: 10px;
+    padding: .55rem;
 
-    margin-top: 8px;
-
-    background: var(--brass-600);
-    color: var(--navy-900);
+    background: var(--lp-brass);
+    color: var(--lp-navy);
 
     border: none;
+    border-radius: 10px;
 
-    font-size: .72rem;
-    font-weight: 600;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+
+    transition: background .2s ease, transform .2s ease, color .2s ease;
 }
 
-.btn-producto:hover {
-    background: #c5a66d;
+.landing-page .btn-producto:hover {
+    background: var(--lp-navy);
+    color: #fff;
+    transform: translateY(-1px);
 }
 
 
 /* =========================================================
-   CLIENTES
+   CLIENTES (TARJETAS)
    ========================================================= */
 
-.clientes {
-    display: grid;
+.landing-page .cliente {
+    position: relative;
 
-    grid-template-columns:
-        repeat(4, 1fr);
+    height: 100%;
+    padding: 30px 18px 26px;
 
-    gap: 25px;
-
-    align-items: center;
-}
-
-.cliente {
     display: flex;
-
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    gap: 14px;
 
-    gap: 8px;
+    text-align: center;
 
-    color: #555;
+    background: #fff;
+    border: 1px solid rgba(11, 35, 64, .08);
+    border-radius: 20px;
+    box-shadow: var(--lp-shadow-sm);
 
-    font-size: .85rem;
-    font-weight: 500;
+    color: #3d4b5e;
+    font-size: .9rem;
+    font-weight: 600;
+    line-height: 1.35;
+
+    overflow: hidden;
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
 }
 
-.cliente-icon {
-    font-size: 1.7rem;
+.landing-page .cliente::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: var(--lp-brass);
+    border-radius: 0 0 3px 3px;
+    transform: translateX(-50%);
+    transition: width .3s ease;
+}
+
+.landing-page .cliente:hover {
+    transform: translateY(-6px);
+    border-color: rgba(176, 141, 87, .5);
+    box-shadow: var(--lp-shadow-lg);
+    color: var(--lp-ink);
+}
+
+.landing-page .cliente:hover::before {
+    width: 60%;
+}
+
+.landing-page .cliente-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 64px;
+    height: 64px;
+
+    font-size: 1.6rem;
     color: #555;
+
+    background: linear-gradient(145deg, #f7f1e4, #ffffff);
+    border: 1px solid rgba(176, 141, 87, .35);
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 4px #fff, 0 4px 12px rgba(11, 35, 64, .08);
+
+    transition: transform .3s ease, background .3s ease;
+}
+
+.landing-page .cliente:hover .cliente-icon {
+    transform: scale(1.1) rotate(-6deg);
+    background: linear-gradient(145deg, #f0e3c4, #fff);
 }
 
 
@@ -342,43 +600,135 @@ body {
    FOOTER
    ========================================================= */
 
-.footer-nuevo {
-    background: var(--navy-900);
+.landing-page .footer-nuevo {
+    margin-top: 24px;
+
+    background:
+        radial-gradient(600px 300px at 100% 0%, rgba(176, 141, 87, .12), transparent 60%),
+        linear-gradient(180deg, #0b2a4d 0%, #071d37 100%);
 
     color: #d9e0e8;
 
-    border-top: 3px solid var(--brass-600);
+    border-top: 3px solid var(--lp-brass);
+    border-radius: 32px 32px 0 0;
 }
 
-.footer-nuevo h4 {
-    color: white;
+.landing-page .footer-nuevo h4 {
+    position: relative;
 
-    font-size: .9rem;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
 
-    margin-bottom: 12px;
+    color: #fff;
+    font-family: "Inter", sans-serif;
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
 }
 
-.footer-nuevo a {
-    color: #d9e0e8;
-
-    text-decoration: none;
-
-    font-size: .78rem;
+.landing-page .footer-nuevo h4::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 32px;
+    height: 2px;
+    background: var(--lp-brass);
+    border-radius: 2px;
 }
 
-.footer-nuevo a:hover {
-    color: var(--brass-500);
-}
-
-.footer-col {
+.landing-page .footer-col {
     display: flex;
     flex-direction: column;
-
-    gap: 5px;
+    align-items: flex-start;
+    gap: 6px;
 }
 
-.footer-contacto {
+.landing-page .footer-nuevo a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+
+    padding: 5px 0;
+
+    color: #c9d3df;
+    font-size: .88rem;
+    text-decoration: none;
+
+    transition: color .2s ease, transform .25s ease, gap .25s ease;
+}
+
+.landing-page .footer-nuevo a::before {
+    content: "";
+    width: 0;
+    height: 1px;
+    background: var(--lp-brass-light);
+    transition: width .25s ease;
+}
+
+.landing-page .footer-nuevo a:hover {
+    color: #fff;
+    gap: 8px;
+}
+
+.landing-page .footer-nuevo a:hover::before {
+    width: 14px;
+}
+
+.landing-page .footer-contacto {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 9px 16px;
+
+    font-size: .85rem;
+    font-weight: 500;
+    color: #e6ecf3;
+
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 999px;
+
+    transition: background .25s ease, border-color .25s ease, transform .25s ease;
+}
+
+.landing-page .footer-contacto:hover {
+    background: rgba(176, 141, 87, .2);
+    border-color: rgba(176, 141, 87, .6);
+    transform: translateX(4px);
+}
+
+.landing-page .footer-contacto.footer-direccion {
+    display: block;
+
+    padding: 14px 18px;
+
+    line-height: 1.6;
+
+    border-radius: 14px;
+    border-left: 3px solid var(--lp-brass);
+}
+
+.landing-page .footer-contacto.footer-direccion:hover {
+    transform: none;
+}
+
+.landing-page .footer-bottom {
+    gap: 10px;
+    color: #aab6c4;
+}
+
+.landing-page .footer-bottom span:last-child {
+    padding: 4px 12px;
+
+    font-family: "IBM Plex Mono", monospace;
     font-size: .78rem;
+
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: 999px;
 }
 
 
@@ -388,45 +738,54 @@ body {
 
 @media (max-width: 992px) {
 
-    .industrias-grid {
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: auto;
+    .landing-page .landing-hero {
+        min-height: auto;
+        padding: 80px 0 110px;
     }
 
-    .industria-card.grande {
-        grid-row: span 1;
+    .landing-page .beneficios-section {
+        margin-top: -56px;
     }
 
-    .industria-card.ancha {
-        grid-column: span 1;
-    }
-
-    .productos-populares {
+    .landing-page .productos-populares {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .clientes {
-        grid-template-columns: repeat(2, 1fr);
+    .landing-page .footer-nuevo {
+        border-radius: 24px 24px 0 0;
     }
 }
 
 
 @media (max-width: 576px) {
 
-    .landing-hero {
-        min-height: 500px;
+    .landing-page .landing-hero {
+        padding: 64px 0 96px;
     }
 
-    .industrias-grid {
+    .landing-page .landing-hero p.lead {
+        font-size: 1.02rem;
+    }
+
+    .landing-page .landing-hero .d-flex .btn {
+        flex: 1 1 100%;
+        text-align: center;
+    }
+
+    .landing-page .beneficios-section {
+        margin-top: -44px;
+    }
+
+    .landing-page .industria-card {
+        aspect-ratio: 16 / 10;
+    }
+
+    .landing-page .productos-populares {
         grid-template-columns: 1fr;
     }
 
-    .productos-populares {
-        grid-template-columns: 1fr;
-    }
-
-    .clientes {
-        grid-template-columns: 1fr;
+    .landing-page .footer-nuevo {
+        border-radius: 20px 20px 0 0;
     }
 }
 
@@ -436,7 +795,7 @@ body {
 </head>
 
 
-<body>
+<body class="landing-page">
 
 
 <!-- =====================================================
@@ -530,8 +889,8 @@ body {
      ===================================================== -->
 
 <header class="landing-hero">
-  <div class="container text-center">
-    <div class="landing-hero-content">
+  <div class="container text-start">
+    <div class="landing-hero-content text-start">
 
       <div class="eyebrow mb-2" data-i18n="landing_eyebrow">
         Plataforma institucional 2026
@@ -539,7 +898,7 @@ body {
 
       <h1 class="mb-3">
         <span data-i18n="landing_title_first">Dotación y suministro</span><br>
-        <span data-i18n="landing_title_second">para unidades policiales</span>
+        <span class="hero-accent" data-i18n="landing_title_second">para unidades policiales</span>
       </h1>
 
       <p class="lead mb-3">
@@ -550,7 +909,7 @@ body {
         </span>
       </p>
 
-      <div class="d-flex gap-3 justify-content-center flex-wrap mb-2">
+      <div class="d-flex gap-3 justify-content-start flex-wrap mb-2">
         <a href="index.html" class="btn btn-lg btn-catalogo" data-i18n="landing_catalog_btn">
           Ver catálogo
         </a>
@@ -559,9 +918,9 @@ body {
         </a>
       </div>
 
-      <p class="small mb-2" style="color:var(--slate-400);">
+      <p class="small mb-2 hero-first-time">
         <span data-i18n="landing_first_time">¿Primera vez aquí?</span>
-        <a href="registro.html" style="color:var(--brass-500);" data-i18n="landing_create_account">
+        <a href="registro.html" data-i18n="landing_create_account">
           Crea tu cuenta institucional
         </a>
       </p>
@@ -584,7 +943,7 @@ body {
 <main>
 
 
-<section class="container py-5">
+<section class="container beneficios-section pb-5">
 
   <div class="row g-4 beneficios">
 
@@ -593,17 +952,21 @@ body {
 
       <div class="beneficio-card">
 
-        <div class="beneficio-icon">
-          🕐
+        <div class="beneficio-head">
+
+          <span class="beneficio-icon">
+            🕐
+          </span>
+
+          <h3
+            class="h6"
+            data-i18n="landing_support_title">
+
+            Atención 24/7
+
+          </h3>
+
         </div>
-
-        <h3
-          class="h6"
-          data-i18n="landing_support_title">
-
-          Atención 24/7
-
-        </h3>
 
         <p
           class="small text-muted mb-0"
@@ -624,17 +987,21 @@ body {
 
       <div class="beneficio-card">
 
-        <div class="beneficio-icon">
-          🔒
+        <div class="beneficio-head">
+
+          <span class="beneficio-icon">
+            🔒
+          </span>
+
+          <h3
+            class="h6"
+            data-i18n="landing_security_title">
+
+            Datos protegidos
+
+          </h3>
+
         </div>
-
-        <h3
-          class="h6"
-          data-i18n="landing_security_title">
-
-          Datos protegidos
-
-        </h3>
 
         <p
           class="small text-muted mb-0"
@@ -655,17 +1022,21 @@ body {
 
       <div class="beneficio-card">
 
-        <div class="beneficio-icon">
-          📦
+        <div class="beneficio-head">
+
+          <span class="beneficio-icon">
+            📦
+          </span>
+
+          <h3
+            class="h6"
+            data-i18n="landing_delivery_title">
+
+            Entrega directa
+
+          </h3>
+
         </div>
-
-        <h3
-          class="h6"
-          data-i18n="landing_delivery_title">
-
-          Entrega directa
-
-        </h3>
 
         <p
           class="small text-muted mb-0"
@@ -693,7 +1064,7 @@ body {
 
 <section class="container pb-5">
 
-  <div class="text-center mb-4">
+  <div class="text-center mb-5">
 
     <h2 class="seccion-titulo h4 mb-1">
 
@@ -704,27 +1075,55 @@ body {
   </div>
 
 
-  <div class="industrias-grid">
+  <div class="row g-4 industrias-grid">
 
-    <a href="index.html" class="industria-card">
-      <img src="http://localhost:8081/img/camufajeSelva.jpg" alt="Camuflaje Selva" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
-      <span class="industria-texto">CAMUFLAJE<br>SELVA</span>
-    </a>
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="industria-item">
+        <a href="index.html" class="industria-card">
+          <img src="http://localhost:8081/img/camufajeSelva.jpg" alt="Camuflaje Selva" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
+          <span class="industria-texto">CAMUFLAJE<br>SELVA</span>
+        </a>
+        <a href="index.html" class="btn-industria">
+          Explorar <span class="flecha">→</span>
+        </a>
+      </div>
+    </div>
 
-    <a href="index.html" class="industria-card">
-      <img src="http://localhost:8081/img/gala.jpg" alt="Gala" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
-      <span class="industria-texto">GALA</span>
-    </a>
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="industria-item">
+        <a href="index.html" class="industria-card">
+          <img src="http://localhost:8081/img/gala.jpg" alt="Gala" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
+          <span class="industria-texto">GALA</span>
+        </a>
+        <a href="index.html" class="btn-industria">
+          Explorar <span class="flecha">→</span>
+        </a>
+      </div>
+    </div>
 
-    <a href="index.html" class="industria-card">
-      <img src="http://localhost:8081/img/Antidisturbios.jpg" alt="Antidisturbios" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
-      <span class="industria-texto">ANTIDISTURBIOS</span>
-    </a>
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="industria-item">
+        <a href="index.html" class="industria-card">
+          <img src="http://localhost:8081/img/Antidisturbios.jpg" alt="Antidisturbios" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
+          <span class="industria-texto">ANTIDISTURBIOS</span>
+        </a>
+        <a href="index.html" class="btn-industria">
+          Explorar <span class="flecha">→</span>
+        </a>
+      </div>
+    </div>
 
-    <a href="index.html" class="industria-card">
-      <img src="http://localhost:8081/img/Armada.jpg" alt="Armada" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
-      <span class="industria-texto">ARMADA</span>
-    </a>
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="industria-item">
+        <a href="index.html" class="industria-card">
+          <img src="http://localhost:8081/img/Armada.jpg" alt="Armada" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
+          <span class="industria-texto">ARMADA</span>
+        </a>
+        <a href="index.html" class="btn-industria">
+          Explorar <span class="flecha">→</span>
+        </a>
+      </div>
+    </div>
 
   </div>
 
@@ -774,62 +1173,78 @@ body {
   </div>
 
 
-  <div class="clientes">
+  <div class="row g-3 g-lg-4 clientes">
 
 
-    <div class="cliente">
+    <div class="col-6 col-lg-3">
 
-      <span class="cliente-icon">
-        🌐
-      </span>
+      <div class="cliente">
 
-      <span>
-        Logística<br>
-        Global
-      </span>
+        <span class="cliente-icon">
+          🌐
+        </span>
 
-    </div>
+        <span>
+          Logística<br>
+          Global
+        </span>
 
-
-    <div class="cliente">
-
-      <span class="cliente-icon">
-        🏢
-      </span>
-
-      <span>
-        Empresa<br>
-        Constructora<br>
-        del Norte
-      </span>
+      </div>
 
     </div>
 
 
-    <div class="cliente">
+    <div class="col-6 col-lg-3">
 
-      <span class="cliente-icon">
-        🛡️
-      </span>
+      <div class="cliente">
 
-      <span>
-        Seguridad<br>
-        Integral Co.
-      </span>
+        <span class="cliente-icon">
+          🏢
+        </span>
+
+        <span>
+          Empresa<br>
+          Constructora<br>
+          del Norte
+        </span>
+
+      </div>
 
     </div>
 
 
-    <div class="cliente">
+    <div class="col-6 col-lg-3">
 
-      <span class="cliente-icon">
-        📦
-      </span>
+      <div class="cliente">
 
-      <span>
-        Almacén<br>
-        Central
-      </span>
+        <span class="cliente-icon">
+          🛡️
+        </span>
+
+        <span>
+          Seguridad<br>
+          Integral Co.
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <div class="col-6 col-lg-3">
+
+      <div class="cliente">
+
+        <span class="cliente-icon">
+          📦
+        </span>
+
+        <span>
+          Almacén<br>
+          Central
+        </span>
+
+      </div>
 
     </div>
 
@@ -856,7 +1271,7 @@ body {
 
       <!-- POLÍTICAS -->
 
-      <div class="col-md-3">
+      <div class="col-6 col-md-3">
 
         <div class="footer-col">
 
@@ -883,7 +1298,7 @@ body {
 
       <!-- EMPRESA -->
 
-      <div class="col-md-3">
+      <div class="col-6 col-md-3">
 
         <div class="footer-col">
 
@@ -906,7 +1321,7 @@ body {
 
       <!-- CONTACTO -->
 
-      <div class="col-md-3">
+      <div class="col-6 col-md-3">
 
         <div class="footer-col">
 
@@ -933,7 +1348,7 @@ body {
 
       <!-- DIRECCIÓN -->
 
-      <div class="col-md-3">
+      <div class="col-6 col-md-3">
 
         <div class="footer-col">
 
@@ -941,7 +1356,7 @@ body {
             Corporación
           </h4>
 
-          <div class="footer-contacto">
+          <div class="footer-contacto footer-direccion">
 
             Años. Habitantes de 288,<br>
             Bucaramanga,<br>
@@ -963,7 +1378,7 @@ body {
 
 
     <div
-      class="d-flex flex-wrap justify-content-between small">
+      class="d-flex flex-wrap justify-content-between align-items-center small footer-bottom">
 
       <span>
 
