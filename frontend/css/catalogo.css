@@ -222,6 +222,8 @@ body.catalogo-page .pc-desc {
 body.catalogo-page .pc-buy { margin-top: auto; }
 body.catalogo-page .pc-price-row { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; margin-bottom: .75rem; }
 body.catalogo-page .card-producto .precio { font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; color: var(--cat-ink); }
+/* Sin cifra visible (sin sesión o por cotizar): aviso, no tamaño de precio. */
+body.catalogo-page .card-producto .precio.precio-texto { font-size: .95rem; font-weight: 700; letter-spacing: 0; color: var(--cat-ink); }
 body.catalogo-page .pc-stock { font-size: .74rem; font-weight: 600; color: var(--cat-soft); white-space: nowrap; }
 body.catalogo-page .pc-btn {
   display: flex; align-items: center; justify-content: center; gap: .5rem; width: 100%;

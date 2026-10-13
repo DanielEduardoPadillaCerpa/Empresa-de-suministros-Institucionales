@@ -924,7 +924,7 @@ async function migrar() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS automation_outbox (
       id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-      workflow ENUM('W1','W3','W6','W8') NOT NULL,
+      workflow ENUM('W1','W3','W6','W8','W11') NOT NULL,
       dedupe_key VARCHAR(191) NOT NULL UNIQUE,
       payload JSON NOT NULL,
       payload_cifrado BOOLEAN NOT NULL DEFAULT FALSE,
@@ -939,7 +939,7 @@ async function migrar() {
   `);
 
   await pool.query(
-    "ALTER TABLE automation_outbox MODIFY workflow ENUM('W1','W3','W6','W8') NOT NULL"
+    "ALTER TABLE automation_outbox MODIFY workflow ENUM('W1','W3','W6','W8','W11') NOT NULL"
   );
 
   await pool.query(`
@@ -1023,8 +1023,9 @@ async function migrar() {
   await migrarAutenticacionMfa();
   await migrarCuentaSegura();
   await sembrarCategoriasYProductos();
-  await sembrarAdminPorDefecto();
   await require('./migraciones').aplicarMigraciones(pool);
+  // Después de las migraciones: así recibe permisos y el cambio obligatorio de contraseña.
+  await sembrarAdminPorDefecto();
 }
 
 async function migrarAutenticacionMfa() {
@@ -1061,7 +1062,7 @@ async function migrarCuentaSegura() {
   }
 
   await pool.query(
-    "ALTER TABLE automation_outbox MODIFY workflow ENUM('W1','W3','W6','W8') NOT NULL"
+    "ALTER TABLE automation_outbox MODIFY workflow ENUM('W1','W3','W6','W8','W11') NOT NULL"
   );
 
   await pool.query(`
@@ -1252,12 +1253,18 @@ async function sembrarAdminPorDefecto() {
     "SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'staff_permisos' LIMIT 1"
   );
   if (tablaPermisos.length) {
-    const { PERMISOS_STAFF } = require('./autorizacion');
-    for (const permiso of Object.keys(PERMISOS_STAFF)) {
+    const { PERMISOS_STAFF, PERMISOS_DATOS_PERSONALES } = require('./autorizacion');
+    for (const permiso of Object.keys(PERMISOS_STAFF).filter(p => !PERMISOS_DATOS_PERSONALES.has(p) || p === 'documentos.ver')) {
       await pool.query('INSERT IGNORE INTO staff_permisos (usuario_id, permiso) VALUES (?, ?)', [admin.insertId, permiso]);
     }
   }
 
+  // La contraseña vino de una variable de entorno: debe cambiarse en el primer acceso.
+  try {
+    await pool.query('UPDATE usuarios SET debe_cambiar_password = TRUE WHERE id = ?', [admin.insertId]);
+  } catch (err) {
+    if (err.code !== 'ER_BAD_FIELD_ERROR') throw err;
+  }
   console.log('==============================================================');
   console.log('[db] Cuenta de administrador creada automáticamente:');
   console.log(`      correo:    ${correo}`);

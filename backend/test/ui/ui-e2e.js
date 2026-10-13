@@ -64,40 +64,43 @@ function escribir(d, id, valor) {
   el.dispatchEvent(new d.defaultView.Event('change', { bubbles: true }));
 }
 
+async function api(ruta, token, opciones = {}) {
+  const r = await fetch(BASE + ruta, { ...opciones, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, ...(opciones.headers || {}) } });
+  return { status: r.status, body: await r.json().catch(() => ({})) };
+}
+
+// Personal con contraseña inicial: la cambia por API y vuelve a iniciar sesión.
+async function loginStaff(correo, password) {
+  let sesion = await login(correo, password);
+  if (sesion.debeCambiarPassword) {
+    const nueva = password + '-Nueva';
+    await api('/api/mi-cuenta/password', sesion.token, { method: 'POST', body: JSON.stringify({ passwordActual: password, passwordNueva: nueva }) });
+    sesion = await login(correo, nueva);
+  }
+  return sesion;
+}
+
 (async () => {
   const correo = `seguridad${Date.now()}@vigilancia-prueba.test`;
 
-  // ---------- 1. Registro por pasos ----------
+  // ---------- 1. Registro mínimo ----------
   const reg = await abrir('registro.html');
   const { d } = reg;
   await hasta(() => d.querySelectorAll('#vf-tipos input').length > 0);
   check('el asistente carga los tipos desde la API', d.querySelectorAll('#vf-tipos input').length === 6, d.querySelectorAll('#vf-tipos input').length + ' tipos');
   check('el formulario anterior queda oculto en modo público', d.getElementById('form-registro').hidden === true);
+  check('el asistente tiene 3 pasos', d.querySelectorAll('#vf-progreso li').length === 3);
   d.getElementById('vf-siguiente').click();
   check('no avanza sin elegir tipo', d.getElementById('vf-error-tipo').textContent.length > 0);
   const radio = d.querySelector('#vf-tipos input[value="corporativo"]');
   radio.checked = true;
   radio.dispatchEvent(new reg.w.Event('change', { bubbles: true }));
   d.getElementById('vf-siguiente').click();
-  check('paso 2 muestra los requisitos del tipo', d.querySelector('[data-paso="1"]').hidden === false && d.querySelectorAll('#vf-requisitos-lista li').length === 4);
-  d.getElementById('vf-siguiente').click();
-  check('paso 3 muestra el campo específico "Sector"', Boolean(d.getElementById('vf-sector')));
-  escribir(d, 'vf-nombreEntidad', 'Vigilancia Prueba S.A.S.');
-  escribir(d, 'vf-nit', '800197268-5');
-  escribir(d, 'vf-dependencia', 'Gerencia de compras');
-  escribir(d, 'vf-departamento', 'Antioquia');
-  escribir(d, 'vf-municipio', 'Medellín');
-  escribir(d, 'vf-direccionInstalacion', 'Carrera 43A # 1-50');
-  escribir(d, 'vf-sector', 'seguridad_privada');
-  d.getElementById('vf-siguiente').click();
-  check('NIT con dígito incorrecto se detecta en el navegador', d.querySelector('[data-error="nit"]').textContent.includes('dígito'));
-  escribir(d, 'vf-nit', '800.197.268-4');
-  d.getElementById('vf-siguiente').click();
-  check('con NIT válido avanza a "Tus datos"', d.querySelector('[data-paso="3"]').hidden === false);
-  escribir(d, 'vf-nombreFuncionario', 'Laura Prueba Gómez');
-  escribir(d, 'vf-cargo', 'Coordinadora de compras');
+  check('paso 2 pide solo nombre, correo y contraseña', d.querySelector('[data-paso="1"]').hidden === false && !d.getElementById('vf-nit') && !d.getElementById('vf-telefono'));
+  check('el campo específico "Sector" es opcional', Boolean(d.getElementById('vf-sector')) && !d.getElementById('vf-sector').required);
+  escribir(d, 'vf-nombreCompleto', 'Laura Prueba Gómez');
   escribir(d, 'vf-correo', correo);
-  escribir(d, 'vf-telefono', '6041234567');
+  escribir(d, 'vf-sector', 'seguridad_privada');
   escribir(d, 'vf-password', 'ClaveSegura2026!');
   escribir(d, 'vf-passwordConfirmacion', 'OtraClave2026!!');
   d.getElementById('vf-siguiente').click();
@@ -107,26 +110,42 @@ function escribir(d, id, valor) {
   check('resumen muestra el sector elegido', d.getElementById('vf-resumen').textContent.includes('Vigilancia y seguridad privada'));
   check('la contraseña no queda en el borrador local', !(reg.w.sessionStorage.getItem('si_registro_borrador') || '').includes('ClaveSegura'));
   d.getElementById('vf-enviar').click();
-  check('sin autorización de datos no se envía', d.querySelector('[data-error="aceptaTratamiento"]').textContent.length > 0);
+  check('sin aceptar términos no se envía', d.querySelector('[data-error="aceptaTerminos"]').textContent.length > 0);
+  d.getElementById('vf-terminos').checked = true;
   d.getElementById('vf-acepta').checked = true;
   d.getElementById('vf-enviar').click();
-  await hasta(() => d.querySelector('[data-paso="5"]').hidden === false);
-  check('confirmación de solicitud registrada', d.querySelector('[data-paso="5"]').hidden === false);
-  check('confirmación lista 3 documentos obligatorios (incl. licencia Supervigilancia)', d.querySelectorAll('#vf-confirmacion-docs li').length === 3 && d.getElementById('vf-confirmacion-docs').textContent.includes('Superintendencia de Vigilancia'), d.getElementById('vf-confirmacion-docs').children.length + ' li: ' + d.getElementById('vf-confirmacion-docs').innerHTML.slice(0, 300));
+  await hasta(() => d.querySelector('[data-paso="3"]').hidden === false);
+  check('confirmación de cuenta creada', d.querySelector('[data-paso="3"]').hidden === false);
+  check('la confirmación explica uso general y verificación posterior', d.querySelector('[data-paso="3"]').textContent.includes('uso general'));
   check('sin errores de JavaScript en registro', reg.errores.length === 0, reg.errores.join(' | '));
   reg.w.close();
 
-  // ---------- 2. Mi verificación ----------
+  // ---------- 2. Mi verificación (solo cuando se necesita) ----------
   const sesion = await login(correo, 'ClaveSegura2026!');
   check('login informa estado borrador', sesion.estadoVerificacion === 'borrador');
   const mi = await abrir('mi-verificacion.html', sesion);
   await hasta(() => !mi.d.getElementById('vf-contenido').hidden);
-  check('Mi verificación muestra el estado "Borrador"', mi.d.getElementById('vf-estado').textContent === 'Borrador');
+  check('Mi verificación muestra "Verificación no iniciada"', mi.d.getElementById('vf-estado').textContent === 'Verificación no iniciada');
+  check('explica que la cuenta ya compra uso general', mi.d.getElementById('vf-explicacion').textContent.includes('uso general'));
   const botonEnviar = [...mi.d.querySelectorAll('#vf-acciones-estado button')].find(b => b.textContent.includes('Enviar'));
-  check('"Enviar a revisión" deshabilitado sin documentos', botonEnviar && botonEnviar.disabled);
-  check('la página ofrece adjuntar documentos', mi.d.getElementById('vf-form-documento').hidden === false);
+  check('"Enviar a revisión" deshabilitado sin requisitos', botonEnviar && botonEnviar.disabled);
+  check('la página ofrece registrar el documento de identidad', mi.d.getElementById('vf-form-identificador').hidden === false);
+  escribir(mi.d, 'vf-id-numero', '1.098.765.432');
+  mi.d.getElementById('vf-id-guardar').click();
+  await hasta(() => mi.d.getElementById('vf-id-mensaje').textContent.length > 0);
+  check('sin autorización no se registra el documento', mi.d.getElementById('vf-id-mensaje').textContent.includes('autorizar'));
+  escribir(mi.d, 'vf-id-numero', '1.098.765.432');
+  mi.d.getElementById('vf-id-autoriza').checked = true;
+  mi.d.getElementById('vf-id-guardar').click();
+  await hasta(() => (mi.d.getElementById('vf-id-actual')?.textContent || '').includes('432'));
+  check('documento registrado y mostrado enmascarado', mi.d.getElementById('vf-id-actual').textContent.includes('•••••432') && !mi.d.body.innerHTML.includes('1098765432'));
   check('sin errores de JavaScript en Mi verificación', mi.errores.length === 0, mi.errores.join(' | '));
   mi.w.close();
+  const org = await api('/api/verificacion/mi-solicitud/clasificacion', sesion.token, { method: 'POST', body: JSON.stringify({
+    tipoInstitucion: 'corporativo', sector: 'seguridad_privada', nombreEntidad: 'Vigilancia Prueba S.A.S.', nit: '800197268-4',
+    dependencia: 'Gerencia de compras', cargo: 'Coordinadora de compras', departamento: 'Antioquia', municipio: 'Medellín', direccionInstalacion: 'Carrera 43A # 1-50'
+  }) });
+  check('datos de la entidad guardados', org.status === 200);
   for (const tipo of ['certificado_existencia', 'licencia_supervigilancia', 'acreditacion_vinculacion']) {
     const fd = new FormData();
     fd.append('tipoDocumento', tipo);
@@ -137,23 +156,42 @@ function escribir(d, id, valor) {
   const mi2 = await abrir('mi-verificacion.html', sesion);
   await hasta(() => !mi2.d.getElementById('vf-contenido').hidden);
   const enviar2 = [...mi2.d.querySelectorAll('#vf-acciones-estado button')].find(b => b.textContent.includes('Enviar'));
-  check('con documentos, "Enviar a revisión" se habilita', enviar2 && !enviar2.disabled);
+  check('con requisitos completos, "Enviar a revisión" se habilita', enviar2 && !enviar2.disabled);
   enviar2.click();
-  await hasta(() => mi2.d.getElementById('vf-estado').textContent === 'Pendiente de verificación');
-  check('tras enviar, el estado pasa a "Pendiente de verificación"', mi2.d.getElementById('vf-estado').textContent === 'Pendiente de verificación');
+  await hasta(() => mi2.d.getElementById('vf-estado').textContent === 'En verificación');
+  check('tras enviar, el estado pasa a "En verificación"', mi2.d.getElementById('vf-estado').textContent === 'En verificación');
+  await hasta(() => !mi2.d.getElementById('vf-seccion-comprobaciones').hidden);
+  check('se muestran las tres comprobaciones', mi2.d.querySelectorAll('#vf-comprobaciones li').length === 3);
   mi2.w.close();
 
-  // ---------- 3. Panel de revisión ----------
-  const admin = await login('admin@prueba.test', 'AdminPrueba2026!');
+  // ---------- 3. Panel de revisión con doble comprobación ----------
+  const admin = await loginStaff('admin@prueba.test', 'AdminPrueba2026!');
+  const correoConfirmador = `confirma${Date.now()}@prueba.test`;
+  await api('/api/verificacion/admin/personal', admin.token, { method: 'POST', body: JSON.stringify({ correo: correoConfirmador, password: 'ConfirmaPrueba2026!', permisos: ['verificacion.ver', 'verificacion.confirmar_institucion'] }) });
+  const confirmador = await loginStaff(correoConfirmador, 'ConfirmaPrueba2026!');
   const panel = await abrir('admin-verificaciones.html', admin);
   await hasta(() => panel.d.querySelector('#lista tr[data-id]'));
   const fila = [...panel.d.querySelectorAll('#lista tr[data-id]')].find(tr => tr.textContent.includes('Vigilancia Prueba'));
   check('la solicitud aparece en la cola de pendientes', Boolean(fila));
   fila.click();
   await hasta(() => panel.d.querySelector('[data-decision="aprobar"]'));
-  check('el detalle muestra requisitos completos', panel.d.getElementById('detalle').textContent.includes('Correo verificado'));
-  const rechazar = panel.d.querySelector('[data-decision="rechazar"]');
-  rechazar.click();
+  check('el detalle muestra la doble comprobación', panel.d.getElementById('detalle').textContent.includes('Doble comprobación'));
+  check('el documento aparece enmascarado', panel.d.getElementById('detalle').textContent.includes('•••••432'));
+  check('"Aprobar" está deshabilitado sin comprobaciones', panel.d.querySelector('[data-decision="aprobar"]').disabled);
+  panel.d.querySelector('[data-comp="vinculo_documental"]').click();
+  const vinculoConfirmado = () => (panel.d.querySelector('[data-form-comp="vinculo_documental"]')?.closest('li')?.textContent || '').includes('Confirmado');
+  await hasta(vinculoConfirmado);
+  check('el revisor registra la revisión documental', vinculoConfirmado());
+  const clienteId = Number(fila.dataset.id);
+  const canal = await api(`/api/verificacion/admin/solicitudes/${clienteId}/comprobaciones/canal_independiente`, confirmador.token, { method: 'POST', body: JSON.stringify({ resultado: 'confirmado', referencia: 'Correo desde dominio oficial, radicado 991' }) });
+  check('otra persona registra la confirmación institucional', canal.status === 200);
+  panel.d.querySelector('#lista tr[data-id="' + clienteId + '"]').click();
+  await hasta(() => panel.d.querySelector('[data-comp="entidad"]'));
+  panel.d.querySelector('[data-form-comp="entidad"] [data-c="referencia"]').value = 'Certificado RUES cotejado';
+  panel.d.querySelector('[data-comp="entidad"]').click();
+  await hasta(() => panel.d.querySelector('[data-decision="aprobar"]') && !panel.d.querySelector('[data-decision="aprobar"]').disabled);
+  check('con las tres comprobaciones, "Aprobar" se habilita', !panel.d.querySelector('[data-decision="aprobar"]').disabled);
+  panel.d.querySelector('[data-decision="rechazar"]').click();
   await hasta(() => panel.d.getElementById('detalle-mensaje')?.textContent.length > 0);
   check('rechazar sin motivo muestra error', (panel.d.getElementById('detalle-mensaje')?.textContent || '').includes('motivo'));
   panel.d.querySelector('[data-decision="aprobar"]').click();
@@ -161,18 +199,22 @@ function escribir(d, id, valor) {
   panel.d.querySelector('[data-confirmar]').click();
   await hasta(() => panel.d.querySelector('#detalle .vf-estado')?.textContent === 'Aprobada');
   check('aprobar desde el panel cambia el estado a "Aprobada"', panel.d.querySelector('#detalle .vf-estado')?.textContent === 'Aprobada');
-  check('las pestañas de productos y personal están disponibles para el superadmin', !panel.d.querySelector('[data-requiere="productos.cumplimiento"]').closest('li').hidden);
+  check('el administrador sembrado (no superadmin) no ve la pestaña de diagnóstico', panel.d.getElementById('tab-diagnostico-li').hidden === true);
   check('sin errores de JavaScript en el panel', panel.errores.length === 0, panel.errores.join(' | '));
   panel.w.close();
 
-  // ---------- 4. Catálogo con cuenta aprobada ----------
+  // ---------- 4. Catálogo y cambio de contraseña ----------
   const sesionAprobada = await login(correo, 'ClaveSegura2026!');
   const cat = await abrir('index.html', sesionAprobada);
   await hasta(() => cat.d.querySelectorAll('.card-producto').length > 0, 15000);
   const tarjetas = cat.d.querySelectorAll('.card-producto').length;
-  check('catálogo carga productos para la cuenta aprobada', tarjetas > 0, tarjetas + ' tarjetas');
-  check('ninguna tarjeta pide "Completa tu verificación"', cat.d.querySelectorAll('a.pc-btn[href="mi-verificacion.html"]').length === 0 && cat.d.querySelectorAll('.card-producto .precio').length > 0);
+  check('catálogo carga productos para la cuenta verificada', tarjetas > 0, tarjetas + ' tarjetas');
+  check('ninguna tarjeta queda bloqueada por cuenta inactiva', cat.d.querySelectorAll('a.pc-btn[href="login.html"]').length === 0 && cat.d.querySelectorAll('.card-producto .precio').length > 0);
   cat.w.close();
+  const cambio = await abrir('cambiar-password.html', { ...sesionAprobada, debeCambiarPassword: true });
+  check('la página de cambio de contraseña avisa del cambio obligatorio', cambio.d.getElementById('cp-obligatorio').hidden === false);
+  check('sin errores de JavaScript en cambio de contraseña', cambio.errores.length === 0, cambio.errores.join(' | '));
+  cambio.w.close();
 
   const fallas = resultados.filter(r => !r.ok).length;
   console.log(`\n${resultados.length - fallas}/${resultados.length} verificaciones de interfaz correctas`);

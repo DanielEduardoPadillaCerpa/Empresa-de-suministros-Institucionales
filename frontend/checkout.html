@@ -1187,7 +1187,71 @@ function prepararLineaPedido(item) {
   };
 }
 
-async function crearIntentoCheckout(metodo, direccion, sesion, idempotencyKey) {
+// ===== Autorización de compras con productos restringidos =====
+// El servidor decide si la operación la exige (403 REQUIERE_AUTORIZACION_COMPRA).
+// Se pide un código enviado al correo de la cuenta; la autorización queda
+// ligada a este carrito y se consume una sola vez al crear el pedido.
+function pedirCodigoAutorizacion(mensaje) {
+  return new Promise(resolve => {
+    let dialogo = document.getElementById('dlg-autorizacion-compra');
+    if (!dialogo) {
+      dialogo = document.createElement('dialog');
+      dialogo.id = 'dlg-autorizacion-compra';
+      dialogo.setAttribute('aria-labelledby', 'dlg-autorizacion-titulo');
+      dialogo.style.cssText = 'max-width:420px;width:calc(100% - 32px);border:0;border-radius:14px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25)';
+      dialogo.innerHTML = '<form method="dialog">' +
+        '<h2 id="dlg-autorizacion-titulo" class="h5">Confirma esta compra</h2>' +
+        '<p class="small text-muted" id="dlg-autorizacion-texto"></p>' +
+        '<label class="form-label" for="dlg-autorizacion-codigo">Código de 6 dígitos</label>' +
+        '<input class="form-control mb-3" id="dlg-autorizacion-codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="\\d{6}">' +
+        '<div class="d-flex gap-2 justify-content-end">' +
+        '<button class="btn btn-outline-secondary" value="cancelar">Cancelar</button>' +
+        '<button class="btn btn-dark" value="confirmar">Confirmar</button></div></form>';
+      document.body.appendChild(dialogo);
+    }
+    dialogo.querySelector('#dlg-autorizacion-texto').textContent = mensaje;
+    const campo = dialogo.querySelector('#dlg-autorizacion-codigo');
+    campo.value = '';
+    dialogo.onclose = () => resolve(dialogo.returnValue === 'confirmar' ? campo.value.trim() : null);
+    dialogo.showModal();
+    campo.focus();
+  });
+}
+
+async function obtenerAutorizacionCompra(sesion, lineas) {
+  const inicio = await fetch(API_BASE + '/api/verificacion/compra/autorizacion', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sesion.token },
+    body: JSON.stringify({ items: lineas.map(({ id, cantidad }) => ({ id, cantidad })) })
+  });
+  const datos = await inicio.json().catch(() => ({}));
+  if (!inicio.ok) {
+    if (datos.code === 'REQUIERE_VERIFICACION') {
+      const error = new Error(datos.error + ' Puedes iniciarla o renovarla desde Mi verificación.');
+      error.enlace = 'mi-verificacion.html?motivo=compra';
+      throw error;
+    }
+    throw new Error(datos.error || 'No fue posible iniciar la autorización de la compra.');
+  }
+  let mensaje = 'Tu pedido incluye productos restringidos. Enviamos un código a tu correo para autorizar esta compra (vence en ' + datos.expiraEnMinutos + ' minutos).';
+  for (let intento = 0; intento < 5; intento += 1) {
+    const codigo = await pedirCodigoAutorizacion(mensaje);
+    if (codigo === null) throw new Error('Compra cancelada: no se confirmó el código.');
+    const confirmacion = await fetch(API_BASE + '/api/verificacion/compra/autorizacion/confirmar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sesion.token },
+      body: JSON.stringify({ autorizacion: datos.autorizacion, codigo })
+    });
+    const resultado = await confirmacion.json().catch(() => ({}));
+    if (confirmacion.ok) return datos.autorizacion;
+    if (confirmacion.status !== 401) throw new Error(resultado.error || 'No fue posible confirmar el código.');
+    mensaje = resultado.error;
+  }
+  throw new Error('Se agotaron los intentos. Inicia de nuevo la compra.');
+}
+
+async function crearIntentoCheckout(metodo, direccion, sesion, idempotencyKey, autorizacionCompra) {
+  const lineas = items.map(prepararLineaPedido);
   const resp = await fetch(API_BASE + '/api/checkout', {
     method: 'POST',
     headers: {
@@ -1196,17 +1260,26 @@ async function crearIntentoCheckout(metodo, direccion, sesion, idempotencyKey) {
       'Idempotency-Key': idempotencyKey
     },
     body: JSON.stringify({
-      items: items.map(prepararLineaPedido),
+      items: lineas,
       enviarComprobante: document.getElementById('enviar-comprobante').checked,
       metodo,
       datosComprador: obtenerDatosComprador(),
-      direccionEntrega: direccion
+      direccionEntrega: direccion,
+      ...(autorizacionCompra ? { autorizacionCompra } : {})
     })
   });
   const resultado = await resp.json().catch(() => ({}));
   if (!resp.ok) {
+    // Sin autorización todavía: se pide el código y se reintenta con la misma
+    // clave de idempotencia (el intento rechazado no creó ningún pedido).
+    if (resp.status === 403 && resultado.code === 'REQUIERE_AUTORIZACION_COMPRA' && !autorizacionCompra) {
+      const ref = await obtenerAutorizacionCompra(sesion, lineas);
+      return crearIntentoCheckout(metodo, direccion, sesion, idempotencyKey, ref);
+    }
     sessionStorage.removeItem(CHECKOUT_KEY_STORAGE);
-    throw new Error(resultado.error || 'No fue posible iniciar el checkout.');
+    const error = new Error(resultado.error || 'No fue posible iniciar el checkout.');
+    if (resultado.code === 'CUENTA_NO_ACTIVA') error.enlace = 'mi-verificacion.html';
+    throw error;
   }
   return resultado;
 }

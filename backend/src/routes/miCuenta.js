@@ -7,6 +7,7 @@ const { pool } = require('../db');
 const { cifrar, descifrar } = require('../crypto');
 const { hashCodigoMfa, compararHashesMfa, generarCodigoMfa } = require('../mfaCodes');
 const { requiereAutenticacion, requiereAdmin } = require('./auth');
+const { requierePermiso } = require('../autorizacion');
 const { registrarAuditoria, registrarAuditoriaTransaccional } = require('../auditoria');
 
 const router = express.Router();
@@ -428,7 +429,7 @@ router.post('/password', limitarPassword, async (req, res) => {
 
     const passwordHash = await bcrypt.hash(datos.passwordNueva, 10);
     const [actualizacionUsuario] = await connection.query(
-      'UPDATE usuarios SET password_hash = ?, session_version = session_version + 1 WHERE id = ?',
+      'UPDATE usuarios SET password_hash = ?, session_version = session_version + 1, debe_cambiar_password = FALSE WHERE id = ?',
       [passwordHash, req.usuario.uid]
     );
     if (actualizacionUsuario.affectedRows !== 1) {
@@ -518,7 +519,7 @@ router.post('/solicitud-cambio', limitarSolicitud, async (req, res) => {
   }
 });
 
-router.get('/solicitudes', requiereAdmin, async (req, res) => {
+router.get('/solicitudes', requiereAdmin, requierePermiso('clientes.gestionar'), async (req, res) => {
   try {
     const [filas] = await pool.query(
       `SELECT id, cliente_id, campo, detalle, estado, respuesta_admin, creado_en,
@@ -535,7 +536,7 @@ router.get('/solicitudes', requiereAdmin, async (req, res) => {
   }
 });
 
-router.patch('/solicitudes/:id', requiereAdmin, async (req, res) => {
+router.patch('/solicitudes/:id', requiereAdmin, requierePermiso('clientes.gestionar'), async (req, res) => {
   const datos = respuestaValidacion(
     res,
     esquemaDecision.safeParse(req.body || {}),

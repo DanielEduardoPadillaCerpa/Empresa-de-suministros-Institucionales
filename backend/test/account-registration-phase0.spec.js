@@ -52,32 +52,32 @@ function crearConexionMock() {
   return connection;
 }
 
+// Contexto de staff leído de MySQL por requierePermiso().
+function filaStaff(sql) {
+  return /FROM usuarios u\s+LEFT JOIN clientes/i.test(String(sql)) ? [[{ id: 1, rol: 'admin', es_superadmin: 0 }], []] : null;
+}
+
 beforeEach(() => {
   pool.query.mockReset().mockImplementation(async sql => {
-    if (/SELECT session_version FROM usuarios/i.test(String(sql))) return [[{ session_version: 0 }], []];
+    if (/SELECT session_version[^;]*FROM usuarios/i.test(String(sql))) return [[{ session_version: 0 }], []];
+    if (filaStaff(sql)) return filaStaff(sql);
+    if (/FROM staff_permisos/i.test(String(sql))) return [[{ permiso: 'clientes.gestionar' }], []];
     if (/SELECT id FROM clientes/i.test(String(sql))) return [[{ id: 5 }], []];
     return [{ insertId: 1, affectedRows: 1 }, []];
   });
   pool.getConnection.mockReset();
 });
 
-// Registro válido de Bomberos (NIT con dígito de verificación correcto: 800197268-4).
+// Registro mínimo válido de Bomberos: los datos de la organización, el
+// documento de identidad y la evidencia se piden solo si una compra lo exige.
 function registroValido(cambios = {}) {
   return {
     tipoInstitucion: 'bomberos',
     tipoCuerpo: 'voluntario',
-    nombreEntidad: 'Cuerpo de Bomberos Voluntarios de prueba',
-    nit: '800197268-4',
-    dependencia: 'Estación central',
-    cargo: 'Almacenista',
-    departamento: 'Cundinamarca',
-    municipio: 'Chía',
-    direccionInstalacion: 'Calle 10 # 5-20',
-    nombreFuncionario: 'Comprador de prueba',
+    nombreCompleto: 'Comprador de prueba',
     correo: 'comprador@example.test',
-    telefono: '3001234567',
-    direccionEntrega: 'Carrera 2',
     password: 'ClaveSegura2026!',
+    aceptaTerminos: true,
     aceptaTratamiento: true,
     ...cambios
   };
@@ -92,6 +92,21 @@ describe('Fase 0 - registro y control de acceso', () => {
     expect(response.status).toBe(400);
     expect(pool.query).not.toHaveBeenCalled();
     expect(pool.getConnection).not.toHaveBeenCalled();
+  });
+
+  test('el registro mínimo rechaza datos que solo se piden al verificar (NIT, teléfono, antecedentes)', async () => {
+    for (const extra of [{ nit: '800197268-4' }, { telefono: '3001234567' }, { numeroConsultaAntecedentes: '123' }, { estadoVerificacion: 'aprobado' }]) {
+      const response = await request(appConRutas()).post('/api/auth/registro').send(registroValido(extra));
+      expect(response.status).toBe(400);
+    }
+    expect(pool.getConnection).not.toHaveBeenCalled();
+  });
+
+  test('el registro exige aceptar los términos y el tratamiento de datos', async () => {
+    for (const cambio of [{ aceptaTerminos: false }, { aceptaTratamiento: undefined }]) {
+      const response = await request(appConRutas()).post('/api/auth/registro').send(registroValido(cambio));
+      expect(response.status).toBe(400);
+    }
   });
 
   test('el autorregistro rechaza cualquier intento de asignar autorización general', async () => {
@@ -116,7 +131,8 @@ describe('Fase 0 - registro y control de acceso', () => {
     expect(connection.rollback).not.toHaveBeenCalled();
     const insercionCliente = connection.query.mock.calls.find(([sql]) => /INSERT INTO clientes/i.test(sql));
     expect(insercionCliente).toBeDefined();
-    expect(insercionCliente[0]).toMatch(/autorizacion_general\)\s*VALUES\s*\([^)]*FALSE/i);
+    expect(insercionCliente[0]).toMatch(/autorizacion_general, acepta_terminos_en\)\s*VALUES\s*\(\?, \?, \?, 'borrador', FALSE, \?, FALSE, NOW\(\)\)/i);
+    expect(insercionCliente[0]).not.toMatch(/nit|telefono|direccion/i);
     expect(connection.query.mock.calls.some(([sql]) => /INSERT INTO usuarios/i.test(sql))).toBe(true);
     expect(response.body.clienteId).toBe(71);
   });
@@ -184,7 +200,8 @@ describe('Fase 0 - registro y control de acceso', () => {
 
   function mockClienteParaPut({ permisos, estado = 'aprobado' }) {
     pool.query.mockImplementation(async sql => {
-      if (/SELECT session_version FROM usuarios/i.test(String(sql))) return [[{ session_version: 0 }], []];
+      if (/SELECT session_version[^;]*FROM usuarios/i.test(String(sql))) return [[{ session_version: 0 }], []];
+      if (filaStaff(sql)) return filaStaff(sql);
       if (/FROM clientes WHERE id/i.test(String(sql))) return [[{ id: 5, autorizacion_general: 0, estado_verificacion: estado }], []];
       if (/FROM staff_permisos/i.test(String(sql))) return [permisos.map(permiso => ({ permiso })), []];
       return [{ affectedRows: 1 }, []];
@@ -193,7 +210,7 @@ describe('Fase 0 - registro y control de acceso', () => {
 
   test('solo el staff con permiso de cumplimiento concede la autorización de restringidos mediante PUT', async () => {
     const adminToken = jwt.sign({ uid: 1, rol: 'admin', mfa: true }, process.env.JWT_SECRET);
-    mockClienteParaPut({ permisos: ['restringidos.autorizar'] });
+    mockClienteParaPut({ permisos: ['clientes.gestionar', 'restringidos.autorizar'] });
     const response = await request(appConRutas())
       .put('/api/clientes/5')
       .set('Authorization', `Bearer ${adminToken}`)
@@ -207,7 +224,7 @@ describe('Fase 0 - registro y control de acceso', () => {
 
   test('un administrador sin el permiso no puede conceder restringidos (escalada vertical)', async () => {
     const adminToken = jwt.sign({ uid: 2, rol: 'admin', mfa: true }, process.env.JWT_SECRET);
-    mockClienteParaPut({ permisos: ['verificacion.ver'] });
+    mockClienteParaPut({ permisos: ['clientes.gestionar', 'verificacion.ver'] });
     const response = await request(appConRutas())
       .put('/api/clientes/5')
       .set('Authorization', `Bearer ${adminToken}`)
@@ -219,13 +236,26 @@ describe('Fase 0 - registro y control de acceso', () => {
 
   test('no se conceden restringidos a una cuenta que no está aprobada', async () => {
     const adminToken = jwt.sign({ uid: 1, rol: 'admin', mfa: true }, process.env.JWT_SECRET);
-    mockClienteParaPut({ permisos: ['restringidos.autorizar'], estado: 'pendiente' });
+    mockClienteParaPut({ permisos: ['clientes.gestionar', 'restringidos.autorizar'], estado: 'pendiente' });
     const response = await request(appConRutas())
       .put('/api/clientes/5')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ autorizacionGeneral: true });
 
     expect(response.status).toBe(409);
+  });
+
+  test('un administrador sin el permiso clientes.gestionar no gestiona clientes (administrador limitado)', async () => {
+    const adminToken = jwt.sign({ uid: 3, rol: 'admin', mfa: true }, process.env.JWT_SECRET);
+    mockClienteParaPut({ permisos: ['verificacion.ver'] });
+    const response = await request(appConRutas())
+      .put('/api/clientes/5')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ nombreUnidad: 'Otro nombre' });
+
+    expect(response.status).toBe(403);
+    expect(response.body.permisoRequerido).toBe('clientes.gestionar');
+    expect(pool.query.mock.calls.some(([sql]) => /UPDATE clientes SET/i.test(sql))).toBe(false);
   });
 
   test('POST /dato-sensible requiere sesión y no escribe sin autenticación', async () => {
@@ -254,7 +284,7 @@ describe('Fase 0 - registro y control de acceso', () => {
     const token = jwt.sign({ uid: 10, clienteId: 5, rol: 'cliente', mfa: true }, process.env.JWT_SECRET);
     let insertado = false;
     pool.query.mockImplementation(async sql => {
-      if (/SELECT session_version FROM usuarios/i.test(String(sql))) return [[{ session_version: 0 }], []];
+      if (/SELECT session_version[^;]*FROM usuarios/i.test(String(sql))) return [[{ session_version: 0 }], []];
       if (/SELECT id FROM clientes/i.test(String(sql))) return [[{ id: 5 }], []];
       if (/INSERT INTO datos_sensibles/i.test(String(sql))) {
         insertado = true;

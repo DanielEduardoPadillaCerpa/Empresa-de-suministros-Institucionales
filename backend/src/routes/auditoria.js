@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../db');
 const { requiereAutenticacion, requiereAdmin } = require('./auth');
+const { requierePermiso } = require('../autorizacion');
 
 // GET /api/auditoria -> historial de acciones administrativas (solo admin)
 // Admite ?limite= (por defecto 100) y ?entidad= para filtrar.
-router.get('/', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.get('/', requiereAutenticacion, requiereAdmin, requierePermiso('auditoria.ver'), async (req, res) => {
   try {
     const limite = Math.min(Number(req.query.limite) || 100, 500);
     const entidad = req.query.entidad;

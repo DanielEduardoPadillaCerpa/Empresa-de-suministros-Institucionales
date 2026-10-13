@@ -31,7 +31,8 @@ test('automation signatures verify payload, timestamp, and tampering', () => {
 test('n8n workflow exports are valid JSON and Code nodes parse', () => {
   const directory = path.join(__dirname, '..', '..', 'n8n', 'workflows');
   const archivos = fs.readdirSync(directory).filter(nombre => nombre.endsWith('.json'));
-  assert.equal(archivos.length, 10);
+  assert.equal(archivos.length, 11);
+  assert.ok(archivos.includes('W11-verificacion-compra.json'));
   assert.ok(archivos.includes('W6-asistente-escalado.json'));
   assert.ok(archivos.includes('W7-resumen-preguntas-asistente.json'));
   assert.ok(archivos.includes('W8-notificaciones-cuenta.json'));

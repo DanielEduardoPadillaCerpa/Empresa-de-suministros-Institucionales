@@ -10,6 +10,8 @@ Object.assign(process.env, {
   DB_HOST: '127.0.0.1', DB_PORT: '3307', DB_USER: 'test', DB_PASSWORD: 'test_pw', DB_NAME: 'suministros_ui_test',
   PORT: '8091', NODE_ENV: 'development', JWT_SECRET: 'ui-test-jwt-secret-with-enough-length-000',
   CRYPTO_KEY: 'ui-test-crypto-key-32-characters', MFA_TOKEN_PEPPER: 'ui-test-mfa-pepper-with-at-least-32-chars',
+  CRYPTO_KEYS: 'ui1:' + Buffer.alloc(32, 7).toString('base64'), CRYPTO_KEY_ACTIVA: 'ui1',
+  IDENT_HMAC_KEY: Buffer.alloc(32, 9).toString('base64'),
   ADMIN_EMAIL: 'admin@prueba.test', ADMIN_PASSWORD: 'AdminPrueba2026!', PAYMENT_MODE: 'mock',
   PAYMENT_WEBHOOK_SECRET: 'ui-test-payment-webhook-secret-0123456789',
   N8N_MFA_WEBHOOK_URL: 'http://127.0.0.1:8099/mfa', N8N_MFA_WEBHOOK_SECRET: 'ui-test-mfa-webhook-secret-at-least-32-chars',

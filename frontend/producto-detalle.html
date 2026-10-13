@@ -86,6 +86,14 @@
     font-family: "Plus Jakarta Sans", "Inter", sans-serif; font-size: clamp(2.2rem, 3.4vw, 2.9rem);
     font-weight: 800; letter-spacing: -.03em; color: #fff; text-shadow: 0 2px 18px rgba(0,0,0,.3);
   }
+  /* Cuando no hay cifra que mostrar (sin sesión, cotización, cuenta inactiva)
+     el mismo espacio lleva un aviso: tamaño de texto normal, no de precio. */
+  .detalle-precio.es-mensaje {
+    font-family: "Inter", sans-serif; font-size: 1.02rem; font-weight: 600; line-height: 1.5;
+    letter-spacing: 0; max-width: 46ch; color: rgba(235,242,250,.92); text-shadow: none;
+    padding: .7rem 1rem; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+    border-left: 3px solid #22c55e; border-radius: 12px;
+  }
   body.detalle-page .badge-restringido { background: linear-gradient(135deg,#dc2626,#991b1b) !important; color: #fff !important; border: 0 !important; }
   body.detalle-page .detalle-info .aviso-sensible {
     color: #7f1d1d; background: rgba(255,255,255,.96); border: 1px solid rgba(220,38,38,.35);
@@ -188,7 +196,7 @@
     background: rgba(0,176,96,.12); box-shadow: none;
   }
   .ficha-icono svg { width: 16px; height: 16px; }
-  .ficha-lista .btn-link { color: var(--dp-ink); font-weight: 700; }
+  .ficha-lista .btn-link { padding: 0; font-size: inherit; color: var(--dp-ink); font-weight: 700; text-align: left; }
   .ficha-lista .btn-link:hover { color: #067a43; text-decoration: none; }
   .ficha-nota { margin-top: .6rem; font-size: .74rem; line-height: 1.5; color: #98a5b5; }
 
@@ -350,6 +358,14 @@ function formatearPrecio(valor) {
   return '$' + n.toLocaleString('es-CO');
 }
 
+// El espacio del precio muestra una cifra o, si no hay precio visible, un aviso
+// con tamaño de texto normal.
+function mostrarPrecio(texto, esMensaje) {
+  const precio = document.getElementById('detalle-precio');
+  precio.textContent = texto;
+  precio.classList.toggle('es-mensaje', esMensaje);
+}
+
 let productoActual = null;
 let categoriaActual = '';
 let tallaSeleccionada = null;
@@ -405,11 +421,9 @@ async function cargarDetalle() {
     actualizarTextoDetalle();
     const requiereLogin = p.requiere_login === true;
     const cotizacionRequerida = p.metadatos?.cotizacion_requerida === true;
-    document.getElementById('detalle-precio').textContent = requiereLogin
-      ? 'Inicia sesión para consultar el precio institucional.'
-      : cotizacionRequerida
-      ? 'Precio y disponibilidad sujetos a cotización institucional.'
-      : formatearPrecio(p.precio);
+    if (requiereLogin) mostrarPrecio('Inicia sesión para consultar el precio institucional.', true);
+    else if (cotizacionRequerida) mostrarPrecio('Precio y disponibilidad sujetos a cotización institucional.', true);
+    else mostrarPrecio(formatearPrecio(p.precio), false);
 
     // Cotización B2B
     const enlaceCotizacion = document.getElementById('detalle-cotizacion-b2b');
@@ -421,6 +435,9 @@ async function cargarDetalle() {
     const esRestringido = p.restringido === 1 || p.restringido === true;
     document.getElementById('detalle-restringido').style.display = esRestringido ? 'inline-block' : 'none';
     document.getElementById('detalle-aviso-restringido').style.display = esRestringido ? 'block' : 'none';
+    if (p.acceso?.requiereAutorizacionCompra) {
+      document.getElementById('detalle-aviso-restringido').textContent = 'Producto restringido: al confirmar la compra te enviaremos un código a tu correo para autorizar esa operación.';
+    }
 
     const sinStock = !requiereLogin && Number(p.cantidad_disponible) <= 0;
     const disponibilidadEl = document.getElementById('detalle-disponibilidad');
@@ -428,23 +445,29 @@ async function cargarDetalle() {
     const btnAgregar = document.getElementById('detalle-btn-agregar');
 
     const motivoAcceso = p.acceso?.motivo || null;
-    if (motivoAcceso === 'cuenta_no_aprobada') {
-      // Sesión iniciada pero la cuenta aún no está aprobada por verificación institucional.
-      document.getElementById('detalle-precio').textContent = 'El precio institucional se muestra cuando tu cuenta esté aprobada.';
-      disponibilidadEl.textContent = 'Tu cuenta está en proceso de verificación institucional.';
+    if (motivoAcceso === 'cuenta_no_activa' || motivoAcceso === 'cuenta_suspendida') {
+      // Sesión iniciada sin correo confirmado, o cuenta suspendida.
+      const suspendida = motivoAcceso === 'cuenta_suspendida';
+      mostrarPrecio(suspendida ? 'Tu cuenta está suspendida.' : 'Confirma tu correo para ver el precio.', true);
+      disponibilidadEl.textContent = suspendida
+        ? 'Las cuentas suspendidas no pueden comprar. Consulta el motivo en Mi verificación.'
+        : 'Inicia sesión con el código que enviamos a tu correo para activar tu cuenta.';
       cantidadInput.closest('.stepper').hidden = true;
       btnAgregar.disabled = true;
-      btnAgregar.textContent = 'Completa tu verificación para comprar';
-      document.getElementById('detalle-cotizacion-b2b').href = 'mi-verificacion.html';
-      document.getElementById('detalle-cotizacion-b2b').textContent = 'Ver el estado de mi verificación';
+      btnAgregar.textContent = suspendida ? 'Cuenta suspendida' : 'Confirma tu correo';
+      document.getElementById('detalle-cotizacion-b2b').href = suspendida ? 'mi-verificacion.html' : 'login.html';
+      document.getElementById('detalle-cotizacion-b2b').textContent = suspendida ? 'Ver el estado de mi cuenta' : 'Iniciar sesión';
       tallasOcultarFicha();
-    } else if (motivoAcceso === 'requiere_autorizacion_restringidos' || motivoAcceso === 'revision_legal_pendiente') {
+    } else if (['requiere_autorizacion_restringidos', 'revision_legal_pendiente', 'cuenta_de_prueba'].includes(motivoAcceso)) {
       disponibilidadEl.textContent = motivoAcceso === 'revision_legal_pendiente'
         ? 'Este producto está en revisión de cumplimiento normativo y no puede comprarse por ahora.'
-        : 'Este producto es restringido: tu cuenta necesita una autorización adicional. Solicítala adjuntando la evidencia desde Mi verificación o escribiendo a soporte.';
+        : motivoAcceso === 'cuenta_de_prueba'
+        ? 'Las cuentas de prueba no pueden comprar en este entorno.'
+        : 'Este producto es restringido: tu cuenta verificada necesita además la autorización de productos restringidos. Solicítala a soporte indicando la evidencia de dotación.';
       cantidadInput.disabled = true;
       btnAgregar.disabled = true;
-      btnAgregar.textContent = motivoAcceso === 'revision_legal_pendiente' ? 'En revisión de cumplimiento' : 'Requiere autorización adicional';
+      btnAgregar.textContent = motivoAcceso === 'revision_legal_pendiente' ? 'En revisión de cumplimiento'
+        : motivoAcceso === 'cuenta_de_prueba' ? 'Cuenta de prueba' : 'Requiere autorización adicional';
     } else if (requiereLogin) {
       disponibilidadEl.textContent = 'Inventario y disponibilidad visibles al iniciar sesión.';
       cantidadInput.closest('.stepper').hidden = true;

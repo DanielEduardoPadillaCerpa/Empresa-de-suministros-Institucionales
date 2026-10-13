@@ -106,7 +106,7 @@ const CONTEXTO_POLICIA_APROBADO = {
 beforeEach(() => {
   indice.obtenerIndice.mockResolvedValue(catalogo);
   pool.query.mockReset().mockImplementation(async sql => {
-    if (/SELECT session_version FROM usuarios/i.test(String(sql))) return [[{ session_version: 0 }], []];
+    if (/SELECT session_version[^;]*FROM usuarios/i.test(String(sql))) return [[{ session_version: 0 }], []];
     if (/FROM usuarios u\s+LEFT JOIN clientes c/i.test(String(sql))) return [[CONTEXTO_POLICIA_APROBADO], []];
     return [{ insertId: 1, affectedRows: 1 }, []];
   });
@@ -309,7 +309,7 @@ describe('API del asistente y aislamiento de datos', () => {
     test('perfil checkout requiere JWT, usa solo clienteId autenticado y responde no-store', async () => {
       const token = jwt.sign({ uid: 10, clienteId: 7, mfa: true }, process.env.JWT_SECRET);
       pool.query.mockImplementation(async sql => {
-        if (/SELECT session_version FROM usuarios/i.test(String(sql))) return [[{ session_version: 0 }], []];
+        if (/SELECT session_version[^;]*FROM usuarios/i.test(String(sql))) return [[{ session_version: 0 }], []];
         return [[
           {
             id: 7,
@@ -438,7 +438,7 @@ describe('API del asistente y aislamiento de datos', () => {
   test('el estado consulta únicamente pedidos del cliente autenticado', async () => {
     const token = jwt.sign({ uid: 10, clienteId: 7, mfa: true }, process.env.JWT_SECRET);
     pool.query.mockImplementation(async (sql, params) => {
-      if (String(sql).includes('SELECT session_version FROM usuarios')) {
+      if (/SELECT session_version[^;]*FROM usuarios/.test(String(sql))) {
         return [[{ session_version: 0 }], []];
       }
       if (String(sql).includes('WHERE cliente_id = ?')) {

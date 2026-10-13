@@ -11,8 +11,7 @@ const { hashCodigoMfa, compararHashesMfa, generarCodigoMfa } = require('../mfaCo
 const {
   validarRegistro,
   dominioCoincide,
-  datosInstitucionales,
-  requisitosDocumentales,
+  camposEspecificosDe,
   configuracionPublica
 } = require('../registroInstitucional');
 const { registrarHistorial } = require('../verificacion');
@@ -31,19 +30,22 @@ function datosVerificacionSesion(fila) {
   };
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'cambia-este-secreto';
+const { secretoJwt } = require('../configSegura');
 const JWT_EXPIRA = process.env.JWT_EXPIRES_IN || '2h';
 const REFRESH_DIAS = Number(process.env.REFRESH_EXPIRES_DIAS || 7);
 
 // Genera un refresh token aleatorio, guarda su HASH en la base de datos
 // (nunca el valor real) y devuelve el token en texto plano para el cliente.
-async function generarRefreshToken(usuarioId, connection = pool, mfaVerificadoEn = new Date()) {
+// mfaVerificadoEn = null significa "ahora" y se toma del reloj de MySQL: las
+// comprobaciones de MFA reciente comparan contra NOW() y un Date de Node se
+// escribiría en la zona horaria del proceso, no en la de la base.
+async function generarRefreshToken(usuarioId, connection = pool, mfaVerificadoEn = null) {
   const tokenPlano = crypto.randomBytes(40).toString('hex');
   const hash = crypto.createHash('sha256').update(tokenPlano).digest('hex');
   const expiracion = new Date(Date.now() + REFRESH_DIAS * 24 * 60 * 60 * 1000);
 
   await connection.query(
-    'INSERT INTO refresh_tokens (usuario_id, token_hash, fecha_expiracion, mfa_verificado_en) VALUES (?, ?, ?, ?)',
+    'INSERT INTO refresh_tokens (usuario_id, token_hash, fecha_expiracion, mfa_verificado_en) VALUES (?, ?, ?, COALESCE(?, NOW()))',
     [usuarioId, hash, expiracion, mfaVerificadoEn]
   );
 
@@ -51,7 +53,7 @@ async function generarRefreshToken(usuarioId, connection = pool, mfaVerificadoEn
 }
 
 function firmarAccessToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRA });
+  return jwt.sign(payload, secretoJwt(), { expiresIn: JWT_EXPIRA });
 }
 
 // jwt.decode().exp viene en segundos desde epoch; el frontend necesita ms
@@ -207,10 +209,11 @@ router.get('/registro/tipos', (req, res) => {
   res.json({ tipos: configuracionPublica() });
 });
 
-// POST /api/auth/registro -> crea la ficha del cliente y sus credenciales en
-// una sola transacción. La cuenta nace en estado 'borrador': no ve precios ni
-// compra hasta que verifique su correo, aporte la evidencia y un revisor con
-// permiso la apruebe. Rol, institución y autorizaciones nunca se toman del navegador.
+// POST /api/auth/registro -> registro mínimo: nombre, correo, contraseña, tipo
+// de institución y aceptaciones. La cuenta nace activa para el uso general
+// (estado de verificación 'borrador' = verificación no iniciada) y sin ninguna
+// autorización de productos restringidos. Rol, institución verificada y
+// autorizaciones nunca se toman del navegador.
 router.post('/registro', limitarRegistro, async (req, res) => {
   let connection;
   try {
@@ -223,9 +226,7 @@ router.post('/registro', limitarRegistro, async (req, res) => {
     }
     const datos = validacion.datos;
     const tipo = datos.tipoInstitucion;
-    const dominioVerificado = dominioCoincide(tipo, datos.correo);
-    const autorizacionSensible = datos.autorizacionSensible === true;
-    const numeroConsultaAntecedentes = datos.numeroConsultaAntecedentes || '';
+    const especificos = camposEspecificosDe(tipo, datos);
 
     const hash = await bcrypt.hash(datos.password, 12);
     connection = await pool.getConnection();
@@ -233,35 +234,20 @@ router.post('/registro', limitarRegistro, async (req, res) => {
 
     const [cliente] = await connection.query(
       `INSERT INTO clientes
-        (nombre_unidad, direccion_instalacion, nit, nombre_funcionario, correo,
-         telefono, direccion_entrega, tipo_institucion, estado_verificacion,
-         dominio_verificado, datos_registro_cifrados, autorizacion_general)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'borrador', ?, ?, FALSE)`,
+        (nombre_funcionario, correo, tipo_institucion, estado_verificacion,
+         dominio_verificado, datos_registro_cifrados, autorizacion_general, acepta_terminos_en)
+       VALUES (?, ?, ?, 'borrador', FALSE, ?, FALSE, NOW())`,
       [
-        datos.nombreEntidad,
-        datos.direccionInstalacion,
-        datos.nit,
-        cifrar(datos.nombreFuncionario),
+        cifrar(datos.nombreCompleto),
         cifrar(datos.correo),
-        cifrar(datos.telefono),
-        cifrar(datos.direccionEntrega || ''),
         tipo,
-        dominioVerificado,
-        cifrar(JSON.stringify(datosInstitucionales(tipo, datos)))
+        Object.keys(especificos).length ? cifrar(JSON.stringify(especificos)) : null
       ]
     );
     const [usuario] = await connection.query(
       'INSERT INTO usuarios (correo, password_hash, cliente_id, rol) VALUES (?, ?, ?, ?)',
       [datos.correo, hash, cliente.insertId, 'cliente']
     );
-    if (autorizacionSensible && numeroConsultaAntecedentes) {
-      await connection.query(
-        `INSERT INTO datos_sensibles
-          (cliente_id, numero_consulta_antecedentes, autorizacion_sensible)
-         VALUES (?, ?, TRUE)`,
-        [cliente.insertId, cifrar(numeroConsultaAntecedentes)]
-      );
-    }
     await registrarHistorial(connection, {
       clienteId: cliente.insertId,
       anterior: null,
@@ -280,11 +266,8 @@ router.post('/registro', limitarRegistro, async (req, res) => {
       rol: 'cliente',
       tipoInstitucion: tipo,
       estadoVerificacion: 'borrador',
-      dominioInstitucional: dominioVerificado,
-      documentosRequeridos: requisitosDocumentales(tipo, {
-        dominioVerificado,
-        datos: datosInstitucionales(tipo, datos)
-      }).filter(doc => doc.obligatorio)
+      correoInstitucional: dominioCoincide(tipo, datos.correo),
+      mensaje: 'Tu cuenta quedó creada. Inicia sesión para confirmar tu correo. Si más adelante compras productos que exigen verificación, te pediremos los datos necesarios en ese momento.'
     });
   } catch (err) {
     if (connection) {
@@ -363,7 +346,7 @@ router.post('/mfa/verificar', limitarVerificacionMfa, async (req, res) => {
     const [retos] = await connection.query(
       `SELECT r.usuario_id, r.codigo_hash, r.estado, r.intentos, r.proposito,
               (r.expira_en > NOW()) AS vigente,
-              u.correo, u.rol, u.cliente_id, u.session_version,
+              u.correo, u.rol, u.cliente_id, u.session_version, u.debe_cambiar_password,
               c.estado_verificacion, c.institucion_aprobada, c.tipo_institucion
        FROM retos_mfa r
        JOIN usuarios u ON u.id = r.usuario_id
@@ -419,7 +402,6 @@ router.post('/mfa/verificar', limitarVerificacionMfa, async (req, res) => {
       });
     }
 
-    const ahora = new Date();
     const token = firmarAccessToken({
       uid: reto.usuario_id,
       correo: reto.correo,
@@ -429,7 +411,7 @@ router.post('/mfa/verificar', limitarVerificacionMfa, async (req, res) => {
       sv: Number(reto.session_version || 0),
       mfa: true
     });
-    const refreshToken = await generarRefreshToken(reto.usuario_id, connection, ahora);
+    const refreshToken = await generarRefreshToken(reto.usuario_id, connection);
     await connection.query(
       "UPDATE retos_mfa SET estado = 'verificado' WHERE reto_id = ? AND estado = 'pendiente'",
       [retoId]
@@ -451,6 +433,7 @@ router.post('/mfa/verificar', limitarVerificacionMfa, async (req, res) => {
       rol: reto.rol,
       institucionId: institucionDeSesion(reto),
       ...datosVerificacionSesion(reto),
+      debeCambiarPassword: Boolean(reto.debe_cambiar_password),
       mfaVerified: true
     });
   } catch (err) {
@@ -636,6 +619,8 @@ router.post('/logout', async (req, res) => {
   }
 });
 
+const RUTAS_CON_CAMBIO_PENDIENTE = new Set(['GET /api/mi-cuenta/', 'GET /api/mi-cuenta', 'POST /api/mi-cuenta/password']);
+
 // Middleware exportado para proteger otras rutas
 async function requiereAutenticacion(req, res, next) {
   const header = req.headers.authorization || '';
@@ -643,7 +628,7 @@ async function requiereAutenticacion(req, res, next) {
   if (!token) return res.status(401).json({ error: 'No autenticado' });
   let usuario;
   try {
-    usuario = jwt.verify(token, JWT_SECRET);
+    usuario = jwt.verify(token, secretoJwt(), { algorithms: ['HS256'] });
   } catch {
     return res.status(401).json({ error: 'Sesión inválida o expirada' });
   }
@@ -660,11 +645,16 @@ async function requiereAutenticacion(req, res, next) {
 
   try {
     const [filas] = await pool.query(
-      'SELECT session_version FROM usuarios WHERE id = ?',
+      'SELECT session_version, debe_cambiar_password FROM usuarios WHERE id = ?',
       [usuarioId]
     );
     if (!filas.length || Number(filas[0].session_version || 0) !== versionToken) {
       return res.status(401).json({ error: 'La sesión fue revocada. Inicia sesión nuevamente.' });
+    }
+    // Credencial inicial (superadministrador o administrador sembrado): hasta
+    // cambiarla solo se permite consultar la cuenta y cambiar la contraseña.
+    if (filas[0].debe_cambiar_password && !RUTAS_CON_CAMBIO_PENDIENTE.has(`${req.method} ${req.baseUrl}${req.path}`)) {
+      return res.status(403).json({ code: 'PASSWORD_CHANGE_REQUIRED', error: 'Debes cambiar tu contraseña inicial antes de continuar.' });
     }
     req.usuario = usuario;
     return next();

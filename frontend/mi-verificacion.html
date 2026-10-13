@@ -19,7 +19,7 @@
   <div class="container py-3">
     <div class="eyebrow mb-2">Panel del cliente</div>
     <h1 class="display-serif h2 mb-2">Mi verificación institucional</h1>
-    <p class="lead col-lg-8 mb-0">Consulta el estado de tu solicitud, adjunta la evidencia requerida y envíala a revisión.</p>
+    <p class="lead col-lg-8 mb-0">Solo la necesitas para comprar productos que exigen verificación. Aquí ves qué falta, adjuntas la evidencia y sigues cada comprobación.</p>
   </div>
 </header>
 
@@ -44,9 +44,40 @@
           <div id="vf-acciones-estado" class="mt-3 d-flex flex-wrap gap-2"></div>
         </section>
 
+        <section class="vf-panel mb-4" id="vf-seccion-comprobaciones" aria-labelledby="vf-comp-titulo" hidden>
+          <h2 id="vf-comp-titulo">Comprobaciones de tu solicitud</h2>
+          <p class="vf-ayuda">Se necesitan las tres para aprobarla. Una comprobación "en revisión" no es un rechazo: una persona del equipo la revisa.</p>
+          <ul class="vf-requisitos" id="vf-comprobaciones"></ul>
+        </section>
+
         <section class="vf-panel mb-4" id="vf-seccion-requisitos" aria-labelledby="vf-req-titulo">
           <h2 id="vf-req-titulo">Requisitos</h2>
           <ul class="vf-requisitos" id="vf-requisitos"></ul>
+        </section>
+
+        <section class="vf-panel mb-4" id="vf-seccion-identificador" aria-labelledby="vf-id-titulo" hidden>
+          <h2 id="vf-id-titulo">Documento de identidad</h2>
+          <p class="vf-ayuda">Lo usamos únicamente para comprobar que la evidencia de tu institución corresponde a ti y para detectar suplantaciones. Se guarda cifrado; el equipo solo ve los últimos tres dígitos. No lo consultamos en bases externas.</p>
+          <p id="vf-id-actual" class="mb-2" hidden></p>
+          <div id="vf-id-no-disponible" class="alert alert-warning" hidden>La verificación de identidad no está disponible en este momento. Inténtalo más tarde.</div>
+          <form id="vf-form-identificador" class="row g-2 align-items-end" novalidate>
+            <div class="col-md-4">
+              <label class="form-label" for="vf-id-tipo">Tipo de documento</label>
+              <select class="form-select" id="vf-id-tipo" required></select>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label" for="vf-id-numero">Número</label>
+              <input class="form-control" id="vf-id-numero" inputmode="numeric" autocomplete="off" maxlength="20" required>
+            </div>
+            <div class="col-md-3 d-grid">
+              <button class="btn btn-dark" type="submit" id="vf-id-guardar">Guardar</button>
+            </div>
+            <div class="col-12 form-check ms-1">
+              <input class="form-check-input" type="checkbox" id="vf-id-autoriza">
+              <label class="form-check-label small" for="vf-id-autoriza">Autorizo el tratamiento de mi número de documento para esta verificación (Ley 1581 de 2012). Puedo solicitar su eliminación cuando ya no sea necesario.</label>
+            </div>
+            <div class="col-12" id="vf-id-mensaje" role="alert"></div>
+          </form>
         </section>
 
         <section class="vf-panel mb-4" aria-labelledby="vf-docs-titulo">
@@ -74,7 +105,7 @@
         </section>
 
         <section class="vf-panel mb-4" id="vf-seccion-clasificacion" aria-labelledby="vf-clasif-titulo" hidden>
-          <h2 id="vf-clasif-titulo">Clasificación de la organización</h2>
+          <h2 id="vf-clasif-titulo">Datos de tu entidad</h2>
           <p class="vf-ayuda" id="vf-clasif-ayuda"></p>
           <form id="vf-form-clasificacion" novalidate>
             <div class="row">
@@ -113,7 +144,7 @@
               </div>
             </div>
             <div id="cl-mensaje" role="alert"></div>
-            <button class="btn btn-outline-dark" type="submit">Guardar clasificación</button>
+            <button class="btn btn-outline-dark" type="submit">Guardar datos de la entidad</button>
           </form>
         </section>
       </div>
@@ -143,20 +174,22 @@
 <script src="js/navbar.js"></script>
 <script>
 const ESTADOS = {
-  borrador: ['Borrador', 'Completa tus datos, adjunta la evidencia requerida y envía la solicitud a revisión. Mientras tanto no puedes ver precios ni comprar.'],
-  pendiente: ['Pendiente de verificación', 'Tu solicitud está en revisión. Te mostraremos aquí la decisión. No necesitas hacer nada más por ahora.'],
+  borrador: ['Verificación no iniciada', 'Tu cuenta está activa: ya puedes comprar productos de uso general. Completa estos pasos solo si necesitas productos que exigen verificación.'],
+  pendiente: ['En verificación', 'Tu solicitud está en revisión. Te avisaremos por correo cuando haya una decisión. No necesitas hacer nada más por ahora.'],
   requiere_informacion: ['Requiere información adicional', 'El equipo de verificación necesita más información. Revisa el motivo, adjunta lo solicitado y vuelve a enviar la solicitud.'],
-  aprobado: ['Aprobada', 'Tu cuenta está aprobada: ya puedes ver precios y comprar los productos habilitados para tu institución.'],
-  rechazado: ['Rechazada', 'Tu solicitud fue rechazada. Revisa el motivo; si puedes corregirlo, adjunta la evidencia y vuelve a enviarla.'],
+  aprobado: ['Verificada', 'Tu identidad y tu vínculo con la institución están verificados. Cada compra de productos restringidos se confirma con un código enviado a tu correo.'],
+  rechazado: ['No aprobada', 'Tu solicitud no fue aprobada. Revisa el motivo; si puedes corregirlo, adjunta la evidencia y vuelve a enviarla. Tu cuenta sigue activa para uso general.'],
   suspendido: ['Suspendida', 'Tu cuenta está suspendida y no puede realizar compras. Si crees que es un error, comunícate con soporte.']
 };
+const ESTADO_COMPROBACION = { confirmado: ['cumplido', 'Confirmada'], pendiente: ['', 'Pendiente'], en_revision: ['condicional', 'En revisión'] };
 const EVENTOS = {
   registro: 'Registro creado', enviar: 'Enviada a revisión', aprobar: 'Aprobada', rechazar: 'Rechazada',
   solicitar_informacion: 'Se solicitó información adicional', suspender: 'Cuenta suspendida', reactivar: 'Cuenta reactivada',
   clasificacion: 'Clasificación actualizada', cambio_tipo_solicitado: 'Cambio de tipo solicitado',
   cambio_tipo_aprobado: 'Cambio de tipo aprobado', cambio_tipo_rechazado: 'Cambio de tipo rechazado',
   restringidos_autorizados: 'Autorización de restringidos concedida', restringidos_revocados: 'Autorización de restringidos revocada',
-  migracion_cuenta_heredada: 'Cuenta anterior pendiente de clasificación'
+  migracion_cuenta_heredada: 'Cuenta anterior pendiente de clasificación',
+  identificador_registrado: 'Documento de identidad registrado', renovar: 'Renovación enviada a revisión'
 };
 
 let tiposConfig = [];
@@ -198,7 +231,9 @@ function pintar() {
   document.getElementById('vf-tipo').textContent = s.tipoEtiqueta
     ? 'Tipo de institución: ' + s.tipoEtiqueta + (s.organizacion?.nombreEntidad ? ' · ' + s.organizacion.nombreEntidad : '')
     : 'Tipo de institución sin clasificar';
-  document.getElementById('vf-explicacion').textContent = explicacion;
+  document.getElementById('vf-explicacion').textContent = s.verificacionVencida
+    ? 'Tu verificación venció. Sigues pudiendo comprar productos de uso general; para productos restringidos, renuévala.'
+    : explicacion + (s.estado === 'aprobado' && s.verificadoHasta ? ' Vigente hasta el ' + new Date(s.verificadoHasta).toLocaleDateString('es-CO', { dateStyle: 'long' }) + '.' : '');
 
   const motivo = document.getElementById('vf-motivo');
   motivo.hidden = !s.motivo;
@@ -213,14 +248,14 @@ function pintar() {
 
   const acciones = document.getElementById('vf-acciones-estado');
   acciones.innerHTML = '';
-  if (s.estado === 'aprobado') {
+  if (s.estado === 'aprobado' && !s.verificacionVencida) {
     acciones.innerHTML = '<a class="btn btn-success" href="index.html">Ir al catálogo</a>' +
       (s.autorizacionRestringidos ? '<span class="vf-etiqueta cumplido align-self-center">Autorizada para productos restringidos</span>' : '');
   }
-  if (['borrador', 'requiere_informacion', 'rechazado'].includes(s.estado)) {
+  if (['borrador', 'requiere_informacion', 'rechazado'].includes(s.estado) || s.verificacionVencida) {
     const boton = document.createElement('button');
     boton.className = 'btn btn-dark';
-    boton.textContent = 'Enviar a revisión';
+    boton.textContent = s.verificacionVencida ? 'Renovar verificación' : 'Enviar a revisión';
     boton.disabled = !s.puedeEnviar;
     boton.addEventListener('click', enviar);
     acciones.appendChild(boton);
@@ -239,6 +274,12 @@ function pintar() {
   lista.push(req.tipoDefinido
     ? '<li><span class="vf-etiqueta cumplido">Cumplido</span><span>Tipo de institución definido</span></li>'
     : '<li><span class="vf-etiqueta obligatorio">Pendiente</span><span>Selecciona el tipo de institución en "Clasificación de la organización".</span></li>');
+  lista.push(req.organizacionCompleta
+    ? '<li><span class="vf-etiqueta cumplido">Cumplido</span><span>Datos de la entidad completos</span></li>'
+    : '<li><span class="vf-etiqueta obligatorio">Pendiente</span><span>Completa los datos de tu entidad (nombre, NIT, dependencia y ubicación).</span></li>');
+  lista.push(req.identificadorRegistrado
+    ? '<li><span class="vf-etiqueta cumplido">Cumplido</span><span>Documento de identidad registrado</span></li>'
+    : '<li><span class="vf-etiqueta obligatorio">Pendiente</span><span>Registra tu documento de identidad.</span></li>');
   lista.push(req.correoVerificado
     ? '<li><span class="vf-etiqueta cumplido">Cumplido</span><span>Correo verificado con código de seguridad' + (req.dominioVerificado ? ' (dominio institucional)' : '') + '</span></li>'
     : '<li><span class="vf-etiqueta obligatorio">Pendiente</span><span>Verifica tu correo iniciando sesión con el código.</span></li>');
@@ -265,8 +306,27 @@ function pintar() {
   document.getElementById('vf-tipo-documento').innerHTML = req.requisitos
     .map(r => '<option value="' + escapar(r.tipo) + '">' + escapar(r.etiqueta) + (r.obligatorio ? ' (obligatorio)' : '') + '</option>').join('');
 
+  const seccionComp = document.getElementById('vf-seccion-comprobaciones');
+  const comprobaciones = s.solicitud && ['en_curso', 'requiere_revision', 'fuente_no_disponible'].includes(s.solicitud.estado) ? s.solicitud.comprobaciones : [];
+  seccionComp.hidden = comprobaciones.length === 0;
+  document.getElementById('vf-comprobaciones').innerHTML = comprobaciones.map(c => {
+    const [clase, texto] = ESTADO_COMPROBACION[c.resultado] || ESTADO_COMPROBACION.pendiente;
+    return '<li><span class="vf-etiqueta ' + clase + '">' + texto + '</span><span><strong>' + escapar(c.etiqueta) + '</strong><br><span class="small text-muted">' + escapar(c.metodo) + '</span></span></li>';
+  }).join('');
+
+  const seccionId = document.getElementById('vf-seccion-identificador');
+  seccionId.hidden = !s.puedeSubirDocumentos && !s.identificador;
+  const actual = document.getElementById('vf-id-actual');
+  actual.hidden = !s.identificador;
+  actual.textContent = s.identificador ? 'Registrado: ' + (s.tiposIdentificador.find(t => t.id === s.identificador.tipo)?.etiqueta || s.identificador.tipo) + ' ' + s.identificador.enmascarado : '';
+  document.getElementById('vf-id-no-disponible').hidden = s.proteccionIdentificadores !== false;
+  const formId = document.getElementById('vf-form-identificador');
+  formId.hidden = !s.puedeSubirDocumentos || s.proteccionIdentificadores === false;
+  document.getElementById('vf-id-tipo').innerHTML = s.tiposIdentificador.map(t => '<option value="' + escapar(t.id) + '">' + escapar(t.etiqueta) + '</option>').join('');
+  document.getElementById('vf-id-guardar').textContent = s.identificador ? 'Reemplazar' : 'Guardar';
+
   const clasif = document.getElementById('vf-seccion-clasificacion');
-  clasif.hidden = !s.puedeCambiarTipo;
+  clasif.hidden = !s.puedeCambiarTipo && !s.verificacionVencida;
   document.getElementById('vf-clasif-ayuda').textContent = s.estado === 'aprobado'
     ? 'Si tu organización cambió de tipo, solicita el cambio aquí. No se concede de inmediato: un revisor debe aprobarlo y mientras tanto conservas tu acceso actual.'
     : 'Corrige o completa la clasificación de tu organización antes de enviar la solicitud.';
@@ -333,7 +393,15 @@ async function cargar() {
 }
 
 async function enviar() {
-  const resp = await api('/api/verificacion/mi-solicitud/enviar', { method: 'POST' });
+  // La operación que originó la verificación viaja como contexto; la clave de
+  // idempotencia evita solicitudes duplicadas por doble clic o reintentos.
+  const motivo = new URLSearchParams(window.location.search).get('motivo');
+  const clave = 'env-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
+  const resp = await api('/api/verificacion/mi-solicitud/enviar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': clave.replace(/[^A-Za-z0-9_-]/g, '') },
+    body: JSON.stringify({ operacion: motivo === 'catalogo_restringido' ? 'catalogo_restringido' : 'compra' })
+  });
   const datos = await resp.json().catch(() => ({}));
   if (!resp.ok) {
     mostrarNotificacion(datos.error || 'No se pudo enviar la solicitud.', 'error', 5000);
@@ -394,6 +462,33 @@ document.getElementById('vf-documentos').addEventListener('click', async e => {
 });
 
 document.getElementById('cl-tipo').addEventListener('change', () => pintarEspecificos());
+
+document.getElementById('vf-form-identificador').addEventListener('submit', async e => {
+  e.preventDefault();
+  const mensaje = document.getElementById('vf-id-mensaje');
+  const numero = document.getElementById('vf-id-numero');
+  if (!document.getElementById('vf-id-autoriza').checked) {
+    mensaje.className = 'alert alert-danger';
+    mensaje.textContent = 'Debes autorizar el tratamiento del documento para continuar.';
+    return;
+  }
+  const resp = await api('/api/verificacion/mi-solicitud/identificador', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tipoDocumento: document.getElementById('vf-id-tipo').value, numero: numero.value.trim(), autorizaTratamiento: true })
+  });
+  const datos = await resp.json().catch(() => ({}));
+  // El número no se conserva en la página después de enviarlo.
+  numero.value = '';
+  if (!resp.ok) {
+    mensaje.className = 'alert alert-danger';
+    mensaje.textContent = datos.error || 'No se pudo registrar el documento.';
+    return;
+  }
+  mensaje.className = 'alert alert-success';
+  mensaje.textContent = 'Documento registrado (' + datos.enmascarado + ').';
+  await cargar();
+});
 
 document.getElementById('vf-form-clasificacion').addEventListener('submit', async e => {
   e.preventDefault();

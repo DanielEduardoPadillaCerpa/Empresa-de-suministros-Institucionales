@@ -3,12 +3,13 @@ const router = express.Router();
 const { pool } = require('../db');
 const { cifrar, descifrar } = require('../crypto');
 const { requiereAutenticacion, requiereAdmin } = require('./auth');
+const { requierePermiso } = require('../autorizacion');
 const { registrarAuditoria } = require('../auditoria');
 const { obtenerPermisosStaff } = require('../autorizacion');
 const { eliminarArchivoDocumento } = require('../verificacion');
 
 // Datos personales descifrados disponibles únicamente para administradores.
-router.get('/', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.get('/', requiereAutenticacion, requiereAdmin, requierePermiso('clientes.gestionar'), async (req, res) => {
   try {
     const [filas] = await pool.query('SELECT * FROM clientes ORDER BY fecha_registro DESC');
     const clientes = filas.map(c => ({
@@ -33,7 +34,7 @@ router.get('/', requiereAutenticacion, requiereAdmin, async (req, res) => {
   }
 });
 
-router.get('/:id', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.get('/:id', requiereAutenticacion, requiereAdmin, requierePermiso('clientes.gestionar'), async (req, res) => {
   try {
     const [filas] = await pool.query('SELECT * FROM clientes WHERE id = ?', [req.params.id]);
     if (!filas.length) return res.status(404).json({ error: 'Cliente no encontrado' });
@@ -57,7 +58,7 @@ router.get('/:id', requiereAutenticacion, requiereAdmin, async (req, res) => {
 });
 
 // POST /api/clientes -> alta administrativa de clientes sin credenciales.
-router.post('/', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.post('/', requiereAutenticacion, requiereAdmin, requierePermiso('clientes.gestionar'), async (req, res) => {
   try {
     const {
       nombreUnidad, direccionInstalacion, nit,
@@ -99,7 +100,7 @@ router.post('/', requiereAutenticacion, requiereAdmin, async (req, res) => {
 });
 
 // PUT /api/clientes/:id -> editar cliente (solo admin) — usado por admin-clientes.html
-router.put('/:id', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.put('/:id', requiereAutenticacion, requiereAdmin, requierePermiso('clientes.gestionar'), async (req, res) => {
   try {
     const { nombreUnidad, nit, nombreFuncionario, correo, telefono, direccionInstalacion, direccionEntrega, autorizacionGeneral } = req.body;
 
@@ -160,7 +161,7 @@ router.put('/:id', requiereAutenticacion, requiereAdmin, async (req, res) => {
 });
 
 // DELETE /api/clientes/:id -> eliminar cliente (solo admin) — usado por admin-clientes.html
-router.delete('/:id', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.delete('/:id', requiereAutenticacion, requiereAdmin, requierePermiso('clientes.gestionar'), async (req, res) => {
   try {
     const [existente] = await pool.query('SELECT id FROM clientes WHERE id = ?', [req.params.id]);
     if (!existente.length) return res.status(404).json({ error: 'Cliente no encontrado' });

@@ -82,3 +82,20 @@ La migración solo **agrega** tablas, columnas e índices y no borra filas, pero
 4. Los administradores existentes recibieron los siete permisos de staff.
 
 Opciones (decisión del negocio): mantenerlo y pedir a los clientes que completen su verificación; aprobar desde el panel a los clientes ya conocidos; o revertir con `node scripts/migraciones.js revertir 001_verificacion_institucional --confirmo-perdida-de-datos` y volver al código anterior (respaldo en `.respaldo-pre-verificacion/`).
+
+## 8. Segunda auditoría (2026-10-13): registro mínimo y verificación en la compra
+
+Punto de recuperación: rama `feat/verificacion-en-compra`, commit `07e7e37`. Documentos relacionados: [ARQUITECTURA_ACTUAL.md](ARQUITECTURA_ACTUAL.md), [FLUJO_AUTENTICACION_ACTUAL.md](FLUJO_AUTENTICACION_ACTUAL.md), [INVENTARIO_FUNCIONALIDADES.md](INVENTARIO_FUNCIONALIDADES.md).
+
+| # | Severidad | Hallazgo | Evidencia | Estado |
+|---|---|---|---|---|
+| A1 | Alta | La clave AES se deriva rellenando o truncando el texto de `CRYPTO_KEY` (no es una clave aleatoria de 32 bytes). El valor del `.env` local es un texto legible. `descifrar()` devuelve el valor original si falla, lo que oculta manipulaciones. | `src/crypto.js` | Corregido para datos nuevos: anillo de claves versionado (`v2:`) con clave aleatoria obligatoria. Los datos antiguos siguen legibles; rotarlos requiere un script y una ventana de mantenimiento. |
+| A2 | Alta | `JWT_SECRET` tiene un valor por defecto en el código y el del `.env` es un texto legible. No se valida al arrancar. | `routes/auth.js` | Corregido: en producción el arranque falla con secretos cortos o de ejemplo. Hay que rotar el secreto real (lo hace el equipo de operación). |
+| A3 | Media | `N8N_MFA_WEBHOOK_SECRET` del `.env` es un texto legible. | `.env` | Pendiente de rotación por operación; ahora se valida en producción. |
+| A4 | Media | `backend/generarHash.js` contiene una contraseña fija. | archivo | Excluido del repositorio (`.gitignore`); no lo usa el código. |
+| A5 | Media | El servidor local usa la base de producción sin `NODE_ENV=production` y sin `PAYMENT_MODE`, así que queda en modo mock y `/api/pagos/dev/simular-webhook` está habilitado contra datos reales. | `.env`, `routes/pagos.js` | Documentado; se recomienda `NODE_ENV=production` o una base de desarrollo. |
+| A6 | Media | Las rutas administrativas heredadas usan `requiereAdmin` (rol del token): cualquier admin, aunque no tenga permisos, gestiona productos, pedidos, clientes y auditoría. No existe un superadministrador y quien tiene `staff.permisos` puede crear administradores con todos los permisos. | `routes/productos.js`, `categorias.js`, `pedidos.js`, `clientes.js`, `auditoria.js` | Corregido: permisos `catalogo.gestionar`, `pedidos.gestionar`, `clientes.gestionar`, `auditoria.ver`, y superadministrador. |
+| A7 | Media | El administrador sembrado desde variables no tiene que cambiar su contraseña. | `db.js` | Corregido (`debe_cambiar_password`). |
+| A8 | Media | El registro exige 12 o más datos (NIT, cargo, dependencia, ubicación, teléfono) antes de crear la cuenta, en contra del principio de minimización. | `registroInstitucional.js` | Corregido: registro mínimo. |
+| A9 | Media | Una cuenta sin verificar no puede comprar ni siquiera productos de uso general; la verificación institucional es requisito para cualquier compra. | `autorizacion.js`, `checkout.js` | Corregido: la verificación se pide solo cuando la operación la requiere. |
+| A10 | Baja | La API de n8n local rechaza la `N8N_API_KEY` (401): no se pudo comparar lo desplegado con el repositorio. | prueba del 2026-10-13 | Pendiente de credencial. |

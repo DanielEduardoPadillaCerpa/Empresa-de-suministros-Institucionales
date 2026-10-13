@@ -77,7 +77,7 @@ function crearConexion(queryHandler = async () => [{ affectedRows: 1, insertId: 
 
 function configurarSesionVersion(version = 0) {
   pool.query.mockImplementation(async sql => {
-    if (/SELECT session_version FROM usuarios/i.test(String(sql))) {
+    if (/SELECT session_version[^;]*FROM usuarios/i.test(String(sql))) {
       return [[{ session_version: version }], []];
     }
     return [{ affectedRows: 1 }, []];
@@ -119,7 +119,7 @@ describe('API autenticada de mi cuenta', () => {
 
   test('GET devuelve únicamente el perfil asociado al cliente del JWT', async () => {
     pool.query.mockImplementation(async (sql, params) => {
-      if (/SELECT session_version FROM usuarios/i.test(String(sql))) return [[{ session_version: 0 }], []];
+      if (/SELECT session_version[^;]*FROM usuarios/i.test(String(sql))) return [[{ session_version: 0 }], []];
       return [[{
         id: 7,
         nombre_funcionario: 'Nombre propio',
@@ -557,11 +557,17 @@ describe('contraseña, sesiones y privacidad', () => {
     expect(connection.commit).toHaveBeenCalledTimes(1);
   });
 
-  test('solo un administrador puede resolver solicitudes de cuenta', async () => {
+  function mockStaff(permisos) {
     pool.query.mockImplementation(async sql => {
-      if (/SELECT session_version FROM usuarios/i.test(String(sql))) return [[{ session_version: 0 }], []];
+      if (/SELECT session_version[^;]*FROM usuarios/i.test(String(sql))) return [[{ session_version: 0 }], []];
+      if (/FROM usuarios u\s+LEFT JOIN clientes/i.test(String(sql))) return [[{ id: 1, rol: 'admin', es_superadmin: 0 }], []];
+      if (/FROM staff_permisos/i.test(String(sql))) return [permisos.map(permiso => ({ permiso })), []];
       return [{ affectedRows: 1 }, []];
     });
+  }
+
+  test('solo un administrador con clientes.gestionar puede resolver solicitudes de cuenta', async () => {
+    mockStaff(['clientes.gestionar']);
     const admin = crearToken({ uid: 1, clienteId: null, rol: 'admin' });
     const response = await request(crearApp(admin))
       .patch('/api/mi-cuenta/solicitudes/41')
@@ -569,7 +575,32 @@ describe('contraseña, sesiones y privacidad', () => {
       .send({ estado: 'aprobada', respuesta: 'Aprobada' });
 
     expect(response.status).toBe(200);
-    expect(pool.query.mock.calls[1][0]).toMatch(/UPDATE solicitudes_cuenta/);
+    expect(pool.query.mock.calls.some(([sql]) => /UPDATE solicitudes_cuenta/.test(String(sql)))).toBe(true);
+  });
+
+  test('un administrador sin clientes.gestionar no resuelve solicitudes de cuenta', async () => {
+    mockStaff(['verificacion.ver']);
+    const admin = crearToken({ uid: 1, clienteId: null, rol: 'admin' });
+    const response = await request(crearApp(admin))
+      .patch('/api/mi-cuenta/solicitudes/41')
+      .set('Authorization', `Bearer ${admin}`)
+      .send({ estado: 'aprobada', respuesta: 'Aprobada' });
+
+    expect(response.status).toBe(403);
+    expect(pool.query.mock.calls.some(([sql]) => /UPDATE solicitudes_cuenta/.test(String(sql)))).toBe(false);
+  });
+
+  test('con contraseña inicial pendiente solo se permite cambiarla', async () => {
+    pool.query.mockImplementation(async sql => {
+      if (/SELECT session_version[^;]*FROM usuarios/i.test(String(sql))) return [[{ session_version: 0, debe_cambiar_password: 1 }], []];
+      return [[], []];
+    });
+    const token = crearToken();
+    const bloqueada = await request(crearApp()).post('/api/mi-cuenta/sesiones/cerrar-todas').set('Authorization', `Bearer ${token}`);
+    expect(bloqueada.status).toBe(403);
+    expect(bloqueada.body.code).toBe('PASSWORD_CHANGE_REQUIRED');
+    const permitida = await request(crearApp()).post('/api/mi-cuenta/password').set('Authorization', `Bearer ${token}`).send({});
+    expect(permitida.status).not.toBe(403);
   });
 
   test('el limitador responde 429 al superar las solicitudes de cambio de correo', async () => {

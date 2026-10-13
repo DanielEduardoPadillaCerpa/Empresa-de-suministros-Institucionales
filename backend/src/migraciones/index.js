@@ -4,7 +4,8 @@
 // ejecutándose antes que estas.
 
 const MIGRACIONES = [
-  require('./001_verificacion_institucional')
+  require('./001_verificacion_institucional'),
+  require('./002_verificacion_en_compra')
 ];
 
 async function asegurarTablaControl(db) {
@@ -24,12 +25,15 @@ async function versionesAplicadas(db) {
 }
 
 async function aplicarMigraciones(db) {
-  const { PERMISOS_STAFF } = require('../autorizacion');
+  // Permisos que la migración 001 concede a los administradores existentes
+  // (fijos: los permisos agregados después tienen su propia migración).
+  const permisosStaff = ['verificacion.ver', 'verificacion.decidir', 'documentos.ver', 'cuentas.suspender',
+    'restringidos.autorizar', 'productos.cumplimiento', 'staff.permisos'];
   const aplicadas = await versionesAplicadas(db);
   for (const migracion of MIGRACIONES) {
     if (aplicadas.has(migracion.version)) continue;
     console.log(`[migraciones] Aplicando ${migracion.version}...`);
-    await migracion.up(db, { permisosStaff: Object.keys(PERMISOS_STAFF) });
+    await migracion.up(db, { permisosStaff });
     await db.query('INSERT INTO schema_migraciones (version, descripcion) VALUES (?, ?)', [migracion.version, migracion.descripcion]);
     console.log(`[migraciones] ${migracion.version} aplicada.`);
   }

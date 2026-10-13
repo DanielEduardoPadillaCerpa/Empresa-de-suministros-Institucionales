@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../db');
 const { requiereAutenticacion, requiereAdmin } = require('./auth');
+const { requierePermiso } = require('../autorizacion');
 const { registrarAuditoria } = require('../auditoria');
 
 // GET /api/categorias -> listar todas
@@ -28,7 +29,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/categorias -> crear categoría (solo admin)
-router.post('/', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.post('/', requiereAutenticacion, requiereAdmin, requierePermiso('catalogo.gestionar'), async (req, res) => {
   try {
     const { nombre, descripcion } = req.body;
     const [resultado] = await pool.query(
@@ -44,7 +45,7 @@ router.post('/', requiereAutenticacion, requiereAdmin, async (req, res) => {
 });
 
 // PUT /api/categorias/:id -> actualizar categoría (solo admin)
-router.put('/:id', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.put('/:id', requiereAutenticacion, requiereAdmin, requierePermiso('catalogo.gestionar'), async (req, res) => {
   try {
     const { nombre, descripcion } = req.body;
     await pool.query(
@@ -60,7 +61,7 @@ router.put('/:id', requiereAutenticacion, requiereAdmin, async (req, res) => {
 });
 
 // DELETE /api/categorias/:id -> eliminar categoría (solo admin)
-router.delete('/:id', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.delete('/:id', requiereAutenticacion, requiereAdmin, requierePermiso('catalogo.gestionar'), async (req, res) => {
   try {
     await pool.query('DELETE FROM categorias WHERE id=?', [req.params.id]);
     await registrarAuditoria({ usuario: req.usuario, accion: 'eliminar', entidad: 'categoria', entidadId: req.params.id });

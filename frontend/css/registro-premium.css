@@ -74,6 +74,9 @@ body.registration-page .registration-hero::after {
   content: "";
   position: absolute;
   inset: 0;
+  /* .hero::after (theme-modern) lo reduce a una línea de 4 px; aquí es el velo
+     completo que da contraste al texto (la línea verde la pone border-bottom). */
+  height: auto;
   z-index: -1;
   pointer-events: none;
   background:
@@ -438,6 +441,20 @@ body.registration-page .registration-info-key .clasif-badge {
   body.registration-page .registration-hero {
     min-height: 290px;
     background-position: center, 66% center, center;
+  }
+
+  /* En pantallas angostas la ilustración queda detrás del texto: el velo
+     oscuro cubre todo el ancho para que el título y el párrafo se lean. */
+  body.registration-page .registration-hero::after {
+    background: linear-gradient(180deg, rgba(5, 21, 39, .93) 0%, rgba(5, 25, 43, .86) 100%);
+  }
+
+  body.registration-page .registration-hero h1 {
+    font-size: 2rem;
+  }
+
+  body.registration-page .registration-hero p.lead {
+    font-size: .95rem;
   }
 
   body.registration-page .registration-hero > .container {

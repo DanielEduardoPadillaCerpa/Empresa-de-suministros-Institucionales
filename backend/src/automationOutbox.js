@@ -26,6 +26,10 @@ const WORKFLOWS = {
   W8: {
     url: 'N8N_W8_ACCOUNT_WEBHOOK_URL',
     secret: 'N8N_W8_ACCOUNT_SECRET'
+  },
+  W11: {
+    url: 'N8N_W11_VERIFICATION_WEBHOOK_URL',
+    secret: 'N8N_W11_SECRET'
   }
 };
 

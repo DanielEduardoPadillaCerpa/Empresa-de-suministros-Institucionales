@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-10-13 (tarde): registro mínimo y verificación en la compra
+
+### Agregado
+- Registro mínimo: tipo de institución, nombre, correo, contraseña, aceptación de términos y del tratamiento de datos. El campo específico del tipo es opcional.
+- Verificación diferida en *Mi verificación* (datos de la entidad, documento de identidad cifrado, evidencia) solo cuando una compra la requiere. Tiene vigencia de 365 días y se renueva.
+- Doble comprobación: revisión documental, canal independiente (correo institucional o confirmación oficial por otra persona) y entidad en datos.gov.co, con tabla de decisión en el servidor y cuatro ojos.
+- Autorización por compra para productos restringidos: código al correo, ligada al carrito, de un solo uso.
+- n8n W11 (`n8n/workflows/W11-verificacion-compra.json`, generador `n8n/generar-w11.js`): consulta de RUES y CHIP, avisos y mantenimiento. Respuestas con HMAC propio y nonce.
+- Superadministrador (`scripts/crear-superadmin.js`), cambio obligatorio de la contraseña inicial (`cambiar-password.html`), diagnóstico y permisos reservados.
+- Cuentas de prueba sintéticas (`scripts/crear-cuentas-prueba.js`).
+- Cifrado versionado (`CRYPTO_KEYS`), índice HMAC (`IDENT_HMAC_KEY`) y validación de secretos al arrancar (`configSegura.js`).
+- Migración `002_verificacion_en_compra`.
+- Documentación: viabilidad SIGEP y datos abiertos, arquitectura y política de verificación, matriz FP/FN, flujo n8n, superusuario, tratamiento de datos y documentos de auditoría.
+
+### Cambiado
+- Una cuenta con el correo verificado y no suspendida compra productos de uso general sin verificación institucional (antes debía estar aprobada para todo).
+- Las rutas administrativas heredadas exigen permisos: `catalogo.gestionar`, `pedidos.gestionar`, `clientes.gestionar` y `auditoria.ver` (los administradores existentes los reciben en la migración).
+- Aprobar una verificación exige la doble comprobación completa. Suspender cancela las solicitudes y revoca las autorizaciones.
+- `JWT_SECRET` ya no tiene valor por defecto y el JWT se verifica solo con HS256.
+- El personal creado desde el panel debe cambiar su contraseña temporal.
+
+### Corregido
+- La marca de MFA reciente se guardaba en hora local y se comparaba con la hora UTC de MySQL, lo que rompía el cambio de contraseña.
+
+### Pendiente
+- Ver la clasificación final en `RESULTADOS_PRUEBAS.md`: rotación de los secretos débiles del `.env` actual, importar W11, convenios externos, validación jurídica, recifrado de datos heredados, `nodemailer`, CSP/HSTS, cookie `HttpOnly` y antivirus.
+
 ## 2026-10-13 — Verificación institucional de compradores
 
 ### Agregado

@@ -201,18 +201,42 @@ const MENSAJES_CAMPO = {
   autorizacionSensible: 'La autorización de tratamiento no es válida.'
 };
 
-function esquemaPara(tipo) {
-  const especificos = {};
-  for (const [campo, def] of Object.entries(TIPOS_COMPRADOR[tipo].camposEspecificos)) {
-    especificos[campo] = z.enum(Object.keys(def.opciones));
+for (const tipo of Object.values(TIPOS_COMPRADOR)) {
+  for (const [campo, def] of Object.entries(tipo.camposEspecificos)) {
     MENSAJES_CAMPO[campo] = MENSAJES_CAMPO[campo] || `Selecciona: ${def.etiqueta.toLowerCase()}.`;
   }
-  // strict: cualquier campo de otro tipo, o intentos de fijar rol, clienteId o
-  // autorizaciones, hacen fallar la validación.
-  return z.object({ ...CAMPOS_COMUNES, ...especificos }).strict();
 }
 
-const ESQUEMAS = Object.fromEntries(Object.keys(TIPOS_COMPRADOR).map(tipo => [tipo, esquemaPara(tipo)]));
+// Registro mínimo: solo lo indispensable para crear y proteger la cuenta. Los
+// datos de la organización, el documento de identidad y la evidencia se piden
+// después, únicamente si una compra lo requiere. El campo específico del tipo
+// (fuerza, organismo, clase de cuerpo, sector) es opcional y no sensible.
+MENSAJES_CAMPO.nombreCompleto = 'Indica tu nombre completo (mínimo 5 caracteres).';
+MENSAJES_CAMPO.aceptaTerminos = 'Debes aceptar los términos y condiciones para crear la cuenta.';
+function esquemaRegistroMinimo(tipo) {
+  const especificos = {};
+  for (const [campo, def] of Object.entries(TIPOS_COMPRADOR[tipo].camposEspecificos)) {
+    especificos[campo] = z.enum(Object.keys(def.opciones)).optional();
+  }
+  // strict: cualquier campo de otro tipo, o intentos de fijar rol, clienteId,
+  // estado o autorizaciones, hacen fallar la validación.
+  return z.object({
+    tipoInstitucion: z.string(),
+    nombreCompleto: texto(5, 150),
+    correo: CAMPOS_COMUNES.correo,
+    password: CAMPOS_COMUNES.password,
+    aceptaTerminos: z.literal(true),
+    aceptaTratamiento: z.literal(true),
+    ...especificos
+  }).strict();
+}
+
+const ESQUEMAS = Object.fromEntries(Object.keys(TIPOS_COMPRADOR).map(tipo => [tipo, esquemaRegistroMinimo(tipo)]));
+
+function contrasenaContieneUsuario(password, correo) {
+  const usuario = correo.split('@')[0];
+  return usuario.length >= 4 && password.toLowerCase().includes(usuario);
+}
 
 // Valida el registro según el tipo elegido. El servidor decide qué campos son
 // obligatorios: el navegador solo elige el tipo.
@@ -237,12 +261,19 @@ function validarRegistro(body) {
     return { ok: false, errores };
   }
   const datos = resultado.data;
-  const nit = normalizarNit(datos.nit);
-  if (!nit) return { ok: false, errores: { nit: MENSAJES_CAMPO.nit } };
-  if (datos.password.toLowerCase().includes(datos.correo.split('@')[0]) && datos.correo.split('@')[0].length >= 4) {
+  if (contrasenaContieneUsuario(datos.password, datos.correo)) {
     return { ok: false, errores: { password: 'La contraseña no puede contener tu usuario de correo.' } };
   }
-  return { ok: true, datos: { ...datos, nit } };
+  return { ok: true, datos };
+}
+
+// Campos específicos del tipo que se capturaron en el registro (opcionales).
+function camposEspecificosDe(tipo, datos) {
+  const salida = {};
+  for (const campo of Object.keys(TIPOS_COMPRADOR[tipo].camposEspecificos)) {
+    if (datos[campo]) salida[campo] = datos[campo];
+  }
+  return salida;
 }
 
 // Solo los datos de la organización (sin credenciales ni datos personales del
@@ -334,6 +365,7 @@ module.exports = {
   calcularDvNit,
   normalizarNit,
   validarRegistro,
+  camposEspecificosDe,
   validarDatosOrganizacion,
   datosInstitucionales,
   requisitosDocumentales,

@@ -222,11 +222,13 @@
     const enlaceCotizacion = `contacto.html?tipo=cotizacion&producto=${encodeURIComponent(nombreProducto)}`;
     // El servidor decide qué puede hacer la cuenta con cada producto (p.acceso).
     const motivoAcceso = p.acceso?.motivo || null;
-    const cuentaNoAprobada = motivoAcceso === 'cuenta_no_aprobada';
-    const ventaBloqueada = !requiereLogin && (motivoAcceso === 'requiere_autorizacion_restringidos' || motivoAcceso === 'revision_legal_pendiente');
-    const textoBloqueo = motivoAcceso === 'revision_legal_pendiente' ? 'En revisión de cumplimiento' : 'Requiere autorización adicional';
-    const botonAccion = cuentaNoAprobada
-      ? `<a class="pc-btn pc-btn-detail" href="mi-verificacion.html">Completa tu verificación</a>`
+    // cuenta_no_activa: el correo aún no se confirmó con el código; cuenta_suspendida: no compra.
+    const cuentaInactiva = motivoAcceso === 'cuenta_no_activa' || motivoAcceso === 'cuenta_suspendida';
+    const ventaBloqueada = !requiereLogin && ['requiere_autorizacion_restringidos', 'revision_legal_pendiente', 'cuenta_de_prueba'].includes(motivoAcceso);
+    const textoBloqueo = motivoAcceso === 'revision_legal_pendiente' ? 'En revisión de cumplimiento'
+      : motivoAcceso === 'cuenta_de_prueba' ? 'Cuenta de prueba' : 'Requiere autorización adicional';
+    const botonAccion = cuentaInactiva
+      ? `<a class="pc-btn pc-btn-detail" href="${motivoAcceso === 'cuenta_suspendida' ? 'mi-verificacion.html' : 'login.html'}">${motivoAcceso === 'cuenta_suspendida' ? 'Cuenta suspendida' : 'Confirma tu correo'}</a>`
       : requiereLogin
       ? `<a class="pc-btn pc-btn-detail" href="login.html?redirect=${encodeURIComponent(detalleUrl)}">Iniciar sesión institucional</a>`
       : ventaBloqueada
@@ -261,9 +263,9 @@
           <p class="pc-desc" data-i18n-ignore>${escapeHtml(descripcionProducto)}</p>
           <div class="pc-buy">
             <div class="pc-price-row">
-              <span class="precio">${requiereLogin ? 'Precio institucional' : cotizacionRequerida ? 'Precio por cotizar' : formatearPrecio(p.precio)}</span>
-              ${cuentaNoAprobada
-                ? `<span class="pc-stock">Visible cuando aprueben tu cuenta</span>`
+              <span class="precio${requiereLogin || cotizacionRequerida ? ' precio-texto' : ''}">${requiereLogin ? 'Precio institucional' : cotizacionRequerida ? 'Precio por cotizar' : formatearPrecio(p.precio)}</span>
+              ${cuentaInactiva
+                ? `<span class="pc-stock">${motivoAcceso === 'cuenta_suspendida' ? 'Cuenta suspendida' : 'Visible al confirmar tu correo'}</span>`
                 : requiereLogin
                 ? `<span class="pc-stock">Visible al iniciar sesión</span>`
                 : cotizacionRequerida

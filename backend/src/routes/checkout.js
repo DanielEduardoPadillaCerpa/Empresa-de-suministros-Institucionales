@@ -8,9 +8,12 @@ const { requiereAutenticacion } = require('./auth');
 const { getPaymentProvider } = require('../paymentProviderInstance');
 const { invalidarIndiceCatalogo } = require('../assistant/indiceCatalogo');
 const { obtenerContexto, evaluarProducto } = require('../autorizacion');
+const { hashCarrito, consumirAutorizacionCompra, vincularAutorizacionPedido } = require('../verificacionCompra');
+const { registrarAuditoriaTransaccional } = require('../auditoria');
 
 const MENSAJES_COMPRA = {
-  cuenta_no_aprobada: 'Tu cuenta todavía no está aprobada para comprar. Revisa el estado de tu verificación.',
+  cuenta_no_activa: 'Tu cuenta no está habilitada para comprar. Inicia sesión de nuevo para confirmar tu correo o revisa su estado.',
+  cuenta_de_prueba: 'Las cuentas de prueba no pueden comprar en este entorno.',
   requiere_autorizacion_restringidos: 'El pedido incluye artículos restringidos y tu cuenta no tiene la autorización correspondiente.',
   revision_legal_pendiente: 'Uno o más productos están en revisión de cumplimiento y no pueden venderse por ahora.',
   cotizacion_requerida: 'Este producto requiere una cotización institucional y no está habilitado para compra directa.'
@@ -191,7 +194,7 @@ router.post('/', requiereAutenticacion, async (req, res) => {
       return res.status(400).json({ error: 'Los datos de tarjeta deben ingresarse únicamente en la pasarela de pago.' });
     }
 
-    const { items, enviarComprobante = false, datosComprador, direccionEntrega, metodo = 'mock' } = req.body || {};
+    const { items, enviarComprobante = false, datosComprador, direccionEntrega, metodo = 'mock', autorizacionCompra } = req.body || {};
     if (!Array.isArray(items) || items.length < 1 || items.length > 100) {
       return res.status(400).json({ error: 'El carrito no contiene artículos válidos.' });
     }
@@ -249,15 +252,18 @@ router.post('/', requiereAutenticacion, async (req, res) => {
       await connection.rollback();
       return res.status(403).json({ error: 'La cuenta no está vinculada a un cliente habilitado para comprar.' });
     }
-    if (!ctx.aprobado) {
+    // Uso general: basta una cuenta activa (correo verificado, no suspendida).
+    // Lo que exige verificación se decide producto por producto.
+    if (!ctx.cuentaActiva) {
       await connection.rollback();
-      return res.status(403).json({ code: 'CUENTA_NO_APROBADA', estadoVerificacion: ctx.estado, error: MENSAJES_COMPRA.cuenta_no_aprobada });
+      return res.status(403).json({ code: 'CUENTA_NO_ACTIVA', estadoVerificacion: ctx.estado, error: MENSAJES_COMPRA.cuenta_no_activa });
     }
 
     const idsOrdenados = [...cantidadesPorProducto.keys()].sort((a, b) => a - b);
     const productosPorId = new Map();
     let totalCentavos = 0n;
     let hayRestringido = false;
+    let requiereAutorizacion = false;
     for (const id of idsOrdenados) {
       const [filas] = await connection.query(
         `SELECT id, nombre, precio, cantidad_disponible, restringido, estado, institucion_id, metadatos, revision_legal,
@@ -285,11 +291,32 @@ router.post('/', requiereAutenticacion, async (req, res) => {
       totalCentavos += producto.precioCentavos * BigInt(cantidadesPorProducto.get(id));
       productosPorId.set(id, producto);
       hayRestringido = hayRestringido || Boolean(producto.restringido);
+      requiereAutorizacion = requiereAutorizacion || Boolean(decision.requiereAutorizacionCompra);
     }
 
     if (hayRestringido && !ctx.autorizadoRestringidos) {
       await connection.rollback();
       return res.status(403).json({ error: 'El pedido requiere autorización previa para artículos restringidos.' });
+    }
+
+    // Productos restringidos: autorización por operación (código enviado al
+    // correo), ligada a este usuario y a este carrito, de un solo uso.
+    let autorizacionConsumida = null;
+    if (requiereAutorizacion) {
+      const consumo = await consumirAutorizacionCompra(connection, {
+        ref: autorizacionCompra, ctx, carritoHash: hashCarrito(lineas)
+      });
+      if (!consumo.ok) {
+        await connection.rollback();
+        return res.status(403).json({
+          code: 'REQUIERE_AUTORIZACION_COMPRA',
+          motivo: consumo.motivo,
+          error: consumo.motivo === 'carrito_distinto'
+            ? 'El carrito cambió después de autorizar la compra. Confirma de nuevo con el código.'
+            : 'Esta compra incluye productos restringidos: confirma la operación con el código que enviaremos a tu correo.'
+        });
+      }
+      autorizacionConsumida = consumo.id;
     }
 
     const itemsCanonicos = lineas.map(linea => {
@@ -321,6 +348,17 @@ router.post('/', requiereAutenticacion, async (req, res) => {
         enviarComprobante
       ]
     );
+
+    if (autorizacionConsumida) {
+      await vincularAutorizacionPedido(connection, autorizacionConsumida, pedidoCreado.insertId);
+      await registrarAuditoriaTransaccional(connection, {
+        usuario: { uid: ctx.usuarioId, correo: null },
+        accion: 'compra_restringida_autorizada',
+        entidad: 'pedido',
+        entidadId: pedidoCreado.insertId,
+        detalle: { autorizacionId: autorizacionConsumida, clienteId }
+      });
+    }
 
     const proveedor = getPaymentProvider();
     const intento = await proveedor.crearIntento({ montoCentavos: totalCentavos, moneda: 'COP', expiraEn });

@@ -126,11 +126,13 @@ function apiBaseUrl() {
   return document.getElementById('apiBase').value.replace(/\/$/, '');
 }
 
-function destinoTrasLogin(rol, estadoVerificacion) {
+function destinoTrasLogin(rol, estadoVerificacion, debeCambiarPassword) {
   const parametros = new URLSearchParams(window.location.search);
-  // Una cuenta de comprador sin aprobar no puede usar el catálogo con precios:
-  // se le lleva a revisar su verificación institucional.
-  if (rol !== 'admin' && estadoVerificacion && estadoVerificacion !== 'aprobado') return 'mi-verificacion.html';
+  // Contraseña inicial asignada por otra persona: se cambia antes de seguir.
+  if (debeCambiarPassword) return 'cambiar-password.html';
+  // Una cuenta activa compra lo de uso general sin verificación; solo una
+  // cuenta suspendida se lleva directamente a ver su estado.
+  if (rol !== 'admin' && estadoVerificacion === 'suspendido') return 'mi-verificacion.html';
   const destinoPorRol = rol === 'admin' ? 'admin-dashboard.html' : 'index.html';
   const solicitado = parametros.get('redirect');
   if (!solicitado) return destinoPorRol;
@@ -204,7 +206,7 @@ async function redirigirSesionActiva() {
   const tokenValido = await authAsegurarTokenValido();
   if (!tokenValido) return;
   const sesionActual = authLeer();
-  window.location.replace(destinoTrasLogin(sesionActual?.rol, sesionActual?.estadoVerificacion));
+  window.location.replace(destinoTrasLogin(sesionActual?.rol, sesionActual?.estadoVerificacion, sesionActual?.debeCambiarPassword));
 }
 redirigirSesionActiva();
 
@@ -306,7 +308,7 @@ formMfa.addEventListener('submit', async event => {
     clearInterval(temporizadorMfa);
     clearInterval(temporizadorReenvio);
     authGuardar(datos);
-    window.location.replace(destinoTrasLogin(datos.rol, datos.estadoVerificacion));
+    window.location.replace(destinoTrasLogin(datos.rol, datos.estadoVerificacion, datos.debeCambiarPassword));
   } catch (err) {
     mostrarEstadoMfa(err.name === 'TypeError'
       ? 'No fue posible conectar con el servicio de verificación. Intenta de nuevo.'

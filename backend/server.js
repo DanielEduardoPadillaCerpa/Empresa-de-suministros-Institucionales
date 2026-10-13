@@ -9,6 +9,8 @@ const { iniciarWorkerAutomatizaciones } = require('./src/automationOutbox');
 const { iniciarJobExpiracionPedidos } = require('./src/paymentJobs');
 const { obtenerConfiguracionMfa } = require('./src/mfaCourier');
 const { iniciarRefrescoIndice } = require('./src/assistant/indiceCatalogo');
+const { validarConfiguracionSegura } = require('./src/configSegura');
+const { iniciarJobVerificaciones } = require('./src/verificacionJobs');
 
 const app = crearApp();
 
@@ -20,6 +22,7 @@ async function iniciar() {
     if (!['rules', 'llm'].includes(modoAsistente)) {
       throw new Error('ASSISTANT_MODE debe ser rules o llm');
     }
+    validarConfiguracionSegura();
     getPaymentProvider();
     if (process.env.NODE_ENV === 'production') {
       obtenerConfiguracionMfa({ produccion: true });
@@ -29,6 +32,7 @@ async function iniciar() {
     iniciarWorkerEmail();
     iniciarWorkerAutomatizaciones();
     iniciarJobExpiracionPedidos();
+    iniciarJobVerificaciones();
 
     // No registrar valores de configuración ni información sensible.
     console.log('[env] Archivo .env:', path.join(__dirname, '.env'));

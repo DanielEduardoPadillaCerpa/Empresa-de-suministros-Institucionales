@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../db');
 const { requiereAutenticacion, requiereAdmin } = require('./auth');
+const { requierePermiso } = require('../autorizacion');
 const { liberarReserva } = require('../inventoryReservations');
 const { registrarAuditoria } = require('../auditoria');
 const { invalidarIndiceCatalogo } = require('../assistant/indiceCatalogo');
@@ -21,7 +22,7 @@ router.post('/', requiereAutenticacion, async (req, res) => {
 // IMPORTANTE: debe declararse ANTES de '/:clienteId', porque Express
 // prueba las rutas en orden y '/:clienteId' capturaría "todos" como si
 // fuera un ID de cliente, dejando esta ruta inalcanzable.
-router.get('/todos', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.get('/todos', requiereAutenticacion, requiereAdmin, requierePermiso('pedidos.gestionar'), async (req, res) => {
   try {
     const [filas] = await pool.query(`
       SELECT p.id, p.fecha_pedido, p.items, p.total, p.estado,
@@ -131,7 +132,7 @@ router.put('/:id/cancelar', requiereAutenticacion, async (req, res) => {
 });
 
 // PUT /api/pedidos/:id -> actualizar estado de un pedido (solo admin)
-router.put('/:id', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.put('/:id', requiereAutenticacion, requiereAdmin, requierePermiso('pedidos.gestionar'), async (req, res) => {
   let connection;
   try {
     const { estado } = req.body;
@@ -198,7 +199,7 @@ router.put('/:id', requiereAutenticacion, requiereAdmin, async (req, res) => {
 });
 
 // GET /api/pedidos/:clienteId -> historial de compras de un cliente (solo admin)
-router.get('/:clienteId', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.get('/:clienteId', requiereAutenticacion, requiereAdmin, requierePermiso('pedidos.gestionar'), async (req, res) => {
   try {
     const clienteId = req.params.clienteId;
     const [filas] = await pool.query(

@@ -92,6 +92,11 @@ body #auth-nav-slot .dropdown-toggle { color: #fff; font-weight: 600; }
   body .navbar-institucional .nav-search { width: 170px; }
   body.gl-page #navRegistro { display: none !important; }
 }
+/* En pantallas de ~1440 px (con barra de desplazamiento) el buscador de 220 px
+   empujaba el carrito fuera del borde derecho. */
+@media (min-width: 1400px) and (max-width: 1599.98px) {
+  body .navbar-institucional .nav-search { width: 180px; }
+}
 @media (max-width: 1199.98px) {
   body .navbar-institucional .navbar-collapse { padding-top: 1rem; }
   body .navbar-institucional .navbar-nav { gap: .25rem; }

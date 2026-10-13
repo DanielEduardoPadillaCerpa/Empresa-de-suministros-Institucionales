@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const router = express.Router();
 const { pool } = require('../db');
 const { requiereAutenticacion, autenticacionOpcional, requiereAdmin } = require('./auth');
+const { requierePermiso } = require('../autorizacion');
 const { registrarAuditoria } = require('../auditoria');
 const { invalidarIndiceCatalogo } = require('../assistant/indiceCatalogo');
 const { institucionValida } = require('../tenancy');
@@ -142,7 +143,7 @@ router.get('/', autenticacionOpcional, incluirInactivosSiAdmin, async (req, res)
 // GET /api/productos/bajo-inventario -> productos por debajo del umbral mínimo (solo admin)
 // IMPORTANTE: declarada ANTES de '/:id', porque Express prueba las rutas en
 // orden y '/:id' interpretaría "bajo-inventario" como si fuera un ID.
-router.get('/bajo-inventario', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.get('/bajo-inventario', requiereAutenticacion, requiereAdmin, requierePermiso('catalogo.gestionar'), async (req, res) => {
   try {
     const umbral = req.query.umbral ? Number(req.query.umbral) : STOCK_MINIMO;
     const [filas] = await pool.query(
@@ -185,7 +186,7 @@ router.get('/:id', autenticacionOpcional, async (req, res) => {
 });
 
 // POST /api/productos -> crear producto (solo admin)
-router.post('/', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.post('/', requiereAutenticacion, requiereAdmin, requierePermiso('catalogo.gestionar'), async (req, res) => {
   try { await leerMultipart(req); } catch (err) { return res.status(err.status || 400).json({ error: err.message }); }
   try {
     const { nombre, descripcion, precio, imagen: imagenRecibida, cantidad_disponible, estado, restringido, categoria_id, macrocategoria, institucion_id, metadatos } = req.body;
@@ -244,7 +245,7 @@ router.post('/', requiereAutenticacion, requiereAdmin, async (req, res) => {
 });
 
 // PUT /api/productos/:id -> editar producto (solo admin)
-router.put('/:id', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.put('/:id', requiereAutenticacion, requiereAdmin, requierePermiso('catalogo.gestionar'), async (req, res) => {
   try { await leerMultipart(req); } catch (err) { return res.status(err.status || 400).json({ error: err.message }); }
   try {
     const { nombre, descripcion, precio, imagen: imagenRecibida, cantidad_disponible, estado, restringido, categoria_id, macrocategoria, institucion_id, metadatos } = req.body;
@@ -321,7 +322,7 @@ router.put('/:id', requiereAutenticacion, requiereAdmin, async (req, res) => {
 // borrar sin romper el historial de compras: en ese caso se desactiva
 // (estado = 'inactivo') en vez de eliminarlo físicamente, y se informa al
 // admin por qué. Si nunca se vendió, se elimina de verdad.
-router.delete('/:id', requiereAutenticacion, requiereAdmin, async (req, res) => {
+router.delete('/:id', requiereAutenticacion, requiereAdmin, requierePermiso('catalogo.gestionar'), async (req, res) => {
   try {
     const [existente] = await pool.query('SELECT id, nombre FROM productos WHERE id = ?', [req.params.id]);
     if (!existente.length) return res.status(404).json({ error: 'Producto no encontrado' });
