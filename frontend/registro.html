@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="registration_page_title">Registro de cliente — Suministros Institucionales</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .modo-admin-registro .navbar-institucional {
+    height: 60px;
+    min-height: 60px;
+    padding: 0 !important;
+  }
+
+  .modo-admin-registro .navbar-institucional > .container {
+    min-height: 60px;
+    justify-content: space-between;
+  }
+
+  .modo-admin-registro #brand-publico {
+    display: inline-flex !important;
+    align-items: center;
+    margin-right: auto;
+  }
+
+  .modo-admin-registro #nav-toggler,
+  .modo-admin-registro #nav1 {
+    display: none !important;
+  }
+
+  .modo-admin-registro #nav-regresar-admin {
+    display: inline-flex !important;
+    align-items: center;
+    margin-left: auto;
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/theme-modern.css">
+<link rel="stylesheet" href="css/global-ui.css">
+<link rel="stylesheet" href="css/registro-premium.css">
+<link rel="stylesheet" href="css/verificacion.css">
+</head>
+<body class="registration-page">
+
+<script src="js/global-layout.js"></script>
+
+<header class="hero registration-hero text-start">
+  <img
+    class="registration-hero-image"
+    src="http://localhost:8081/img/image_1c9f64f8.jpg"
+    alt=""
+    aria-hidden="true"
+    fetchpriority="high">
+  <div class="container py-3 text-start">
+    <div class="eyebrow mb-2" data-i18n="registration_header">
+      Ficha del titular · Ley 1581 de 2012
+    </div>
+    <h1 class="display-serif h2 mb-2" data-i18n="registration_title">
+      Registro de cliente
+    </h1>
+    <p class="lead mb-0" data-i18n="registration_lead">
+      Cada dato solicitado está clasificado según su nivel de sensibilidad. 
+      Solo recolectamos lo estrictamente necesario para procesar tu pedido.
+    </p>
+  </div>
+</header>
+
+
+
+
+
+<main class="container registration-main py-5">
+  <div class="row g-4 align-items-start">
+    <div class="col-lg-7">
+
+      <!-- Registro institucional por pasos (modo público). El formulario
+           #form-registro de abajo se mantiene para el alta/edición administrativa. -->
+      <section id="registro-wizard" class="vf-panel" hidden aria-labelledby="vf-titulo">
+        <h2 id="vf-titulo" class="visually-hidden">Solicitud de acceso institucional</h2>
+        <ol id="vf-progreso" class="vf-steps" aria-label="Progreso del registro"></ol>
+
+        <div data-paso="0">
+          <h2>¿Qué tipo de institución representas?</h2>
+          <p class="vf-ayuda">El tipo define los datos y la evidencia que te pediremos. Elegirlo no concede acceso: cada cuenta la revisa nuestro equipo antes de mostrar precios o permitir compras.</p>
+          <div id="vf-tipos" class="vf-tipos" role="radiogroup" aria-label="Tipo de institución"></div>
+          <div id="vf-error-tipo" class="vf-error-campo" role="alert"></div>
+        </div>
+
+        <div data-paso="1" hidden>
+          <h2>Requisitos para <span id="vf-requisitos-titulo"></span></h2>
+          <p class="vf-ayuda">Ten a mano estos documentos (PDF, JPG o PNG, máximo 5 MB). Los adjuntarás después de verificar tu correo, desde <strong>Mi verificación</strong>.</p>
+          <ul id="vf-requisitos-lista" class="vf-requisitos"></ul>
+          <p id="vf-requisitos-dominio" class="vf-ayuda mt-3 mb-0"></p>
+          <div class="alert alert-light border mt-3 mb-0 small">
+            <strong>Cómo sigue el proceso:</strong> 1) envías esta solicitud, 2) inicias sesión con el código que llega a tu correo,
+            3) adjuntas la evidencia y la envías a revisión, 4) un revisor la aprueba, la rechaza o te pide información adicional.
+            No solicitamos contraseñas de sistemas institucionales ni información operativa.
+          </div>
+        </div>
+
+        <div data-paso="2" hidden>
+          <h2>Datos de la organización</h2>
+          <p class="vf-ayuda">Identifican a la entidad que compra y la sede a la que perteneces.</p>
+          <div class="row">
+            <div class="col-md-8 mb-3">
+              <label class="form-label" for="vf-nombreEntidad">Nombre de la entidad u organización *</label>
+              <input class="form-control" id="vf-nombreEntidad" data-campo="nombreEntidad" autocomplete="organization" maxlength="200" required>
+              <div class="vf-error-campo" data-error="nombreEntidad"></div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label" for="vf-nit">NIT con dígito de verificación *</label>
+              <input class="form-control" id="vf-nit" data-campo="nit" placeholder="900123456-7" inputmode="numeric" autocomplete="off" maxlength="25" required>
+              <div class="vf-error-campo" data-error="nit"></div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label" for="vf-dependencia">Unidad, sede o dependencia *</label>
+              <input class="form-control" id="vf-dependencia" data-campo="dependencia" maxlength="200" required>
+              <div class="vf-error-campo" data-error="dependencia"></div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+              <label class="form-label" for="vf-departamento">Departamento *</label>
+              <input class="form-control" id="vf-departamento" data-campo="departamento" autocomplete="address-level1" maxlength="80" required>
+              <div class="vf-error-campo" data-error="departamento"></div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+              <label class="form-label" for="vf-municipio">Municipio *</label>
+              <input class="form-control" id="vf-municipio" data-campo="municipio" autocomplete="address-level2" maxlength="80" required>
+              <div class="vf-error-campo" data-error="municipio"></div>
+            </div>
+            <div class="col-12 mb-3">
+              <label class="form-label" for="vf-direccionInstalacion">Dirección de la sede *</label>
+              <input class="form-control" id="vf-direccionInstalacion" data-campo="direccionInstalacion" autocomplete="street-address" maxlength="255" required>
+              <div class="vf-error-campo" data-error="direccionInstalacion"></div>
+            </div>
+          </div>
+          <div class="row" id="vf-campos-especificos"></div>
+        </div>
+
+        <div data-paso="3" hidden>
+          <h2>Tus datos y acceso</h2>
+          <p class="vf-ayuda">Identifican a la persona que opera la cuenta. Se almacenan cifrados.</p>
+          <div class="row">
+            <div class="col-md-7 mb-3">
+              <label class="form-label" for="vf-nombreFuncionario">Nombre completo *</label>
+              <input class="form-control" id="vf-nombreFuncionario" data-campo="nombreFuncionario" autocomplete="name" maxlength="150" required>
+              <div class="vf-error-campo" data-error="nombreFuncionario"></div>
+            </div>
+            <div class="col-md-5 mb-3">
+              <label class="form-label" for="vf-cargo">Cargo o función *</label>
+              <input class="form-control" id="vf-cargo" data-campo="cargo" autocomplete="organization-title" maxlength="120" required>
+              <div class="vf-error-campo" data-error="cargo"></div>
+            </div>
+            <div class="col-md-7 mb-3">
+              <label class="form-label" for="vf-correo">Correo electrónico *</label>
+              <input class="form-control" type="email" id="vf-correo" data-campo="correo" autocomplete="email" maxlength="254" required>
+              <div class="form-text" id="vf-ayuda-correo"></div>
+              <div class="vf-error-campo" data-error="correo"></div>
+            </div>
+            <div class="col-md-5 mb-3">
+              <label class="form-label" for="vf-telefono">Teléfono *</label>
+              <input class="form-control" type="tel" id="vf-telefono" data-campo="telefono" autocomplete="tel" maxlength="20" required>
+              <div class="vf-error-campo" data-error="telefono"></div>
+            </div>
+            <div class="col-12 mb-3">
+              <label class="form-label" for="vf-direccionEntrega">Dirección de entrega (si difiere de la sede)</label>
+              <input class="form-control" id="vf-direccionEntrega" data-campo="direccionEntrega" autocomplete="shipping street-address" maxlength="255">
+              <div class="vf-error-campo" data-error="direccionEntrega"></div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label" for="vf-password">Contraseña *</label>
+              <input class="form-control" type="password" id="vf-password" data-campo="password" autocomplete="new-password" minlength="10" maxlength="72" required>
+              <div class="form-text">Entre 10 y 72 caracteres. Se guarda como hash irreversible.</div>
+              <div class="vf-error-campo" data-error="password"></div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label" for="vf-passwordConfirmacion">Confirma la contraseña *</label>
+              <input class="form-control" type="password" id="vf-passwordConfirmacion" data-campo="passwordConfirmacion" autocomplete="new-password" maxlength="72" required>
+              <div class="vf-error-campo" data-error="passwordConfirmacion"></div>
+            </div>
+          </div>
+          <details class="field-ficha sensible mt-2">
+            <summary class="fw-semibold">Opcional: dato de antecedentes para equipo restringido</summary>
+            <p class="small mt-2 mb-2">No es obligatorio y <strong>no condiciona la aprobación de tu cuenta</strong>. Solo se usa si tu institución solicita
+              artículos restringidos y requiere verificar a quien los recibe. Se guarda cifrado en una tabla separada.</p>
+            <label class="form-label" for="vf-antecedentes">Número de consulta de antecedentes judiciales</label>
+            <input class="form-control" id="vf-antecedentes" data-campo="numeroConsultaAntecedentes" autocomplete="off" maxlength="100">
+            <div class="vf-error-campo" data-error="numeroConsultaAntecedentes"></div>
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" id="vf-autorizacion-sensible">
+              <label class="form-check-label small" for="vf-autorizacion-sensible">Autorizo de forma expresa y separada el tratamiento de este dato, únicamente para la verificación descrita.</label>
+            </div>
+          </details>
+        </div>
+
+        <div data-paso="4" hidden>
+          <h2>Revisa tu solicitud</h2>
+          <p class="vf-ayuda">Confirma que los datos son correctos. Podrás corregir la clasificación de la organización antes de enviarla a revisión.</p>
+          <dl id="vf-resumen" class="vf-resumen"></dl>
+          <div class="form-check mt-3">
+            <input class="form-check-input" type="checkbox" id="vf-acepta" data-campo="aceptaTratamiento">
+            <label class="form-check-label small" for="vf-acepta">
+              Autorizo el tratamiento de mis datos personales conforme a la
+              <a href="#" data-bs-toggle="modal" data-bs-target="#modalPolitica">Política de Tratamiento de Datos</a>
+              (Ley 1581 de 2012), para verificar mi vinculación institucional y gestionar compras, facturación y entregas.
+            </label>
+          </div>
+          <div class="vf-error-campo" data-error="aceptaTratamiento"></div>
+        </div>
+
+        <div data-paso="5" hidden>
+          <h2 tabindex="-1">Solicitud registrada</h2>
+          <p>Tu cuenta quedó en estado <span class="vf-estado borrador">Borrador</span>. Todavía no puedes ver precios ni comprar.</p>
+          <p class="mb-2"><strong>Siguientes pasos:</strong></p>
+          <ol class="small">
+            <li>Inicia sesión: te enviaremos un código a tu correo para verificarlo.</li>
+            <li>En <strong>Mi verificación</strong>, adjunta la evidencia y envía la solicitud a revisión.</li>
+            <li>Recibirás la decisión en esa misma página.</li>
+          </ol>
+          <ul id="vf-confirmacion-docs" class="vf-requisitos mb-3"></ul>
+          <a id="vf-ir-login" class="btn btn-dark" href="login.html">Iniciar sesión y continuar</a>
+        </div>
+
+        <div id="vf-mensaje" role="alert" hidden></div>
+        <div id="vf-acciones" class="vf-acciones">
+          <button type="button" id="vf-anterior" class="btn btn-outline-secondary">← Anterior</button>
+          <button type="button" id="vf-siguiente" class="btn btn-dark ms-auto">Continuar →</button>
+          <button type="button" id="vf-enviar" class="btn btn-success ms-auto" hidden>Enviar solicitud</button>
+        </div>
+      </section>
+
+      <form id="form-registro" novalidate hidden>
+
+        <h2 class="h6 text-uppercase text-muted mb-3" style="letter-spacing:.08em;" data-i18n="registration_section_entity">1. Datos de la entidad</h2>
+
+        <div class="field-ficha publico">
+          <span class="clasif-badge publico" data-i18n="privacy_public">Público</span>
+          <label class="form-label" data-i18n="registration_unit_name">Nombre de la unidad / instalación</label>
+          <input type="text" id="nombreUnidad" name="nombre_unidad" autocomplete="organization" class="form-control" placeholder="Ej. Sede regional de la entidad" data-i18n-placeholder="registration_unit_placeholder" required>
+          <div class="form-text" data-i18n="registration_public_note">Consta en registros públicos institucionales — no requiere autorización especial.</div>
+        </div>
+
+        <div class="field-ficha publico">
+          <span class="clasif-badge publico" data-i18n="privacy_public">Público</span>
+          <label class="form-label" data-i18n="registration_official_address">Dirección de la instalación oficial</label>
+          <input type="text" id="direccionInstalacion" name="direccion_instalacion" autocomplete="street-address" class="form-control" placeholder="Dirección de la sede" data-i18n-placeholder="registration_address_placeholder" required>
+        </div>
+
+        <h2 class="h6 text-uppercase text-muted mb-3 mt-4" style="letter-spacing:.08em;" data-i18n="registration_section_commercial">2. Datos comerciales</h2>
+
+        <div class="field-ficha semiprivado">
+          <span class="clasif-badge semiprivado" data-i18n="privacy_semiprivate">Semiprivado</span>
+          <label class="form-label" data-i18n="registration_tax_id">NIT / código presupuestal</label>
+          <input type="text" id="nit" name="nit" autocomplete="off" class="form-control" placeholder="900.XXX.XXX-X" required>
+          <div class="form-text" data-i18n="registration_commercial_note">Interesa a la relación comercial (facturación, cumplimiento de pago).</div>
+        </div>
+
+        <h2 class="h6 text-uppercase text-muted mb-3 mt-4" style="letter-spacing:.08em;" data-i18n="registration_section_official">3. Datos del funcionario responsable</h2>
+
+        <div class="field-ficha privado">
+          <span class="clasif-badge privado" data-i18n="privacy_private">Privado</span>
+          <label class="form-label" data-i18n="registration_official_name">Nombre completo del funcionario que gestiona la compra</label>
+          <input type="text" id="nombreFuncionario" name="nombre_funcionario" autocomplete="name" class="form-control" required>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="field-ficha privado">
+              <span class="clasif-badge privado" data-i18n="privacy_private">Privado</span>
+              <label class="form-label" data-i18n="registration_email">Correo electrónico</label>
+              <input type="email" id="correo" name="correo" autocomplete="email" class="form-control" required>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="field-ficha privado">
+              <span class="clasif-badge privado" data-i18n="privacy_private">Privado</span>
+              <label class="form-label" data-i18n="registration_phone">Teléfono de contacto</label>
+              <input type="tel" id="telefono" name="telefono" autocomplete="tel" class="form-control" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-ficha privado">
+          <span class="clasif-badge privado" data-i18n="privacy_private">Privado</span>
+          <label class="form-label" data-i18n="registration_delivery_address">Dirección de entrega (si difiere de la instalación oficial)</label>
+          <input type="text" id="direccionEntrega" name="direccion_entrega" autocomplete="shipping street-address" class="form-control">
+        </div>
+
+        <h2 class="h6 text-uppercase text-muted mb-3 mt-4" style="letter-spacing:.08em;" data-i18n="registration_section_security">4. Verificación de seguridad</h2>
+
+        <div class="aviso-sensible mb-3" data-i18n="registration_security_notice">
+          Este campo aplica un tratamiento especial: la empresa solo lo solicita porque parte del catálogo
+          corresponde a equipo restringido, cuya entrega exige verificar que quien lo recibe está autorizado
+          para manipularlo. No se solicita para ningún otro fin.
+        </div>
+
+        <div class="field-ficha sensible">
+          <span class="clasif-badge sensible" data-i18n="privacy_sensitive">Sensible</span>
+          <label class="form-label" data-i18n="registration_background_check">Certificado o número de consulta de antecedentes judiciales del funcionario receptor</label>
+          <input type="text" id="numeroConsulta" name="numero_consulta" autocomplete="off" class="form-control" placeholder="Número de consulta ante la autoridad competente" data-i18n-placeholder="registration_background_placeholder">
+          <div class="form-text" data-i18n="registration_background_note">Requerido únicamente para pedidos que incluyan equipo táctico restringido (categoría "Equipo táctico" del catálogo).</div>
+        </div>
+
+        <div class="p-3 mb-3" style="background:rgba(139,46,46,0.06); border:1px solid var(--tag-sensible); border-radius:2px;">
+          <p class="small mb-2"><strong data-i18n="registration_legal_notice">Aviso legal — dato de tratamiento especial (Art. 6, Ley 1581 de 2012 y Decreto 1377 de 2013):</strong></p>
+          <ul class="small mb-2">
+            <li><strong>Finalidad exclusiva:</strong> verificar que el funcionario que recibe equipo restringido está autorizado para manipularlo.</li>
+            <li><strong>Carácter:</strong> no es obligatorio para registrarte ni para comprar productos de dotación u oficina.</li>
+            <li><strong>Consecuencia de no autorizar:</strong> si el pedido incluye equipo restringido y no autorizas este dato, no podremos procesar la entrega de esos artículos específicos; el resto del pedido no se ve afectado.</li>
+            <li><strong>Acceso:</strong> visible únicamente para el área de cumplimiento y seguridad.</li>
+          </ul>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="autorizacion_sensible">
+            <label class="form-check-label small" for="autorizacion_sensible" data-i18n="registration_sensitive_consent">
+              Autorizo expresa y voluntariamente el tratamiento de mi dato de antecedentes judiciales/de seguridad,
+              exclusivamente para la finalidad de verificación descrita arriba.
+            </label>
+          </div>
+        </div>
+
+        <h2 class="h6 text-uppercase text-muted mb-3 mt-4" style="letter-spacing:.08em;" data-i18n="registration_section_access">5. Crea tu acceso</h2>
+
+        <div class="field-ficha privado">
+          <span class="clasif-badge privado" data-i18n="privacy_private">Privado</span>
+          <label class="form-label" data-i18n="registration_password">Contraseña de acceso</label>
+          <input type="password" id="password" name="password" autocomplete="new-password" class="form-control" minlength="8" required>
+          <div class="form-text" data-i18n="registration_password_note">Mínimo 8 caracteres. Se guarda cifrada de forma irreversible (hash), nunca en texto plano — ni siquiera el equipo de soporte puede verla.</div>
+        </div>
+
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="autorizacion" required>
+          <label class="form-check-label small" for="autorizacion">
+            Autorizo el tratamiento de mis datos personales <strong>generales</strong> (público, semiprivado y privado)
+            conforme a la <a href="#" data-bs-toggle="modal" data-bs-target="#modalPolitica">Política de Tratamiento de Datos</a>,
+            para los fines de gestión comercial, logística y facturación descritos en ella.
+          </label>
+        </div>
+
+        <div id="registro-mensaje" class="mb-3" style="display:none;"></div>
+
+        <button type="submit" id="btn-registrar" class="btn btn-dark px-4" data-i18n="registration_submit">Registrar cliente</button>
+      </form>
+
+    </div>
+
+    <div class="col-lg-5 registration-info-column">
+      <aside class="registration-info-card">
+        <div class="registration-info-kicker">Privacidad · Ley 1581 de 2012</div>
+        <h2 class="h4" data-i18n="registration_why_title">¿Por qué clasificamos cada dato?</h2>
+        <p class="small text-muted" data-i18n="registration_why_text">
+          La Ley 1581 de 2012 exige un tratamiento diferenciado según el nivel de sensibilidad de la información.
+          Marcar cada campo con su clasificación permite auditar qué se recolecta, por qué, y aplicar el nivel
+          de acceso y cifrado correcto en el backend para cada categoría.
+        </p>
+        <p class="small text-muted mb-0" data-i18n="registration_storage_text">
+          Los datos <strong>privados</strong> se almacenan cifrados en reposo. Los <strong>semiprivados</strong>
+          son visibles también para contabilidad. Los <strong>públicos</strong> no requieren restricción.
+          Los <strong>sensibles</strong> (antecedentes judiciales) se guardan en una tabla aparte, cifrada,
+          visible solo para cumplimiento y seguridad.
+        </p>
+        <div class="registration-info-key" aria-label="Clasificación de datos">
+          <span class="clasif-badge publico">Público</span>
+          <span class="clasif-badge semiprivado">Semiprivado</span>
+          <span class="clasif-badge privado">Privado</span>
+          <span class="clasif-badge sensible">Sensible</span>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer class="institucional py-4">
+  <div class="container d-flex flex-wrap justify-content-between small">
+    <span data-i18n="footer_rights">© 2026 Suministros Institucionales S.A.S.</span>
+    <span data-i18n="footer_privacy">Tratamiento de datos conforme a la Ley 1581 de 2012</span>
+  </div>
+</footer>
+
+<!-- Modal política de datos -->
+<div class="modal fade" id="modalPolitica" tabindex="-1">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" data-i18n="registration_policy_title">Política de tratamiento de datos</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body small">
+        <p data-i18n="registration_policy_intro">Suministros Institucionales S.A.S. actúa como responsable del tratamiento de los datos personales
+        recolectados en este formulario, conforme a la Ley 1581 de 2012 y el Decreto 1377 de 2013.</p>
+        <p><strong data-i18n="registration_policy_purpose">Finalidad:</strong> gestión de pedidos, facturación, logística de entrega y atención al cliente.</p>
+        <p><strong data-i18n="registration_policy_sensitive">Datos de tratamiento especial:</strong> únicamente para pedidos de equipo táctico restringido,
+        se solicita el número de consulta de antecedentes judiciales del funcionario receptor, bajo consentimiento
+        separado, expreso y voluntario.</p>
+        <p><strong data-i18n="registration_policy_rights">Derechos del titular:</strong> conocer, actualizar, rectificar y solicitar la supresión de sus
+        datos en cualquier momento, escribiendo a datos@suministrosinstitucionales.co</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/imagenes.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/navbar.js"></script>
+<script src="js/chatbot.js"></script>
+<script src="js/registro-wizard.js"></script>
+
+<script>
+const form = document.getElementById('form-registro');
+const btn = document.getElementById('btn-registrar');
+const mensaje = document.getElementById('registro-mensaje');
+const paramsRegistro = new URLSearchParams(window.location.search);
+const modoAdmin = paramsRegistro.get('modo') === 'admin' || authLeer()?.rol === 'admin';
+const clienteEditarId = paramsRegistro.get('id');
+if (modoAdmin) {
+  document.body.classList.add('modo-admin-registro');
+  form.hidden = false;
+} else {
+  window.registroWizardIniciar();
+}
+
+async function prepararModoAdministrativo() {
+  if (!modoAdmin) return;
+  if (!await authAsegurarTokenValido()) {
+    window.location.replace('login.html?redirect=' + encodeURIComponent('registro.html' + window.location.search));
+    return;
+  }
+  const sesion = authLeer();
+  if (!sesion?.token || sesion.rol !== 'admin') {
+    window.location.replace('login.html?redirect=' + encodeURIComponent('registro.html' + window.location.search));
+    return;
+  }
+
+  document.body.classList.add('modo-admin-registro');
+  document.querySelector('header.hero .eyebrow').textContent = clienteEditarId
+    ? 'Administración · Actualización de cliente'
+    : 'Administración · Alta de cliente';
+  document.querySelector('header.hero h1').textContent = clienteEditarId
+    ? 'Actualizar datos del cliente'
+    : 'Registrar nuevo cliente';
+  document.querySelector('header.hero p').textContent = clienteEditarId
+    ? 'Actualiza los datos del cliente seleccionado. Sus credenciales de acceso no se modificarán.'
+    : 'Completa la ficha del cliente. Podrás crear sus credenciales de acceso por separado.';
+
+  const accesoSection = document.querySelector('[data-i18n="registration_section_access"]');
+  if (accesoSection && accesoSection.closest('h2')) accesoSection.closest('h2').style.display = 'none';
+  const passwordField = document.getElementById('password')?.closest('.field-ficha');
+  if (passwordField) passwordField.style.display = 'none';
+  const passwordInput = document.getElementById('password');
+  if (passwordInput) passwordInput.required = false;
+  const autorizacionCheck = document.getElementById('autorizacion');
+  if (autorizacionCheck) {
+    const autorizacionWrap = autorizacionCheck.closest('.form-check');
+    if (autorizacionWrap) autorizacionWrap.style.display = 'none';
+    autorizacionCheck.required = false;
+  }
+  document.querySelector('.col-lg-4')?.style.setProperty('display', 'none');
+  document.getElementById('chatbot-toggle')?.style.setProperty('display', 'none');
+  document.getElementById('chatbot-panel')?.style.setProperty('display', 'none');
+  btn.textContent = clienteEditarId ? 'Actualizar cliente' : 'Crear cliente';
+  document.querySelector('header.hero').style.background = 'linear-gradient(135deg, #0f172a, #1e3a5f)';
+
+  const regresarAdmin = document.getElementById('nav-regresar-admin');
+  if (regresarAdmin) {
+    regresarAdmin.href = 'admin-dashboard.html';
+    regresarAdmin.textContent = '← Regresar al panel principal';
+    regresarAdmin.style.display = 'inline-flex';
+  }
+
+  if (clienteEditarId) cargarClienteParaEditar(sesion, clienteEditarId);
+}
+
+async function cargarClienteParaEditar(sesion, clienteId) {
+  btn.disabled = true;
+  try {
+    const resp = await fetch(API_BASE + '/api/clientes/' + encodeURIComponent(clienteId), {
+      headers: { Authorization: 'Bearer ' + sesion.token }
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(data.error || 'No se pudieron consultar los datos');
+    document.getElementById('nombreUnidad').value = data.nombreUnidad || '';
+    document.getElementById('direccionInstalacion').value = data.direccionInstalacion || '';
+    document.getElementById('nit').value = data.nit || '';
+    document.getElementById('nombreFuncionario').value = data.nombreFuncionario || '';
+    document.getElementById('correo').value = data.correo || '';
+    document.getElementById('telefono').value = data.telefono || '';
+    document.getElementById('direccionEntrega').value = data.direccionEntrega || '';
+    document.getElementById('autorizacion').checked = Boolean(data.autorizacionGeneral);
+    document.getElementById('registro-mensaje').style.display = 'none';
+  } catch (err) {
+    mostrarMensaje('No se pudieron cargar los datos del cliente. ' + err.message, 'danger');
+    mostrarNotificacion('No se pudieron cargar los datos del cliente para editar.', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function mostrarMensaje(texto, tipo) {
+  mensaje.textContent = texto;
+  mensaje.className = 'mb-3 alert alert-' + tipo;
+  mensaje.style.display = 'block';
+}
+
+form.addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  const apiBase = (typeof API_BASE !== 'undefined' ? API_BASE : 'http://localhost:8081').replace(/\/$/, '');
+  const numeroConsulta = document.getElementById('numeroConsulta').value.trim();
+  const autorizacionSensible = document.getElementById('autorizacion_sensible').checked;
+  const correo = document.getElementById('correo').value;
+  const password = document.getElementById('password').value;
+  const sesionAdmin = modoAdmin ? authLeer() : null;
+
+  const payload = {
+    nombreUnidad: document.getElementById('nombreUnidad').value,
+    direccionInstalacion: document.getElementById('direccionInstalacion').value,
+    nit: document.getElementById('nit').value,
+    nombreFuncionario: document.getElementById('nombreFuncionario').value,
+    correo,
+    telefono: document.getElementById('telefono').value,
+    direccionEntrega: document.getElementById('direccionEntrega').value
+  };
+
+  if (modoAdmin) {
+    payload.autorizacionGeneral = document.getElementById('autorizacion').checked;
+  } else {
+    payload.numeroConsultaAntecedentes = numeroConsulta;
+    payload.autorizacionSensible = autorizacionSensible;
+    payload.password = password;
+  }
+
+  btn.disabled = true;
+  btn.textContent = clienteEditarId ? 'Actualizando...' : (modoAdmin ? 'Creando...' : 'Registrando...');
+  mensaje.style.display = 'none';
+
+  try {
+    if (modoAdmin) {
+      const editando = Boolean(clienteEditarId);
+      const endpointCliente = API_BASE + '/api/clientes' + (editando ? '/' + encodeURIComponent(clienteEditarId) : '');
+      const respAdmin = await fetch(endpointCliente, {
+        method: editando ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + sesionAdmin.token
+        },
+        body: JSON.stringify(payload)
+      });
+      const resultadoAdmin = await respAdmin.json().catch(() => ({}));
+      if (!respAdmin.ok) throw new Error(resultadoAdmin.error || 'No se pudo guardar el cliente');
+
+      mostrarMensaje(editando ? 'Cliente actualizado correctamente.' : 'Cliente creado correctamente.', 'success');
+      mostrarNotificacion(editando ? 'Cliente actualizado correctamente.' : 'Cliente creado correctamente.', 'success');
+      btn.disabled = true;
+      setTimeout(() => { window.location.href = 'admin-clientes.html'; }, 900);
+      return;
+    }
+
+    // Cliente y credenciales se crean en una sola transacción del servidor.
+    const respRegistro = await fetch(apiBase + '/api/auth/registro', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const datosRegistro = await respRegistro.json().catch(() => ({}));
+    if (!respRegistro.ok) throw new Error(datosRegistro.error || 'No se pudo completar el registro.');
+
+    // Las cuentas nuevas deben completar MFA antes de recibir una sesión.
+    mostrarMensaje('Cuenta creada correctamente. Inicia sesión para verificar tu correo.', 'success');
+    const params = new URLSearchParams(window.location.search);
+    const login = new URL('login.html', window.location.href);
+    login.searchParams.set('correo', correo);
+    login.searchParams.set('registro', 'completo');
+    if (params.has('redirect')) login.searchParams.set('redirect', params.get('redirect'));
+    btn.disabled = true;
+    setTimeout(() => { window.location.href = login.href; }, 1200);
+  } catch (err) {
+    mostrarMensaje(
+      'No se pudo completar el registro. Verifica que el backend esté corriendo en ' + apiBase + '. Detalle: ' + err.message,
+      'danger'
+    );
+    btn.disabled = false;
+    btn.textContent = 'Registrar cliente';
+  }
+});
+
+prepararModoAdministrativo();
+</script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="orders_page_title">Historial de compras — Suministros Institucionales</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/theme-modern.css">
+<link rel="stylesheet" href="css/global-ui.css">
+</head>
+<body>
+
+<script src="js/global-layout.js"></script>
+
+<header class="hero py-5">
+  <div class="container py-3">
+    <div class="eyebrow mb-2" data-i18n="orders_client_panel">Panel del cliente</div>
+    <h1 class="display-serif h2 mb-2" data-i18n="orders_heading">Historial de compras</h1>
+    <p class="lead col-lg-8 mb-0" data-i18n="orders_lead">Consulta tus pedidos anteriores, con detalle de productos, total y estado.</p>
+  </div>
+</header>
+
+<main class="container py-5">
+  <div id="estado" class="text-muted small mb-3"></div>
+  <div id="pedidosLista" class="d-grid gap-4"></div>
+</main>
+
+<footer class="institucional py-4">
+  <div class="container d-flex flex-wrap justify-content-between small">
+    <span data-i18n="orders_footer_copyright">© 2026 Suministros Institucionales S.A.S.</span>
+    <span data-i18n="orders_footer_label">Vista de cliente — historial de compras</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/imagenes.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/navbar.js"></script>
+<script src="js/chatbot.js"></script>
+<script>
+async function cargarHistorial() {
+  const sesion = authLeer();
+  if (!sesion?.token) {
+    window.location.href = 'login.html?redirect=historial.html';
+    return;
+  }
+
+  const estado = document.getElementById('estado');
+  const contenedor = document.getElementById('pedidosLista');
+  estado.textContent = 'Consultando historial...';
+
+  try {
+    const resp = await fetch(API_BASE + '/api/pedidos', {
+      headers: { Authorization: 'Bearer ' + sesion.token }
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const pedidos = await resp.json();
+
+    if (!pedidos.length) {
+      contenedor.innerHTML = '<div class="card-elevated p-4 text-center text-muted">No hay pedidos registrados.</div>';
+    } else {
+      contenedor.innerHTML = pedidos.map(pedido => {
+        const estadoPedido = pedido.estado || 'pendiente';
+        const timeline = ['Confirmado', 'Empacado', 'Despachado', 'Entregado'];
+        const completed = {
+          pendiente: 1,
+          enviado: 3,
+          entregado: 4,
+          cancelado: 0
+        }[estadoPedido] || 1;
+
+        const pasos = timeline.map((etapa, index) => `
+          <div class="d-flex flex-column align-items-center gap-2 ${index < completed ? 'text-success' : 'text-muted'}">
+            <div class="rounded-circle ${index < completed ? 'bg-success' : 'bg-light border'}" style="width: 12px; height: 12px;"></div>
+            <small class="text-center" style="font-size: 0.68rem; line-height: 1.2;">${etapa}</small>
+          </div>
+        `).join('');
+
+        const labelEstado = {
+          pendiente: 'Pendiente',
+          enviado: 'En tránsito',
+          entregado: 'Entregado',
+          cancelado: 'Cancelado'
+        }[estadoPedido] || estadoPedido;
+
+        const badgeClass = {
+          pendiente: 'bg-warning text-dark',
+          enviado: 'bg-info text-dark',
+          entregado: 'bg-success',
+          cancelado: 'bg-danger'
+        }[estadoPedido] || 'bg-secondary';
+
+        const detalleItems = (pedido.items || []).map(item => `
+          <div class="d-flex justify-content-between align-items-center border-top py-2">
+            <div>
+              <div class="fw-semibold">${item.nombre}</div>
+              <small class="text-muted">Cantidad: ${item.cantidad}${item.variacion ? ' · ' + item.variacion : ''}</small>
+            </div>
+            <strong>$${Number(item.precio || item.precio_unitario || 0).toLocaleString('es-CO')}</strong>
+          </div>
+        `).join('');
+
+        return `
+          <article class="card-elevated p-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
+              <div>
+                <div class="font-monospace small text-uppercase text-muted">Pedido #${pedido.id}</div>
+                <div class="small text-muted">${new Date(pedido.fechaPedido || pedido.fecha).toLocaleString('es-CO')}</div>
+              </div>
+              <span class="badge rounded-pill ${badgeClass}">${labelEstado}</span>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between gap-3 overflow-auto pb-3 mb-3">
+              ${pasos}
+            </div>
+
+            <div class="row g-4">
+              <div class="col-lg-8">
+                <div class="small text-uppercase text-muted mb-2">Artículos adquiridos</div>
+                <div class="bg-light rounded-3 p-3">
+                  ${detalleItems || '<div class="text-muted">Sin detalle disponible.</div>'}
+                </div>
+              </div>
+              <div class="col-lg-4">
+                <div class="small text-uppercase text-muted mb-2">Resumen financiero</div>
+                <div class="bg-light rounded-3 p-3">
+                  <div class="d-flex justify-content-between py-2 border-bottom"><span>Subtotal</span><strong>$${Number(pedido.total || 0).toLocaleString('es-CO')}</strong></div>
+                  <div class="d-flex justify-content-between py-2 border-bottom"><span>IVA</span><strong>$${Math.round(Number(pedido.total || 0) * 0.19).toLocaleString('es-CO')}</strong></div>
+                  <div class="d-flex justify-content-between py-2"><span>Total</span><strong>$${Number(pedido.total || 0).toLocaleString('es-CO')}</strong></div>
+                  <div class="d-flex gap-2 mt-3 flex-wrap">
+                    <button class="btn btn-sm btn-dark" type="button">Descargar soporte</button>
+                    <button class="btn btn-sm btn-outline-dark" type="button">Rastrear guía</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            ${estadoPedido === 'pendiente' ? `
+              <div class="mt-4">
+                <button class="btn btn-sm btn-outline-danger" onclick="cancelarPedido(${pedido.id})">Cancelar pedido</button>
+              </div>
+            ` : ''}
+          </article>
+        `;
+      }).join('');
+    }
+    estado.textContent = pedidos.length + ' pedido(s) cargado(s).';
+  } catch (err) {
+    estado.textContent = '';
+    contenedor.innerHTML = '<div class="card-elevated p-4 text-center text-muted">Sin pedidos disponibles temporalmente.</div>';
+    mostrarNotificacion('Portal temporalmente fuera de línea. Reconectando con el servidor central...', 'error');
+  }
+}
+
+async function cancelarPedido(pedidoId) {
+  const sesion = authLeer();
+  if (!sesion?.token) {
+    window.location.href = 'login.html?redirect=historial.html';
+    return;
+  }
+  if (!await confirmarAccion('¿Seguro que deseas cancelar este pedido?')) return;
+
+  const estado = document.getElementById('estado');
+  try {
+    const resp = await fetch(API_BASE + '/api/pedidos/' + pedidoId + '/cancelar', {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + sesion.token }
+    });
+    const datos = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(datos.error || 'HTTP ' + resp.status);
+    await cargarHistorial();
+  } catch (err) {
+    estado.textContent = '';
+    mostrarNotificacion('Portal temporalmente fuera de línea. Reconectando con el servidor central...', 'error');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', cargarHistorial);
+</script>
+</body>
+</html>

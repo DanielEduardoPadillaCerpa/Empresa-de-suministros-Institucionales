@@ -1,0 +1,12 @@
+.aider*
+
+# Secretos y respaldos locales
+backend/.env
+.env
+node_modules/
+.respaldo-pre-verificacion/
+backend/storage/
+
+# Herramientas locales
+.aider*
+backend/generarHash.js

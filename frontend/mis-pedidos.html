@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="orders_page_title">Historial de compras — Suministros Institucionales</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/theme-modern.css">
+<link rel="stylesheet" href="css/global-ui.css">
+</head>
+<body>
+  <script src="js/global-layout.js"></script>
+
+  <header class="hero py-5">
+    <div class="container py-3">
+      <div class="eyebrow mb-2" data-i18n="orders_client_panel">Panel del cliente</div>
+      <h1 class="display-serif h2 mb-2" data-i18n="orders_heading">Historial de pedidos</h1>
+      <p class="lead col-lg-8 mb-0" data-i18n="orders_lead">Consulta tus pedidos anteriores, con detalle de productos, total y estado.</p>
+    </div>
+  </header>
+
+  <main class="container py-5">
+    <div id="estado-pedidos" class="text-muted mb-3" data-i18n="orders_loading">Cargando...</div>
+
+    <div class="table-responsive">
+      <table class="table table-striped align-middle mb-0" id="tabla-pedidos">
+        <thead>
+          <tr>
+            <th data-i18n="orders_id">ID</th>
+            <th data-i18n="orders_date">Fecha</th>
+            <th data-i18n="orders_products">Productos</th>
+            <th data-i18n="orders_total">Total</th>
+            <th data-i18n="orders_status">Estado</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="institucional py-4">
+    <div class="container d-flex flex-wrap justify-content-between small">
+      <span>© 2026 Suministros Institucionales S.A.S.</span>
+      <span data-i18n="orders_footer_label">Vista de cliente — historial de compras</span>
+    </div>
+  </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/imagenes.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/chatbot.js"></script>
+  <script>
+
+    function textoIdioma(clave, fallback) {
+      const idioma = idiomaGuardado();
+      return T[clave]?.[idioma] ?? fallback;
+    }
+
+    function formatearPrecio(valor) {
+      const n = Number(valor) || 0;
+      return '$' + n.toLocaleString('es-CO');
+    }
+
+    async function cargarPedidos() {
+      const sesion = authLeer();
+      if (!sesion?.token) {
+        window.location.href = 'login.html?redirect=mis-pedidos.html';
+        return;
+      }
+
+      const estado = document.getElementById('estado-pedidos');
+      const tbody = document.querySelector('#tabla-pedidos tbody');
+      estado.textContent = textoIdioma('orders_loading', 'Cargando...');
+      tbody.innerHTML = '';
+
+      try {
+        const resp = await fetch(API_BASE + '/api/pedidos', {
+          headers: { Authorization: 'Bearer ' + sesion.token }
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const pedidos = await resp.json();
+
+        if (!pedidos.length) {
+          estado.textContent = textoIdioma('orders_empty', 'No tienes pedidos registrados.');
+          return;
+        }
+
+        pedidos.forEach(p => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${p.id}</td>
+            <td>${new Date(p.fechaPedido).toLocaleString()}</td>
+            <td>${p.items.map(i => `${i.nombre} x${i.cantidad}`).join('<br>')}</td>
+            <td>${formatearPrecio(p.total)}</td>
+            <td>${p.estado}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        estado.textContent = '';
+      } catch (err) {
+        console.error(err);
+        estado.textContent = textoIdioma('orders_error', 'Error cargando pedidos:') + ' ' + err.message;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', cargarPedidos);
+  </script>
+</body>
+</html>

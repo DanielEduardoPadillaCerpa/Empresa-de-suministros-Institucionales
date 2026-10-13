@@ -3,902 +3,614 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title data-i18n="landing_page_title">
-  Suministros Institucionales
-</title>
+<title data-i18n="landing_page_title">Suministros Institucionales</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/theme-modern.css">
+
 <style>
-
-/* =========================================================
-   LANDING PAGE · TOKENS
-   ========================================================= */
-
-.landing-page {
-    --lp-navy: var(--navy-900, #071d37);
-    --lp-navy-2: #0b2a4d;
-    --lp-brass: var(--brass-600, #b08d57);
-    --lp-brass-light: var(--brass-500, #c5a66d);
-    --lp-slate: var(--slate-400, #94a3b8);
+/* ===== LANDING (va DESPUÉS de theme-modern.css) ===== */
+body.landing-page {
+    --lp-navy: #071d37;
     --lp-ink: #0b2340;
-    --lp-radius: 18px;
-    --lp-shadow-sm: 0 2px 10px rgba(11, 35, 64, .06);
-    --lp-shadow-md: 0 10px 28px rgba(11, 35, 64, .10);
-    --lp-shadow-lg: 0 22px 44px rgba(11, 35, 64, .18);
-
-    background: #f4f6fa;
+    --lp-accent: #00c853;
+    --nav-bg: #0b2d4a;
+    --nav-green: #16a34a;
+    --lp-shadow-sm: 0 2px 10px rgba(11,35,64,.06);
+    --lp-shadow-md: 0 10px 28px rgba(11,35,64,.10);
+    --lp-shadow-lg: 0 22px 44px rgba(11,35,64,.18);
 }
 
-
-/* =========================================================
-   HERO (ALINEADO A LA IZQUIERDA)
-   ========================================================= */
-
-.landing-page .landing-hero {
-    position: relative;
-    overflow: hidden;
-
-    min-height: 580px;
-    padding: 96px 0 130px;
-
-    display: flex;
-    align-items: center;
-
-    color: #fff;
-    text-align: left;
-
-    background:
-        radial-gradient(820px 420px at 88% 8%, rgba(176, 141, 87, .24), transparent 62%),
-        radial-gradient(680px 420px at 0% 100%, rgba(24, 60, 100, .95), transparent 70%),
-        linear-gradient(135deg, #071d37 0%, #0b2a4d 55%, #071d37 100%);
-
-    border-top: 2px solid var(--lp-brass);
-    border-bottom: 1px solid rgba(176, 141, 87, .45);
+/* ---------- NAVBAR ---------- */
+body.landing-page .navbar-institucional {
+    background: var(--nav-bg) !important;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-bottom: 1px solid rgba(22,163,74,.35) !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,.18) !important;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
 }
 
-.landing-page .landing-hero::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background-image:
-        linear-gradient(rgba(255, 255, 255, .03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, .03) 1px, transparent 1px);
-    background-size: 56px 56px;
-    -webkit-mask-image: linear-gradient(90deg, transparent 35%, #000 100%);
-            mask-image: linear-gradient(90deg, transparent 35%, #000 100%);
+/* Brand (logo) */
+body.landing-page .navbar-institucional .navbar-brand {
+    padding: 0;
+    margin-right: 1.5rem;
 }
-
-.landing-page .landing-hero .container {
-    position: relative;
-    z-index: 2;
+body.landing-page .brand-logo {
+    display: block;
+    height: 48px;
+    width: auto;
+    transition: transform .2s ease;
 }
+body.landing-page .navbar-brand:hover .brand-logo { transform: scale(1.03); }
 
-.landing-page .landing-hero-content {
-    max-width: 760px;
+/* Enlaces del menú */
+body.landing-page .navbar-institucional .nav-link {
+    color: #fff !important;
+    font-weight: 600;
+    font-size: .9rem;
+    padding: .5rem .6rem !important;
+    white-space: nowrap;
+}
+body.landing-page .navbar-institucional .nav-link::after { background: var(--nav-green); }
+body.landing-page .navbar-institucional .nav-link:hover,
+body.landing-page .navbar-institucional .nav-link.active { color: #fff !important; }
+
+/* Categorías: el caret de Bootstrap se cambia por un chevron SVG */
+body.landing-page .nav-categorias > .nav-link::after {
     margin: 0;
-    text-align: left;
+    border: 0;
+    vertical-align: baseline;
+    display: block;
+}
+body.landing-page .nav-categorias .chev {
+    width: 12px;
+    height: 12px;
+    margin-left: 6px;
+    transition: transform .2s ease;
+}
+body.landing-page .nav-categorias .nav-link[aria-expanded="true"] .chev { transform: rotate(180deg); }
+
+/* Menús desplegables */
+body.landing-page .navbar-institucional .dropdown-menu {
+    margin-top: .75rem;
+    padding: .5rem;
+    background: #fff;
+    border: 1px solid rgba(11,45,74,.10);
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(0,0,0,.22);
+}
+body.landing-page .navbar-institucional .dropdown-item {
+    padding: .5rem .85rem;
+    font-size: .9rem;
+    font-weight: 500;
+    color: #0b2d4a;
+    border-radius: 8px;
+}
+body.landing-page .navbar-institucional .dropdown-item:hover,
+body.landing-page .navbar-institucional .dropdown-item:focus {
+    background: rgba(22,163,74,.10);
+    color: #15803d;
 }
 
-.landing-page .landing-hero .eyebrow {
+/* Buscador */
+body.landing-page .nav-search { position: relative; width: 100%; }
+body.landing-page .nav-search .form-control {
+    height: 42px;
+    padding: .5rem 2.75rem .5rem 1.1rem;
+    font-size: .88rem;
+    color: #fff;
+    background-color: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.20);
+    border-radius: 999px;
+}
+body.landing-page .nav-search .form-control::placeholder { color: rgba(255,255,255,.62); }
+body.landing-page .nav-search .form-control::-webkit-search-cancel-button { display: none; }
+body.landing-page .nav-search .form-control:focus {
+    color: #fff;
+    background-color: rgba(255,255,255,.14);
+    border-color: var(--nav-green);
+    box-shadow: 0 0 0 4px rgba(22,163,74,.22);
+}
+body.landing-page .nav-search-btn {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
     display: inline-flex;
     align-items: center;
-    gap: 14px;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    color: #fff;
+    background: transparent;
+    border: 0;
+    border-radius: 50%;
+    transition: background .2s ease;
+}
+body.landing-page .nav-search-btn:hover { background: var(--nav-green); }
+body.landing-page .nav-search-btn svg { width: 17px; height: 17px; }
 
-    margin-bottom: 1.25rem !important;
-
-    font-family: "Inter", sans-serif;
-    font-size: .78rem;
-    font-weight: 600;
-    letter-spacing: .22em;
-    text-transform: uppercase;
-
-    color: var(--lp-brass-light);
+/* Mi cuenta / carrito (los inyecta auth.js y cart.js) */
+body.landing-page #auth-nav-slot .dropdown-toggle { color: #fff; font-weight: 600; }
+body.landing-page #carrito-badge {
+    background: var(--nav-green) !important;
+    box-shadow: 0 2px 8px rgba(22,163,74,.55) !important;
 }
 
-.landing-page .landing-hero .eyebrow::before {
-    content: "";
-    width: 44px;
-    height: 2px;
-    background: var(--lp-brass);
-    border-radius: 2px;
+/* Escritorio: 3 bloques (logo | menú centrado | herramientas) */
+@media (min-width: 1200px) {
+    body.landing-page .navbar-institucional .navbar-nav {
+        flex: 1 1 auto;
+        align-items: center;
+        column-gap: .35rem;
+    }
+    body.landing-page .navbar-institucional .nav-menu-start,
+    body.landing-page .navbar-institucional .nav-tools-start { margin-left: auto; }
+    body.landing-page .nav-search { width: 210px; }
+}
+/* Entre 1200 y 1399px no cabe "Registro de cliente" */
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+    body.landing-page #navRegistro { display: none !important; }
+}
+/* Móvil / tablet: menú colapsado */
+@media (max-width: 1199.98px) {
+    body.landing-page .navbar-institucional .navbar-collapse { padding-top: 1rem; }
+    body.landing-page .navbar-institucional .navbar-nav { gap: .25rem; }
+    body.landing-page .nav-search { margin: .5rem 0; }
+    body.landing-page .navbar-institucional #auth-nav-slot { padding-top: .5rem; }
 }
 
-.landing-page .landing-hero h1 {
+/* Destinos de los enlaces Nosotros / Contacto */
+body.landing-page #empresa,
+body.landing-page #contacto { scroll-margin-top: 110px; }
+
+/* ---------- HERO ---------- */
+body.landing-page .landing-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 580px;
+    padding: 96px 0 130px;
+    color: #fff;
+    text-align: left;
+    background-color: #071d37;
+    background-image:
+        linear-gradient(90deg, rgba(7,29,55,.88) 0%, rgba(7,29,55,.60) 45%, rgba(7,29,55,.25) 100%),
+        url("http://localhost:8081/img/image_ef634cec.jpg");
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    border-bottom: 1px solid rgba(0,200,83,.45);
+}
+body.landing-page .landing-hero .container { position: relative; z-index: 2; }
+body.landing-page .landing-hero-content { max-width: 760px; margin: 0; text-align: left; }
+
+body.landing-page .landing-hero h1 {
     font-family: "Source Serif 4", serif;
     font-weight: 700;
     line-height: 1.08;
     letter-spacing: -.02em;
     font-size: clamp(2.4rem, 5.2vw, 4.1rem);
-
     margin-bottom: 1.5rem !important;
+    color: #fff;
+    text-shadow: 0 2px 18px rgba(0,0,0,.35);
 }
-
-.landing-page .landing-hero h1 .hero-accent,
-.landing-page .landing-hero h1 span:last-child {
-    color: var(--lp-brass-light);
+body.landing-page .landing-hero h1 .hero-accent {
+    color: var(--lp-accent);
     font-weight: 600;
     font-style: italic;
 }
-
-.landing-page .landing-hero p.lead {
+body.landing-page .landing-hero .eyebrow {
+    margin-bottom: 1.25rem !important;
+    font-size: .78rem;
+    letter-spacing: .22em;
+}
+body.landing-page .landing-hero p.lead {
     max-width: 620px;
     margin: 0 0 2rem 0 !important;
-
     font-family: "Inter", sans-serif;
     font-size: 1.15rem;
     line-height: 1.7;
-    font-weight: 400;
-
-    color: #cfd8e3;
+    color: #e3e9f0;
 }
-
-.landing-page .hero-first-time {
+body.landing-page .hero-first-time {
     margin: 1.5rem 0 1.25rem !important;
-    color: var(--lp-slate);
     font-size: .92rem !important;
 }
-
-.landing-page .hero-first-time a {
-    color: var(--lp-brass-light);
+body.landing-page .hero-first-time a {
+    color: var(--lp-accent);
     font-weight: 600;
     text-decoration: none;
-    border-bottom: 1px solid rgba(197, 166, 109, .45);
-    padding-bottom: 1px;
-    transition: color .2s ease, border-color .2s ease;
+    border-bottom: 1px solid rgba(0,200,83,.45);
 }
+body.landing-page .hero-first-time a:hover { color: #fff; border-color: #fff; }
 
-.landing-page .hero-first-time a:hover {
-    color: #fff;
-    border-color: #fff;
-}
-
-
-/* =========================================================
-   BOTONES HERO
-   ========================================================= */
-
-.landing-page .landing-hero .d-flex {
-    justify-content: flex-start !important;
-}
-
-.landing-page .btn-catalogo,
-.landing-page .btn-login {
-    padding: .85rem 1.9rem;
-    border-radius: 12px;
-    font-size: 1rem;
-    letter-spacing: .01em;
-    transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
-}
-
-.landing-page .btn-catalogo {
-    background: linear-gradient(135deg, var(--lp-brass-light), var(--lp-brass));
-    color: var(--lp-navy);
-    border: 1px solid rgba(255, 255, 255, .55);
+body.landing-page .btn-catalogo {
+    background: var(--brass-600);
+    color: white;
+    border: 1px solid white;
     font-weight: 700;
-    box-shadow: 0 10px 24px rgba(176, 141, 87, .35);
 }
 
-.landing-page .btn-catalogo:hover {
-    background: #fff;
-    color: var(--lp-navy);
-    transform: translateY(-2px);
-    box-shadow: 0 14px 30px rgba(0, 0, 0, .3);
+body.landing-page .btn-catalogo:hover {
+    background: #c5a66d;
+    color: #071d37;
 }
 
-.landing-page .btn-login {
-    background: rgba(255, 255, 255, .06);
-    border: 1px solid rgba(255, 255, 255, .45);
-    color: #fff;
-    font-weight: 600;
-    -webkit-backdrop-filter: blur(6px);
-            backdrop-filter: blur(6px);
+body.landing-page .btn-login {
+    border: 1px solid white;
+    color: white;
 }
 
-.landing-page .btn-login:hover {
-    background: #fff;
-    color: var(--lp-navy);
-    transform: translateY(-2px);
+body.landing-page .btn-login:hover {
+    background: white;
+    color: #071d37;
 }
-
-.landing-page .landing-hero .btn-outline-light {
+body.landing-page .landing-hero .btn-outline-light {
     padding: .8rem 1.75rem !important;
     border-radius: 12px;
-    border-color: rgba(176, 141, 87, .7);
-    color: var(--lp-brass-light);
+    border-color: rgba(0,200,83,.6);
+    color: var(--lp-accent);
     font-size: .82rem;
     font-weight: 700;
     letter-spacing: .12em;
-    transition: transform .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
 }
-
-.landing-page .landing-hero .btn-outline-light:hover {
-    background: var(--lp-brass);
-    border-color: var(--lp-brass);
+body.landing-page .landing-hero .btn-outline-light:hover {
+    background: var(--lp-accent);
+    border-color: var(--lp-accent);
     color: var(--lp-navy);
     transform: translateY(-2px);
 }
 
-
-/* =========================================================
-   BENEFICIOS (ICONOS PEQUEÑOS)
-   ========================================================= */
-
-.landing-page .beneficios-section {
-    position: relative;
-    z-index: 3;
-    margin-top: -72px;
+/* ---------- BENEFICIOS ---------- */
+body.landing-page .beneficios-section { position: relative; z-index: 3; margin-top: -72px; }
+body.landing-page .row.beneficios {
+    gap: 0 !important;
+    margin-top: calc(-1 * var(--bs-gutter-y)) !important;
 }
-
-.landing-page .beneficio-card {
+body.landing-page .beneficio-card {
+    display: block !important;
     height: 100%;
-    padding: 26px 24px;
-
-    text-align: left;
-
+    padding: 26px 24px !important;
+    text-align: left !important;
     background: #fff;
-    border: 1px solid rgba(11, 35, 64, .08);
-    border-top: 3px solid var(--lp-brass);
-    border-radius: var(--lp-radius);
+    border: 1px solid rgba(11,35,64,.08) !important;
+    border-top: 3px solid var(--lp-accent) !important;
+    border-radius: 18px !important;
     box-shadow: var(--lp-shadow-md);
-
-    transition: transform .25s ease, box-shadow .25s ease;
 }
-
-.landing-page .beneficio-card:hover {
+body.landing-page .beneficio-card:hover {
     transform: translateY(-5px);
     box-shadow: var(--lp-shadow-lg);
+    border-color: rgba(0,200,83,.35) !important;
+    border-top-color: var(--lp-accent) !important;
 }
-
-.landing-page .beneficio-head {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
-}
-
-.landing-page .beneficio-icon {
+body.landing-page .beneficio-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+body.landing-page .beneficio-icon {
     flex: 0 0 auto;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
     width: 32px;
     height: 32px;
     margin: 0;
-
     font-size: .95rem;
     line-height: 1;
-
-    background: rgba(176, 141, 87, .14);
+    color: inherit;
+    background: rgba(0,200,83,.12);
+    box-shadow: none;
     border-radius: 10px;
 }
-
-.landing-page .beneficio-card h3 {
+body.landing-page .beneficio-card h3 {
     margin: 0;
     font-family: "Inter", sans-serif;
     font-size: 1rem;
     font-weight: 700;
     color: var(--lp-ink);
 }
+body.landing-page .beneficio-card p { line-height: 1.6; }
 
-.landing-page .beneficio-card p {
-    line-height: 1.6;
-}
-
-
-/* =========================================================
-   TITULOS DE SECCION
-   ========================================================= */
-
-.landing-page .seccion-titulo {
+/* ---------- TITULOS DE SECCION ---------- */
+body.landing-page .seccion-titulo {
     font-family: "Source Serif 4", serif;
     font-weight: 700;
     letter-spacing: .02em;
     color: var(--lp-ink);
 }
-
-.landing-page .seccion-titulo::after {
+body.landing-page .seccion-titulo::after {
     content: "";
     display: block;
     width: 56px;
     height: 3px;
     margin: .7rem auto 0;
-    background: var(--lp-brass);
+    background: var(--lp-accent);
     border-radius: 3px;
 }
 
-.landing-page .seccion-subtitulo {
-    color: #6c757d;
-}
-
-
-/* =========================================================
-   INDUSTRIAS (BOTON SUPERPUESTO)
-   ========================================================= */
-
-.landing-page .industria-item {
-    position: relative;
-    padding-bottom: 20px;
-}
-
-.landing-page .industria-card {
+/* ---------- INDUSTRIAS ---------- */
+body.landing-page .row.industrias-grid { gap: 0 !important; }
+body.landing-page .industria-item { position: relative; padding-bottom: 20px; }
+body.landing-page .industria-card {
     position: relative;
     display: flex;
     align-items: flex-end;
-
     width: 100%;
     aspect-ratio: 4 / 4.6;
     min-height: 220px;
-
     overflow: hidden;
     text-decoration: none;
-
     background: #172b45;
-    border-radius: var(--lp-radius);
+    border: 0 !important;
+    border-radius: 18px !important;
     box-shadow: var(--lp-shadow-md);
-
-    transition: box-shadow .3s ease, transform .3s ease;
 }
-
-.landing-page .industria-card.image-missing {
-    background: linear-gradient(135deg, #0b2a4d, #183c64);
-}
-
-.landing-page .industria-card img {
+body.landing-page .industria-card.image-missing { background: linear-gradient(135deg, #0b2a4d, #183c64); }
+body.landing-page .industria-card img {
     position: absolute;
     inset: 0;
-
     width: 100%;
     height: 100%;
     object-fit: cover;
-
     transition: transform .5s ease;
 }
-
-.landing-page .industria-card::after {
+body.landing-page .industria-card::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(7, 29, 55, 0) 35%, rgba(7, 29, 55, .88) 100%);
-    transition: opacity .3s ease;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(7,29,55,0) 35%, rgba(7,29,55,.88) 100%);
 }
-
-.landing-page .industria-texto {
+body.landing-page .industria-texto {
     position: relative;
     z-index: 2;
-
+    display: block;
+    height: auto;
     padding: 20px 20px 34px;
-
     color: #fff;
     font-size: 1.2rem;
     font-weight: 700;
     line-height: 1.1;
     letter-spacing: .02em;
 }
-
-.landing-page .industria-item:hover .industria-card {
+body.landing-page .industria-item:hover .industria-card {
     transform: translateY(-4px);
     box-shadow: var(--lp-shadow-lg);
 }
+body.landing-page .industria-item:hover .industria-card img { transform: scale(1.07); }
 
-.landing-page .industria-item:hover .industria-card img {
-    transform: scale(1.07);
-}
-
-.landing-page .btn-industria {
+body.landing-page .btn-industria {
     position: absolute;
     bottom: -15px;
     left: 50%;
     z-index: 5;
     transform: translateX(-50%);
-
     display: inline-flex;
     align-items: center;
     gap: 8px;
-
     padding: .6rem 1.4rem;
     white-space: nowrap;
-
     font-family: "Inter", sans-serif;
     font-size: .74rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
     text-decoration: none;
-
     color: var(--lp-navy);
-    background: linear-gradient(135deg, var(--lp-brass-light), var(--lp-brass));
+    background: linear-gradient(135deg, #00e676, #00c853);
     border: 2px solid #fff;
     border-radius: 999px;
-    box-shadow: 0 8px 20px rgba(11, 35, 64, .25);
-
+    box-shadow: 0 8px 20px rgba(11,35,64,.25);
     transition: transform .25s ease, background .25s ease, color .25s ease, box-shadow .25s ease;
 }
-
-.landing-page .btn-industria .flecha {
-    display: inline-block;
-    transition: transform .25s ease;
-}
-
-.landing-page .btn-industria:hover,
-.landing-page .industria-item:hover .btn-industria {
-    background: var(--lp-navy);
-    color: #fff;
+body.landing-page .btn-industria .flecha { display: inline-block; transition: transform .25s ease; }
+body.landing-page .btn-industria:hover,
+body.landing-page .industria-item:hover .btn-industria {
+    background: var(--lp-navy) !important;
+    color: #fff !important;
     transform: translateX(-50%) translateY(-3px);
-    box-shadow: 0 14px 28px rgba(11, 35, 64, .35);
+    box-shadow: 0 14px 28px rgba(11,35,64,.35);
 }
+body.landing-page .btn-industria:hover .flecha,
+body.landing-page .industria-item:hover .btn-industria .flecha { transform: translateX(4px); }
 
-.landing-page .btn-industria:hover .flecha,
-.landing-page .industria-item:hover .btn-industria .flecha {
-    transform: translateX(4px);
-}
-
-
-/* =========================================================
-   PRODUCTOS POPULARES
-   ========================================================= */
-
-.landing-page .productos-populares {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
-}
-
-.landing-page .producto-popular {
+/* ---------- PRODUCTOS POPULARES ---------- */
+body.landing-page .productos-populares { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+body.landing-page .producto-popular {
     background: #fff;
-    border: 1px solid rgba(11, 35, 64, .08);
+    border: 1px solid rgba(11,35,64,.08);
     border-radius: 16px;
     box-shadow: var(--lp-shadow-sm);
     overflow: hidden;
-
     transition: transform .25s ease, box-shadow .25s ease;
 }
-
-.landing-page .producto-popular:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--lp-shadow-lg);
-}
-
-.landing-page .producto-popular-img {
-    width: 100%;
-    height: 185px;
-    object-fit: cover;
-    background: #eee;
-}
-
-.landing-page .producto-popular-body {
-    padding: 14px;
-}
-
-.landing-page .producto-popular h3 {
-    font-size: .9rem;
-    font-weight: 700;
-    margin-bottom: 6px;
-    color: var(--lp-ink);
-}
-
-.landing-page .producto-popular .precio {
-    font-weight: 700;
-    color: #111;
-}
-
-.landing-page .btn-producto {
+body.landing-page .producto-popular:hover { transform: translateY(-5px); box-shadow: var(--lp-shadow-lg); }
+body.landing-page .producto-popular-img { width: 100%; height: 185px; object-fit: cover; background: #eee; }
+body.landing-page .producto-popular-body { padding: 14px; }
+body.landing-page .producto-popular h3 { margin-bottom: 6px; font-size: .9rem; font-weight: 700; color: var(--lp-ink); }
+body.landing-page .producto-popular .precio { font-weight: 700; color: #111; }
+body.landing-page .btn-producto {
     width: 100%;
     margin-top: 10px;
     padding: .55rem;
-
-    background: var(--lp-brass);
+    background: var(--lp-accent);
     color: var(--lp-navy);
-
     border: none;
     border-radius: 10px;
-
     font-size: .74rem;
     font-weight: 700;
     letter-spacing: .04em;
-
-    transition: background .2s ease, transform .2s ease, color .2s ease;
 }
+body.landing-page .btn-producto:hover { background: var(--lp-navy); color: #fff; transform: translateY(-1px); }
 
-.landing-page .btn-producto:hover {
-    background: var(--lp-navy);
-    color: #fff;
-    transform: translateY(-1px);
-}
-
-
-/* =========================================================
-   CLIENTES (TARJETAS)
-   ========================================================= */
-
-.landing-page .cliente {
+/* ---------- CLIENTES ---------- */
+body.landing-page .cliente {
     position: relative;
-
     height: 100%;
     padding: 30px 18px 26px;
-
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 14px;
-
     text-align: center;
-
     background: #fff;
-    border: 1px solid rgba(11, 35, 64, .08);
-    border-radius: 20px;
+    border-radius: 20px !important;
     box-shadow: var(--lp-shadow-sm);
-
     color: #3d4b5e;
     font-size: .9rem;
     font-weight: 600;
     line-height: 1.35;
-
     overflow: hidden;
-    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
 }
-
-.landing-page .cliente::before {
+body.landing-page .cliente::before {
     content: "";
     position: absolute;
     top: 0;
     left: 50%;
     width: 0;
     height: 3px;
-    background: var(--lp-brass);
+    background: var(--lp-accent);
     border-radius: 0 0 3px 3px;
     transform: translateX(-50%);
     transition: width .3s ease;
 }
-
-.landing-page .cliente:hover {
-    transform: translateY(-6px);
-    border-color: rgba(176, 141, 87, .5);
-    box-shadow: var(--lp-shadow-lg);
-    color: var(--lp-ink);
-}
-
-.landing-page .cliente:hover::before {
-    width: 60%;
-}
-
-.landing-page .cliente-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
+body.landing-page .cliente:hover { transform: translateY(-6px); box-shadow: var(--lp-shadow-lg); color: var(--lp-ink); }
+body.landing-page .cliente:hover::before { width: 60%; }
+body.landing-page .cliente-icon {
     width: 64px;
     height: 64px;
-
     font-size: 1.6rem;
     color: #555;
-
-    background: linear-gradient(145deg, #f7f1e4, #ffffff);
-    border: 1px solid rgba(176, 141, 87, .35);
+    background: linear-gradient(145deg, #eefaf3, #fff);
+    border: 1px solid rgba(0,200,83,.3);
     border-radius: 50%;
-    box-shadow: inset 0 0 0 4px #fff, 0 4px 12px rgba(11, 35, 64, .08);
-
-    transition: transform .3s ease, background .3s ease;
+    box-shadow: inset 0 0 0 4px #fff, 0 4px 12px rgba(11,35,64,.08);
+    transition: transform .3s ease;
 }
+body.landing-page .cliente:hover .cliente-icon { transform: scale(1.1) rotate(-6deg); }
 
-.landing-page .cliente:hover .cliente-icon {
-    transform: scale(1.1) rotate(-6deg);
-    background: linear-gradient(145deg, #f0e3c4, #fff);
-}
-
-
-/* =========================================================
-   FOOTER
-   ========================================================= */
-
-.landing-page .footer-nuevo {
+/* ---------- FOOTER ---------- */
+body.landing-page .footer-nuevo {
     margin-top: 24px;
-
-    background:
-        radial-gradient(600px 300px at 100% 0%, rgba(176, 141, 87, .12), transparent 60%),
-        linear-gradient(180deg, #0b2a4d 0%, #071d37 100%);
-
+    background: linear-gradient(180deg, #0b2a4d 0%, #071d37 100%);
     color: #d9e0e8;
-
-    border-top: 3px solid var(--lp-brass);
+    border-top: 3px solid var(--lp-accent);
     border-radius: 32px 32px 0 0;
 }
-
-.landing-page .footer-nuevo h4 {
+body.landing-page .footer-nuevo h4 {
     position: relative;
-
     margin-bottom: 18px;
     padding-bottom: 12px;
-
-    color: #fff;
     font-family: "Inter", sans-serif;
     font-size: .8rem;
     font-weight: 700;
     letter-spacing: .16em;
     text-transform: uppercase;
+    color: #fff;
 }
-
-.landing-page .footer-nuevo h4::after {
+body.landing-page .footer-nuevo h4::after {
     content: "";
     position: absolute;
     left: 0;
     bottom: 0;
     width: 32px;
     height: 2px;
-    background: var(--lp-brass);
+    background: var(--lp-accent);
     border-radius: 2px;
 }
-
-.landing-page .footer-col {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-}
-
-.landing-page .footer-nuevo a {
+body.landing-page .footer-col { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+body.landing-page .footer-nuevo a {
     display: inline-flex;
     align-items: center;
-    gap: 0;
-
     padding: 5px 0;
-
     color: #c9d3df;
     font-size: .88rem;
     text-decoration: none;
-
-    transition: color .2s ease, transform .25s ease, gap .25s ease;
+    transition: color .2s ease, gap .25s ease;
 }
-
-.landing-page .footer-nuevo a::before {
+body.landing-page .footer-nuevo a::before {
     content: "";
     width: 0;
     height: 1px;
-    background: var(--lp-brass-light);
+    background: var(--lp-accent);
     transition: width .25s ease;
 }
-
-.landing-page .footer-nuevo a:hover {
-    color: #fff;
-    gap: 8px;
-}
-
-.landing-page .footer-nuevo a:hover::before {
-    width: 14px;
-}
-
-.landing-page .footer-contacto {
+body.landing-page .footer-nuevo a:hover { color: #fff; gap: 8px; }
+body.landing-page .footer-nuevo a:hover::before { width: 14px; }
+body.landing-page .footer-contacto {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-
     padding: 9px 16px;
-
     font-size: .85rem;
     font-weight: 500;
     color: #e6ecf3;
-
-    background: rgba(255, 255, 255, .06);
-    border: 1px solid rgba(255, 255, 255, .12);
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.12);
     border-radius: 999px;
-
     transition: background .25s ease, border-color .25s ease, transform .25s ease;
 }
-
-.landing-page .footer-contacto:hover {
-    background: rgba(176, 141, 87, .2);
-    border-color: rgba(176, 141, 87, .6);
+body.landing-page .footer-contacto:hover {
+    background: rgba(0,200,83,.18);
+    border-color: rgba(0,200,83,.55);
     transform: translateX(4px);
 }
-
-.landing-page .footer-contacto.footer-direccion {
+body.landing-page .footer-contacto.footer-direccion {
     display: block;
-
     padding: 14px 18px;
-
     line-height: 1.6;
-
     border-radius: 14px;
-    border-left: 3px solid var(--lp-brass);
+    border-left: 3px solid var(--lp-accent);
 }
-
-.landing-page .footer-contacto.footer-direccion:hover {
-    transform: none;
-}
-
-.landing-page .footer-bottom {
-    gap: 10px;
-    color: #aab6c4;
-}
-
-.landing-page .footer-bottom span:last-child {
+body.landing-page .footer-contacto.footer-direccion:hover { transform: none; }
+body.landing-page .footer-bottom { gap: 10px; color: #aab6c4; }
+body.landing-page .footer-bottom span:last-child {
     padding: 4px 12px;
-
     font-family: "IBM Plex Mono", monospace;
     font-size: .78rem;
-
-    background: rgba(255, 255, 255, .06);
-    border: 1px solid rgba(255, 255, 255, .1);
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.1);
     border-radius: 999px;
 }
 
-
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
-
+/* ---------- RESPONSIVE ---------- */
 @media (max-width: 992px) {
-
-    .landing-page .landing-hero {
-        min-height: auto;
-        padding: 80px 0 110px;
-    }
-
-    .landing-page .beneficios-section {
-        margin-top: -56px;
-    }
-
-    .landing-page .productos-populares {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .landing-page .footer-nuevo {
-        border-radius: 24px 24px 0 0;
-    }
+    body.landing-page .landing-hero { min-height: auto; padding: 80px 0 110px; }
+    body.landing-page .beneficios-section { margin-top: -56px; }
+    body.landing-page .productos-populares { grid-template-columns: repeat(2, 1fr); }
+    body.landing-page .footer-nuevo { border-radius: 24px 24px 0 0; }
 }
-
-
 @media (max-width: 576px) {
-
-    .landing-page .landing-hero {
-        padding: 64px 0 96px;
-    }
-
-    .landing-page .landing-hero p.lead {
-        font-size: 1.02rem;
-    }
-
-    .landing-page .landing-hero .d-flex .btn {
-        flex: 1 1 100%;
-        text-align: center;
-    }
-
-    .landing-page .beneficios-section {
-        margin-top: -44px;
-    }
-
-    .landing-page .industria-card {
-        aspect-ratio: 16 / 10;
-    }
-
-    .landing-page .productos-populares {
-        grid-template-columns: 1fr;
-    }
-
-    .landing-page .footer-nuevo {
-        border-radius: 20px 20px 0 0;
-    }
+    body.landing-page .landing-hero { padding: 64px 0 96px; }
+    body.landing-page .landing-hero p.lead { font-size: 1.02rem; }
+    body.landing-page .landing-hero .d-flex .btn { flex: 1 1 100%; text-align: center; }
+    body.landing-page .beneficios-section { margin-top: -44px; }
+    body.landing-page .industria-card { aspect-ratio: 16 / 10; }
+    body.landing-page .productos-populares { grid-template-columns: 1fr; }
+    body.landing-page .footer-nuevo { border-radius: 20px 20px 0 0; }
 }
-
 </style>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="css/theme-modern.css">
+<link rel="stylesheet" href="css/global-ui.css">
 </head>
-
 
 <body class="landing-page">
 
+<!-- NAVBAR -->
+<script src="js/global-layout.js"></script>
 
-<!-- =====================================================
-     NAVBAR
-     ===================================================== -->
-
-<nav class="navbar navbar-expand-lg navbar-institucional py-3">
-
-  <div class="container">
-
-    <a class="navbar-brand" href="landing.html">
-
-      <span data-i18n="nav_brand">
-        Suministros Institucionales
-      </span>
-
-      <span class="badge-code"
-            data-i18n="nav_badge">
-        PROVEEDOR AUTORIZADO · REG-2026-0417
-      </span>
-
-    </a>
-
-
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#landingNav">
-
-      <span class="navbar-toggler-icon"></span>
-
-    </button>
-
-
-    <div
-      class="collapse navbar-collapse"
-      id="landingNav">
-
-      <ul class="navbar-nav ms-auto gap-lg-3 align-items-lg-center">
-
-        <li class="nav-item">
-
-          <a
-            class="nav-link"
-            href="index.html"
-            data-i18n="nav_catalogo">
-
-            Catálogo
-
-          </a>
-
-        </li>
-
-
-        <li class="nav-item nav-registro-link" id="navRegistro">
-          <a
-            class="nav-link"
-            href="registro.html"
-            data-i18n="nav_registro">
-
-            Registro de cliente
-
-          </a>
-
-        </li>
-
-
-        <li class="nav-item dropdown selector-idioma">
-        </li>
-
-
-        <li
-          class="nav-item d-flex align-items-center"
-          id="auth-nav-slot">
-
-        </li>
-
-      </ul>
-
-    </div>
-
-  </div>
-
-</nav>
-
-
-
-<!-- =====================================================
-     HERO
-     ===================================================== -->
-
+<!-- HERO -->
 <header class="landing-hero">
   <div class="container text-start">
     <div class="landing-hero-content text-start">
 
-      <div class="eyebrow mb-2" data-i18n="landing_eyebrow">
-        Plataforma institucional 2026
-      </div>
+      <div class="eyebrow mb-2" data-i18n="landing_eyebrow">Plataforma institucional 2026</div>
 
       <h1 class="mb-3">
-        <span data-i18n="landing_title_first">Dotación y suministro</span><br>
-        <span class="hero-accent" data-i18n="landing_title_second">para unidades policiales</span>
+        <span class="text-white" data-i18n="landing_title_first">Dotación y suministro</span><br>
+        <span class="hero-accent" data-i18n="landing_title_second">para instituciones y equipos de respuesta</span>
       </h1>
 
       <p class="lead mb-3">
@@ -910,167 +622,76 @@
       </p>
 
       <div class="d-flex gap-3 justify-content-start flex-wrap mb-2">
-        <a href="index.html" class="btn btn-lg btn-catalogo" data-i18n="landing_catalog_btn">
-          Ver catálogo
-        </a>
-        <a href="login.html" class="btn btn-lg btn-login" data-i18n="landing_login_btn">
-          Iniciar sesión
-        </a>
+        <a href="index.html" class="btn btn-lg btn-catalogo" data-i18n="landing_catalog_btn">Ver catálogo</a>
+        <a href="login.html" class="btn btn-lg btn-login" data-i18n="landing_login_btn">Iniciar sesión</a>
       </div>
 
       <p class="small mb-2 hero-first-time">
         <span data-i18n="landing_first_time">¿Primera vez aquí?</span>
-        <a href="registro.html" data-i18n="landing_create_account">
-          Crea tu cuenta institucional
-        </a>
+        <a href="registro.html" data-i18n="landing_create_account">Crea tu cuenta institucional</a>
       </p>
 
-      <a href="registro.html" class="btn btn-outline-light px-4">
-        COMIENZA TU COMPRA CORPORATIVA
-      </a>
+      <a href="registro.html" class="btn btn-outline-light px-4">COMIENZA TU COMPRA CORPORATIVA</a>
 
     </div>
   </div>
 </header>
 
-
-
-
-<!-- =====================================================
-     BENEFICIOS
-     ===================================================== -->
-
 <main>
 
-
+<!-- BENEFICIOS -->
 <section class="container beneficios-section pb-5">
-
   <div class="row g-4 beneficios">
 
-
     <div class="col-md-4">
-
       <div class="beneficio-card">
-
-        <div class="beneficio-icon-wrapper">
-          🕐
+        <div class="beneficio-head">
+          <span class="beneficio-icon">🕐</span>
+          <h3 class="h6" data-i18n="landing_support_title">Atención 24/7</h3>
         </div>
-
-        <div class="beneficio-content">
-            <h3
-              class="h6"
-              data-i18n="landing_support_title">
-
-              Atención 24/7
-
-            </h3>
-
-            <p
-              class="small text-muted mb-0"
-              data-i18n="landing_support_text">
-
-              Chatbot institucional y pedidos disponibles
-              a cualquier hora, con escalamiento a un
-              agente humano cuando se necesita.
-
-            </p>
-            <a href="#" class="beneficio-link">Más información →</a>
-        </div>
-
+        <p class="small text-muted mb-0" data-i18n="landing_support_text">
+          Chatbot institucional y pedidos disponibles
+          a cualquier hora, con escalamiento a un
+          agente humano cuando se necesita.
+        </p>
       </div>
-
     </div>
 
-
     <div class="col-md-4">
-
       <div class="beneficio-card">
-
-        <div class="beneficio-icon-wrapper">
-          🔒
+        <div class="beneficio-head">
+          <span class="beneficio-icon">🔒</span>
+          <h3 class="h6" data-i18n="landing_security_title">Datos protegidos</h3>
         </div>
-
-        <div class="beneficio-content">
-            <h3
-              class="h6"
-              data-i18n="landing_security_title">
-
-              Datos protegidos
-
-            </h3>
-
-            <p
-              class="small text-muted mb-0"
-              data-i18n="landing_security_text">
-
-              Cada dato se clasifica y se cifra según
-              su nivel de sensibilidad, conforme a la
-              Ley 1581 de 2012.
-
-            </p>
-            <a href="#" class="beneficio-link">Más información →</a>
-        </div>
-
+        <p class="small text-muted mb-0" data-i18n="landing_security_text">
+          Cada dato se clasifica y se cifra según
+          su nivel de sensibilidad, conforme a la
+          Ley 1581 de 2012.
+        </p>
       </div>
-
     </div>
 
-
     <div class="col-md-4">
-
       <div class="beneficio-card">
-
-        <div class="beneficio-icon-wrapper">
-          📦
+        <div class="beneficio-head">
+          <span class="beneficio-icon">📦</span>
+          <h3 class="h6" data-i18n="landing_delivery_title">Entrega directa</h3>
         </div>
-
-        <div class="beneficio-content">
-            <h3
-              class="h6"
-              data-i18n="landing_delivery_title">
-
-              Entrega directa
-
-            </h3>
-
-            <p
-              class="small text-muted mb-0"
-              data-i18n="landing_delivery_text">
-
-              Despacho a la instalación oficial registrada,
-              con seguimiento de pedido en tiempo real.
-
-            </p>
-            <a href="#" class="beneficio-link">Más información →</a>
-        </div>
-
+        <p class="small text-muted mb-0" data-i18n="landing_delivery_text">
+          Despacho a la instalación oficial registrada,
+          con seguimiento de pedido en tiempo real.
+        </p>
       </div>
-
     </div>
-
 
   </div>
-
 </section>
 
-
-
-<!-- =====================================================
-     EXPLORAR POR INDUSTRIA
-     ===================================================== -->
-
+<!-- EXPLORAR POR INDUSTRIA -->
 <section class="container pb-5">
-
   <div class="text-center mb-5">
-
-    <h2 class="seccion-titulo h4 mb-1">
-
-      EXPLORAR POR INDUSTRIA
-
-    </h2>
-
+    <h2 class="seccion-titulo h4 mb-1">EXPLORAR POR INDUSTRIA</h2>
   </div>
-
 
   <div class="row g-4 industrias-grid">
 
@@ -1078,15 +699,9 @@
       <div class="industria-item">
         <a href="index.html" class="industria-card">
           <img src="http://localhost:8081/img/camufajeSelva.jpg" alt="Camuflaje Selva" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
-          <div class="industria-texto">
-              <span class="subtitulo-industria">Equipamiento Táctico</span>
-              <span class="titulo-industria">CAMUFLAJE SELVA</span>
-              <div class="industria-meta">
-                  <span class="icono-lineal">→</span>
-                  <span class="flecha-nav">›</span>
-              </div>
-          </div>
+          <span class="industria-texto">CAMUFLAJE<br>SELVA</span>
         </a>
+        <a href="index.html" class="btn-industria">Explorar <span class="flecha">→</span></a>
       </div>
     </div>
 
@@ -1094,15 +709,9 @@
       <div class="industria-item">
         <a href="index.html" class="industria-card">
           <img src="http://localhost:8081/img/gala.jpg" alt="Gala" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
-          <div class="industria-texto">
-              <span class="subtitulo-industria">Uniformes de Ceremonia</span>
-              <span class="titulo-industria">GALA</span>
-              <div class="industria-meta">
-                  <span class="icono-lineal">→</span>
-                  <span class="flecha-nav">›</span>
-              </div>
-          </div>
+          <span class="industria-texto">GALA</span>
         </a>
+        <a href="index.html" class="btn-industria">Explorar <span class="flecha">→</span></a>
       </div>
     </div>
 
@@ -1110,15 +719,9 @@
       <div class="industria-item">
         <a href="index.html" class="industria-card">
           <img src="http://localhost:8081/img/Antidisturbios.jpg" alt="Antidisturbios" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
-          <div class="industria-texto">
-              <span class="subtitulo-industria">Control de Multitudes</span>
-              <span class="titulo-industria">ANTIDISTURBIOS</span>
-              <div class="industria-meta">
-                  <span class="icono-lineal">→</span>
-                  <span class="flecha-nav">›</span>
-              </div>
-          </div>
+          <span class="industria-texto">ANTIDISTURBIOS</span>
         </a>
+        <a href="index.html" class="btn-industria">Explorar <span class="flecha">→</span></a>
       </div>
     </div>
 
@@ -1126,304 +729,127 @@
       <div class="industria-item">
         <a href="index.html" class="industria-card">
           <img src="http://localhost:8081/img/Armada.jpg" alt="Armada" onerror="this.style.display='none'; this.parentElement.classList.add('image-missing');">
-          <div class="industria-texto">
-              <span class="subtitulo-industria">Indumentaria Naval</span>
-              <span class="titulo-industria">ARMADA</span>
-              <div class="industria-meta">
-                  <span class="icono-lineal">→</span>
-                  <span class="flecha-nav">›</span>
-              </div>
-          </div>
+          <span class="industria-texto">ARMADA</span>
         </a>
+        <a href="index.html" class="btn-industria">Explorar <span class="flecha">→</span></a>
       </div>
     </div>
 
   </div>
-
 </section>
 
-
-
-<!-- =====================================================
-     PRODUCTOS POPULARES
-     ===================================================== -->
-
+<!-- PRODUCTOS POPULARES -->
 <section class="container pb-5">
-
   <div class="text-center mb-4">
-
-    <h2 class="seccion-titulo h4 mb-1">
-
-      NUESTROS PRODUCTOS MÁS POPULARES
-
-    </h2>
-
+    <h2 class="seccion-titulo h4 mb-1">NUESTROS PRODUCTOS MÁS POPULARES</h2>
   </div>
-
-
   <div class="productos-populares" id="productos-populares">
     <p class="text-muted">Cargando productos...</p>
   </div>
-
 </section>
 
-
-
-<!-- =====================================================
-     CLIENTES
-     ===================================================== -->
-
+<!-- CLIENTES -->
 <section class="container pb-5">
-
   <div class="text-center mb-4">
-
-    <h2 class="seccion-titulo h4">
-
-      CLIENTES QUE CONFÍAN EN NOSOTROS
-
-    </h2>
-
+    <h2 class="seccion-titulo h4">CLIENTES QUE CONFÍAN EN NOSOTROS</h2>
   </div>
-
 
   <div class="row g-3 g-lg-4 clientes">
 
-
     <div class="col-6 col-lg-3">
-
       <div class="cliente">
-
-        <span class="cliente-icon">
-          🌐
-        </span>
-
-        <span>
-          Logística<br>
-          Global
-        </span>
-
+        <span class="cliente-icon">🌐</span>
+        <span>Logística<br>Global</span>
       </div>
-
     </div>
 
-
     <div class="col-6 col-lg-3">
-
       <div class="cliente">
-
-        <span class="cliente-icon">
-          🏢
-        </span>
-
-        <span>
-          Empresa<br>
-          Constructora<br>
-          del Norte
-        </span>
-
+        <span class="cliente-icon">🏢</span>
+        <span>Empresa<br>Constructora<br>del Norte</span>
       </div>
-
     </div>
 
-
     <div class="col-6 col-lg-3">
-
       <div class="cliente">
-
-        <span class="cliente-icon">
-          🛡️
-        </span>
-
-        <span>
-          Seguridad<br>
-          Integral Co.
-        </span>
-
+        <span class="cliente-icon">🛡️</span>
+        <span>Seguridad<br>Integral Co.</span>
       </div>
-
     </div>
 
-
     <div class="col-6 col-lg-3">
-
       <div class="cliente">
-
-        <span class="cliente-icon">
-          📦
-        </span>
-
-        <span>
-          Almacén<br>
-          Central
-        </span>
-
+        <span class="cliente-icon">📦</span>
+        <span>Almacén<br>Central</span>
       </div>
-
     </div>
-
 
   </div>
-
 </section>
-
 
 </main>
 
-
-
-<!-- =====================================================
-     FOOTER
-     ===================================================== -->
-
+<!-- FOOTER -->
 <footer class="footer-nuevo py-5">
-
   <div class="container">
 
     <div class="row g-4">
 
-
-      <!-- POLÍTICAS -->
-
       <div class="col-6 col-md-3">
-
         <div class="footer-col">
-
-          <h4>
-            Políticas
-          </h4>
-
-          <a href="registro.html">
-            Políticas de Privacidad
-          </a>
-
-          <a href="#">
-            Términos del Servicio
-          </a>
-
-          <a href="#">
-            Cambios y Devoluciones
-          </a>
-
+          <h4>Políticas</h4>
+          <a href="registro.html">Políticas de Privacidad</a>
+          <a href="#">Términos del Servicio</a>
+          <a href="#">Cambios y Devoluciones</a>
         </div>
-
       </div>
 
-
-      <!-- EMPRESA -->
-
-      <div class="col-6 col-md-3">
-
+      <div class="col-6 col-md-3" id="empresa">
         <div class="footer-col">
-
-          <h4>
-            Empresa
-          </h4>
-
-          <a href="#">
-            Contacto Corporativo
-          </a>
-
-          <a href="#">
-            Sobre Nosotros
-          </a>
-
+          <h4>Empresa</h4>
+          <a href="#">Contacto Corporativo</a>
+          <a href="#">Sobre Nosotros</a>
         </div>
-
       </div>
 
-
-      <!-- CONTACTO -->
-
-      <div class="col-6 col-md-3">
-
+      <div class="col-6 col-md-3" id="contacto">
         <div class="footer-col">
-
-          <h4>
-            Contacto
-          </h4>
-
-          <div class="footer-contacto">
-
-            🟢 WhatsApp Ventas
-
-          </div>
-
-          <div class="footer-contacto">
-
-            ✉️ Email Mesa de Ayuda
-
-          </div>
-
+          <h4>Contacto</h4>
+          <div class="footer-contacto">🟢 WhatsApp Ventas</div>
+          <div class="footer-contacto">✉️ Email Mesa de Ayuda</div>
         </div>
-
       </div>
 
-
-      <!-- DIRECCIÓN -->
-
       <div class="col-6 col-md-3">
-
         <div class="footer-col">
-
-          <h4>
-            Corporación
-          </h4>
-
+          <h4>Corporación</h4>
           <div class="footer-contacto footer-direccion">
-
             Años. Habitantes de 288,<br>
             Bucaramanga,<br>
             Santander, Colombia
-
           </div>
-
         </div>
-
       </div>
-
 
     </div>
 
+    <hr class="my-4" style="border-color:rgba(255,255,255,.15);">
 
-    <hr
-      class="my-4"
-      style="border-color:rgba(255,255,255,.15);">
-
-
-    <div
-      class="d-flex flex-wrap justify-content-between align-items-center small footer-bottom">
-
-      <span>
-
-        © 2026 Suministros Institucionales S.A.S.
-
-      </span>
-
-      <span>
-
-        NIT 900.XXX.XXX-1
-
-      </span>
-
+    <div class="d-flex flex-wrap justify-content-between align-items-center small footer-bottom">
+      <span>© 2026 Suministros Institucionales S.A.S.</span>
+      <span>NIT 900.XXX.XXX-1</span>
     </div>
 
   </div>
-
 </footer>
 
-
-
-<!-- =====================================================
-     SCRIPTS
-     ===================================================== -->
-
+<!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 <script src="js/i18n.js"></script>
-
 <script src="js/auth.js"></script>
 <script src="js/imagenes.js"></script>
 <script src="js/cart.js"></script>
+<script src="js/chatbot.js"></script>
 <script>
   function escaparLanding(valor) {
     const div = document.createElement('div');
@@ -1470,7 +896,6 @@
 
   document.addEventListener('DOMContentLoaded', cargarProductosLanding);
 </script>
-
 
 </body>
 </html>

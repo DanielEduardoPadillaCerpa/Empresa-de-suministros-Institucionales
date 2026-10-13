@@ -1,0 +1,87 @@
+:root {
+  --tenant-navy: #0b2d4a;
+  --tenant-green: #00b060;
+  --tenant-surface: rgba(255, 255, 255, .96);
+  --tenant-wash: #eef4f6;
+}
+
+body[data-institution="policia"] { --tenant-navy: #0b2d4a; --tenant-green: #00b060; --tenant-wash: #edf4f6; --tenant-panel-image: url("/img/image_ab9291c8.jpg"); }
+body[data-institution="defensa"] { --tenant-navy: #173b35; --tenant-green: #73a942; --tenant-wash: #eff4ef; --tenant-panel-image: url("/img/defensa-unsplash.jpg"); }
+body[data-institution="bomberos"] { --tenant-navy: #642426; --tenant-green: #d45d3c; --tenant-wash: #f7efed; --tenant-panel-image: url("/img/bomberos-dominio-publico.jpg"); }
+body[data-institution="socorro"] { --tenant-navy: #0b4760; --tenant-green: #00a8a8; --tenant-wash: #edf5f6; --tenant-panel-image: url("/img/socorro-unsplash.jpg"); }
+body[data-institution="penitenciario"] { --tenant-navy: #343c50; --tenant-green: #4b8e78; --tenant-wash: #f0f2f5; --tenant-panel-image: url("/img/penitenciario-unsplash.jpg"); }
+body[data-institution="corporativo"] { --tenant-navy: #233a57; --tenant-green: #00a879; --tenant-wash: #f0f4f7; --tenant-panel-image: url("/img/corporativo-unsplash.jpg"); }
+body[data-institution="general"] { --tenant-navy: #0b2d4a; --tenant-green: #00b060; --tenant-wash: #eef4f6; --tenant-panel-image: url("/img/corporativo-unsplash.jpg"); }
+
+body[data-institution] {
+  background-color: var(--tenant-wash);
+  background-image:
+    radial-gradient(ellipse at 86% 0%, color-mix(in srgb, var(--tenant-green) 11%, transparent), transparent 38rem),
+    linear-gradient(180deg, rgba(255,255,255,.65), transparent 36rem);
+}
+
+body[data-institution] .navbar-institucional,
+body[data-institution] .admin-hero,
+body[data-institution] .catalogo-hero {
+  --nav-bg: var(--tenant-navy);
+}
+
+body[data-institution] .navbar-institucional {
+  background: color-mix(in srgb, var(--tenant-navy) 92%, transparent) !important;
+}
+
+body.admin-console-page[data-institution] {
+  --admin-navy: var(--tenant-navy);
+  --admin-navy-soft: color-mix(in srgb, var(--tenant-navy) 78%, #fff);
+  --admin-green: var(--tenant-green);
+  background:
+    radial-gradient(900px 420px at 100% 4%, color-mix(in srgb, var(--tenant-green) 10%, transparent), transparent 58%),
+    linear-gradient(180deg, var(--tenant-wash), color-mix(in srgb, var(--tenant-wash) 82%, #fff)) !important;
+}
+
+body.admin-console-page[data-institution] header.admin-console-hero {
+  background:
+    linear-gradient(100deg, color-mix(in srgb, var(--tenant-navy) 98%, #000) 0%, color-mix(in srgb, var(--tenant-navy) 90%, transparent) 42%, color-mix(in srgb, var(--tenant-navy) 42%, transparent) 100%) !important;
+  border-bottom-color: var(--tenant-green);
+}
+
+body.admin-console-page[data-institution] .admin-console-hero::after {
+  background-image: linear-gradient(100deg, transparent, color-mix(in srgb, var(--tenant-navy) 10%, transparent)), var(--tenant-panel-image, none);
+}
+
+body[data-institution] .catalogo-hero {
+  background-image:
+    linear-gradient(90deg, color-mix(in srgb, var(--tenant-navy) 96%, transparent), color-mix(in srgb, var(--tenant-navy) 74%, transparent) 62%, color-mix(in srgb, var(--tenant-navy) 46%, transparent)),
+    var(--tenant-panel-image, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: var(--tenant-navy);
+  border-image: linear-gradient(90deg, var(--tenant-green), transparent) 1;
+}
+
+body[data-institution] .admin-hero {
+  background:
+    radial-gradient(ellipse at 90% 0%, color-mix(in srgb, var(--tenant-green) 24%, transparent), transparent 60%),
+    linear-gradient(135deg, var(--tenant-navy), color-mix(in srgb, var(--tenant-navy) 78%, #fff));
+}
+
+body[data-institution] .btn-primary,
+body[data-institution] .pc-btn-add,
+body[data-institution] .carrito-checkout-btn {
+  --bs-btn-bg: var(--tenant-green);
+  --bs-btn-border-color: var(--tenant-green);
+}
+
+body[data-institution="general"] .precio {
+  color: var(--tenant-navy);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-institution] *,
+  body[data-institution] *::before,
+  body[data-institution] *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

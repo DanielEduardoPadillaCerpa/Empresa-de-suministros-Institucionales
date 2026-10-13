@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verificación institucional — Panel administrativo</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/theme-modern.css">
+<link rel="stylesheet" href="css/global-ui.css">
+<link rel="stylesheet" href="css/admin-console.css">
+<link rel="stylesheet" href="css/verificacion.css">
+<style>
+  .verif-page { background: #f8fafc; min-height: 100vh; }
+  .verif-detalle dt { font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; color: #64748b; }
+  .verif-detalle dd { margin-bottom: .55rem; overflow-wrap: anywhere; }
+  .verif-sticky { position: sticky; top: 1rem; }
+  @media (max-width: 991px) { .verif-sticky { position: static; } }
+</style>
+</head>
+<body class="verif-page admin-console-page" data-gl-nav="off" data-gl-cart="off" data-gl-chat="off">
+<script src="js/global-layout.js"></script>
+<nav class="navbar navbar-expand-lg navbar-institucional py-2">
+  <div class="container">
+    <a class="navbar-brand" href="landing.html" aria-label="Suministros Institucionales - Ir al inicio">
+      <img class="brand-logo" src="http://localhost:8081/img/logo-suministros.png" alt="Suministros Institucionales" width="171" height="46">
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav1" aria-label="Menú">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="nav1">
+      <ul class="navbar-nav ms-auto gap-lg-3 align-items-lg-center">
+        <li class="nav-item"><a class="nav-link" href="admin-dashboard.html">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-clientes.html">Clientes</a></li>
+        <li class="nav-item"><a class="nav-link active" href="admin-verificaciones.html">Verificaciones</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-productos.html">Productos</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-pedidos.html">Pedidos</a></li>
+        <li class="nav-item d-flex align-items-center" id="auth-nav-slot"></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4">
+  <h1 class="h3 fw-bold mb-1">Verificación institucional</h1>
+  <p class="text-muted mb-3">Revisa solicitudes de registro, decide con un motivo registrado y administra la elegibilidad de productos. Cada acción queda auditada.</p>
+  <div id="permisos-aviso" class="alert alert-warning" hidden></div>
+
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-solicitudes" type="button" role="tab" data-requiere="verificacion.ver">Solicitudes</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-productos" type="button" role="tab" data-requiere="productos.cumplimiento">Cumplimiento de productos</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-personal" type="button" role="tab" data-requiere="staff.permisos">Personal y permisos</button></li>
+  </ul>
+
+  <div class="tab-content">
+    <!-- ================= Solicitudes ================= -->
+    <section class="tab-pane fade show active" id="tab-solicitudes" role="tabpanel">
+      <div class="vf-conteos" id="conteos" aria-label="Filtrar por estado"></div>
+      <form class="row g-2 mb-3" id="filtros">
+        <div class="col-md-3 col-6">
+          <label class="form-label small" for="f-tipo">Tipo</label>
+          <select class="form-select form-select-sm" id="f-tipo"><option value="">Todos</option><option value="sin_clasificar">Sin clasificar</option></select>
+        </div>
+        <div class="col-md-2 col-6">
+          <label class="form-label small" for="f-desde">Desde</label>
+          <input type="date" class="form-control form-control-sm" id="f-desde">
+        </div>
+        <div class="col-md-2 col-6">
+          <label class="form-label small" for="f-hasta">Hasta</label>
+          <input type="date" class="form-control form-control-sm" id="f-hasta">
+        </div>
+        <div class="col-md-3 col-6">
+          <label class="form-label small" for="f-q">Entidad o NIT</label>
+          <input class="form-control form-control-sm" id="f-q" maxlength="100">
+        </div>
+        <div class="col-md-2 d-flex align-items-end gap-2">
+          <div class="form-check small mb-1">
+            <input class="form-check-input" type="checkbox" id="f-cambio">
+            <label class="form-check-label" for="f-cambio">Cambio de tipo</label>
+          </div>
+          <button class="btn btn-sm btn-dark ms-auto" type="submit">Filtrar</button>
+        </div>
+      </form>
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <div class="vf-panel p-2 vf-tabla-wrap">
+            <table class="vf-tabla">
+              <thead><tr><th>Entidad</th><th>Tipo</th><th>Estado</th><th>Fecha</th></tr></thead>
+              <tbody id="lista"><tr><td colspan="4" class="text-muted">Cargando…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="vf-panel verif-sticky" id="detalle" aria-live="polite">
+            <p class="text-muted mb-0">Selecciona una solicitud para revisarla.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Productos ================= -->
+    <section class="tab-pane fade" id="tab-productos" role="tabpanel">
+      <p class="small text-muted">Los productos restringidos o con revisión <strong>pendiente</strong> o <strong>bloqueada</strong> no pueden venderse. Consulta <code>docs/MATRIZ_ELEGIBILIDAD_PRODUCTOS.md</code> antes de aprobar una revisión legal.</p>
+      <form class="row g-2 mb-3" id="filtros-productos">
+        <div class="col-md-3 col-6">
+          <select class="form-select form-select-sm" id="p-revision" aria-label="Revisión legal">
+            <option value="">Toda revisión</option><option value="pendiente">Pendiente</option><option value="bloqueada">Bloqueada</option>
+            <option value="aprobada">Aprobada</option><option value="no_requerida">No requerida</option>
+          </select>
+        </div>
+        <div class="col-md-3 col-6"><div class="form-check mt-1"><input class="form-check-input" type="checkbox" id="p-restringido"><label class="form-check-label small" for="p-restringido">Solo restringidos</label></div></div>
+        <div class="col-md-4"><input class="form-control form-control-sm" id="p-q" placeholder="Buscar por nombre" aria-label="Buscar producto"></div>
+        <div class="col-md-2 d-grid"><button class="btn btn-sm btn-dark" type="submit">Buscar</button></div>
+      </form>
+      <div class="vf-panel p-2 vf-tabla-wrap">
+        <table class="vf-tabla">
+          <thead><tr><th>Producto</th><th>Institución</th><th>También elegible para</th><th>Restringido</th><th>Revisión legal</th><th>Sustento</th><th></th></tr></thead>
+          <tbody id="productos"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= Personal ================= -->
+    <section class="tab-pane fade" id="tab-personal" role="tabpanel">
+      <div class="vf-panel mb-3 vf-tabla-wrap" id="personal"></div>
+      <form class="vf-panel row g-2" id="form-personal">
+        <h2 class="h6 col-12">Alta de personal administrativo</h2>
+        <div class="col-md-4"><label class="form-label small" for="np-correo">Correo</label><input class="form-control form-control-sm" type="email" id="np-correo" required></div>
+        <div class="col-md-4"><label class="form-label small" for="np-pass">Contraseña temporal (mín. 12)</label><input class="form-control form-control-sm" type="password" id="np-pass" minlength="12" autocomplete="new-password" required></div>
+        <div class="col-md-4 d-flex align-items-end"><button class="btn btn-sm btn-dark" type="submit">Crear sin permisos</button></div>
+        <p class="small text-muted col-12 mb-0">La cuenta inicia sin permisos; asígnalos en la tabla. Inicia sesión con código por correo como cualquier usuario.</p>
+      </form>
+    </section>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/auth.js"></script>
+<script>
+const ESTADOS = {
+  borrador: 'Borrador', pendiente: 'Pendiente', requiere_informacion: 'Requiere información',
+  aprobado: 'Aprobada', rechazado: 'Rechazada', suspendido: 'Suspendida'
+};
+const REVISIONES = { no_requerida: 'No requerida', pendiente: 'Pendiente', aprobada: 'Aprobada', bloqueada: 'Bloqueada' };
+let permisos = new Set();
+let catalogoPermisos = {};
+let tipos = [];
+let filtroEstado = 'pendiente';
+let seleccionada = null;
+
+const esc = t => { const s = document.createElement('span'); s.textContent = t == null ? '' : String(t); return s.innerHTML; };
+const fecha = v => v ? new Date(v).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+const etiquetaTipo = id => tipos.find(t => t.id === id)?.etiqueta || (id ? id : 'Sin clasificar');
+
+async function api(ruta, opciones = {}) {
+  if (!await authAsegurarTokenValido()) {
+    window.location.replace('login.html?redirect=admin-verificaciones.html');
+    throw new Error('Sesión vencida');
+  }
+  const headers = { ...(opciones.headers || {}), Authorization: 'Bearer ' + authLeer().token };
+  if (opciones.body && typeof opciones.body === 'string') headers['Content-Type'] = 'application/json';
+  const resp = await fetch(API_BASE + ruta, { ...opciones, headers });
+  if (resp.status === 401) {
+    window.location.replace('login.html?redirect=admin-verificaciones.html');
+    throw new Error('Sesión vencida');
+  }
+  return resp;
+}
+
+async function apiJson(ruta, opciones) {
+  const resp = await api(ruta, opciones);
+  const datos = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw Object.assign(new Error(datos.error || 'Error ' + resp.status), { datos, status: resp.status });
+  return datos;
+}
+
+// ---------------- Solicitudes ----------------
+async function cargarLista() {
+  const params = new URLSearchParams();
+  if (filtroEstado) params.set('estado', filtroEstado);
+  for (const [id, clave] of [['f-tipo', 'tipo'], ['f-desde', 'desde'], ['f-hasta', 'hasta'], ['f-q', 'q']]) {
+    const v = document.getElementById(id).value.trim();
+    if (v) params.set(clave, v);
+  }
+  if (document.getElementById('f-cambio').checked) params.set('cambio', '1');
+  const tbody = document.getElementById('lista');
+  try {
+    const datos = await apiJson('/api/verificacion/admin/solicitudes?' + params);
+    const total = Object.values(datos.conteos).reduce((a, b) => a + b, 0);
+    document.getElementById('conteos').innerHTML = [['', 'Todas', total], ...Object.keys(ESTADOS).map(e => [e, ESTADOS[e], datos.conteos[e] || 0])]
+      .map(([e, txt, n]) => '<button type="button" class="' + (e === filtroEstado ? 'activo' : '') + '" data-estado="' + e + '" aria-pressed="' + (e === filtroEstado) + '">' + txt + ' (' + n + ')</button>').join('');
+    tbody.innerHTML = datos.solicitudes.length ? datos.solicitudes.map(s =>
+      '<tr data-id="' + s.clienteId + '" class="' + (s.clienteId === seleccionada ? 'seleccionada' : '') + '" style="cursor:pointer" tabindex="0">' +
+      '<td><strong>' + esc(s.entidad) + '</strong><div class="small text-muted">' + esc(s.nit) + ' · ' + esc(s.correo || 'sin cuenta') + '</div>' +
+      (s.otrasCuentasMismoNit ? '<div class="small text-warning-emphasis">' + s.otrasCuentasMismoNit + ' cuenta(s) más con este NIT</div>' : '') + '</td>' +
+      '<td>' + esc(etiquetaTipo(s.tipoInstitucion)) + (s.tipoSolicitado ? '<div class="small">→ ' + esc(etiquetaTipo(s.tipoSolicitado)) + '</div>' : '') +
+      (s.dominioInstitucional ? '<div class="small text-success">Correo institucional</div>' : '') + '</td>' +
+      '<td><span class="vf-estado ' + s.estado + '">' + ESTADOS[s.estado] + '</span><div class="small text-muted">' + s.documentos + ' doc.</div></td>' +
+      '<td class="small">' + fecha(s.enviadoRevisionEn || s.fechaRegistro) + '</td></tr>').join('')
+      : '<tr><td colspan="4" class="text-muted">No hay solicitudes con estos filtros.</td></tr>';
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-danger">' + esc(err.message) + '</td></tr>';
+  }
+}
+
+function bloqueAccion(titulo, permiso, contenido) {
+  if (!permisos.has(permiso)) return '';
+  return '<div class="border-top pt-3 mt-3"><h3 class="h6">' + titulo + '</h3>' + contenido + '</div>';
+}
+
+async function verDetalle(id) {
+  seleccionada = Number(id);
+  document.querySelectorAll('#lista tr').forEach(tr => tr.classList.toggle('seleccionada', Number(tr.dataset.id) === seleccionada));
+  const panel = document.getElementById('detalle');
+  panel.innerHTML = '<p class="text-muted">Cargando…</p>';
+  try {
+    const d = await apiJson('/api/verificacion/admin/solicitudes/' + id);
+    const org = d.organizacion || {};
+    const tipo = tipos.find(t => t.id === d.tipoInstitucion);
+    const especificos = (tipo?.camposEspecificos || []).map(c =>
+      '<dt>' + esc(c.etiqueta) + '</dt><dd>' + esc(c.opciones.find(o => o.valor === org[c.campo])?.etiqueta || '—') + '</dd>').join('');
+    const req = d.requisitos;
+    const requisitos = '<ul class="vf-requisitos small">' +
+      '<li><span class="vf-etiqueta ' + (req.correoVerificado ? 'cumplido' : 'obligatorio') + '">' + (req.correoVerificado ? 'Sí' : 'No') + '</span>Correo verificado por MFA' + (req.dominioVerificado ? ' · dominio institucional coincide' : '') + '</li>' +
+      req.requisitos.map(r => '<li><span class="vf-etiqueta ' + (r.cumplido ? 'cumplido' : r.obligatorio ? 'obligatorio' : '') + '">' + (r.cumplido ? 'Adjunto' : r.obligatorio ? 'Falta' : 'Opcional') + '</span>' + esc(r.etiqueta) + '</li>').join('') + '</ul>';
+    const documentos = d.documentos.length ? '<ul class="small ps-3">' + d.documentos.map(doc =>
+      '<li>' + esc(req.requisitos.find(r => r.tipo === doc.tipo)?.etiqueta || doc.tipo) + ' — ' + esc(doc.nombre) + ' (' + Math.ceil(doc.tamanoBytes / 1024) + ' KB) ' +
+      (permisos.has('documentos.ver') ? '<button type="button" class="btn btn-link btn-sm p-0" data-doc="' + doc.id + '">Descargar (queda auditado)</button>' : '<span class="text-muted">sin permiso de descarga</span>') +
+      '</li>').join('') + '</ul>' : '<p class="small text-muted">Sin documentos.</p>';
+    const historial = '<ol class="vf-timeline small">' + d.historial.slice().reverse().map(h =>
+      '<li><strong>' + esc(h.evento) + '</strong> ' + esc(h.estadoAnterior || '∅') + ' → ' + esc(h.estadoNuevo) +
+      (h.actorCorreo ? ' · ' + esc(h.actorCorreo) : ' · ' + esc(h.actor)) + (h.motivo ? '<div>' + esc(h.motivo) + '</div>' : '') + '<time>' + fecha(h.fecha) + '</time></li>').join('') + '</ol>';
+
+    let acciones = '';
+    if (d.estado === 'pendiente') {
+      acciones += bloqueAccion('Decisión', 'verificacion.decidir',
+        '<textarea class="form-control form-control-sm mb-2" id="motivo-decision" rows="2" maxlength="500" placeholder="Motivo (obligatorio para rechazar o pedir información; mínimo 10 caracteres)"></textarea>' +
+        '<div class="d-flex flex-wrap gap-2"><button class="btn btn-sm btn-success" data-decision="aprobar"' + (req.completo ? '' : ' disabled title="Faltan requisitos"') + '>Aprobar</button>' +
+        '<button class="btn btn-sm btn-warning" data-decision="solicitar_informacion">Pedir información</button>' +
+        '<button class="btn btn-sm btn-outline-danger" data-decision="rechazar">Rechazar</button></div>');
+    }
+    if (d.cambioSolicitado) {
+      const nuevo = tipos.find(t => t.id === d.cambioSolicitado.tipo);
+      acciones += bloqueAccion('Cambio de tipo solicitado: ' + esc(nuevo?.etiqueta || d.cambioSolicitado.tipo), 'verificacion.decidir',
+        '<p class="small mb-2">Requisitos del nuevo tipo: ' + (d.cambioSolicitado.requisitos.completo ? 'completos' : 'faltan ' + esc(d.cambioSolicitado.requisitos.faltantes.join(', '))) +
+        '. Aprobarlo revoca la autorización de restringidos.</p>' +
+        '<textarea class="form-control form-control-sm mb-2" id="motivo-cambio" rows="2" maxlength="500" placeholder="Motivo"></textarea>' +
+        '<button class="btn btn-sm btn-success me-2" data-cambio="aprobar">Aprobar cambio</button><button class="btn btn-sm btn-outline-danger" data-cambio="rechazar">Rechazar cambio</button>');
+    }
+    if (d.estado === 'aprobado') {
+      acciones += bloqueAccion('Productos restringidos', 'restringidos.autorizar',
+        '<p class="small mb-2">Estado actual: <strong>' + (d.autorizacionRestringidos ? 'autorizada' : 'sin autorización') + '</strong>. Registra la evidencia revisada.</p>' +
+        '<textarea class="form-control form-control-sm mb-2" id="motivo-restringidos" rows="2" maxlength="500" placeholder="Evidencia revisada (mínimo 10 caracteres)"></textarea>' +
+        '<button class="btn btn-sm ' + (d.autorizacionRestringidos ? 'btn-outline-danger" data-restringidos="false">Revocar' : 'btn-outline-dark" data-restringidos="true">Autorizar') + '</button>');
+    }
+    if (d.estado !== 'suspendido') {
+      acciones += bloqueAccion('Suspensión', 'cuentas.suspender',
+        '<textarea class="form-control form-control-sm mb-2" id="motivo-suspension" rows="2" maxlength="500" placeholder="Motivo (cierra todas las sesiones de la cuenta)"></textarea>' +
+        '<button class="btn btn-sm btn-outline-danger" data-suspension="suspender">Suspender cuenta</button>');
+    } else {
+      acciones += bloqueAccion('Reactivación', 'cuentas.suspender',
+        '<textarea class="form-control form-control-sm mb-2" id="motivo-suspension" rows="2" maxlength="500" placeholder="Motivo de la reactivación"></textarea>' +
+        '<button class="btn btn-sm btn-outline-success" data-suspension="reactivar">Reactivar cuenta</button>');
+    }
+
+    panel.innerHTML =
+      '<div class="d-flex justify-content-between align-items-start gap-2 mb-2"><h2 class="h5 mb-0">' + esc(org.nombreEntidad) + '</h2><span class="vf-estado ' + d.estado + '">' + ESTADOS[d.estado] + '</span></div>' +
+      (d.motivo ? '<div class="alert alert-light border small py-2">Último motivo: ' + esc(d.motivo) + '</div>' : '') +
+      '<dl class="verif-detalle row small mb-0">' +
+      '<div class="col-sm-6"><dt>Tipo</dt><dd>' + esc(etiquetaTipo(d.tipoInstitucion)) + '</dd>' + especificos +
+      '<dt>NIT</dt><dd>' + esc(org.nit) + (d.otrasCuentasMismoNit.length ? ' <span class="text-warning-emphasis">(' + d.otrasCuentasMismoNit.length + ' cuenta(s) más)</span>' : '') + '</dd>' +
+      '<dt>Dependencia</dt><dd>' + esc(org.dependencia || '—') + '</dd><dt>Ubicación</dt><dd>' + esc([org.municipio, org.departamento].filter(Boolean).join(', ') || '—') + '</dd></div>' +
+      '<div class="col-sm-6"><dt>Solicitante</dt><dd>' + esc(d.solicitante.nombre) + ' — ' + esc(org.cargo || '') + '</dd>' +
+      '<dt>Cuenta(s)</dt><dd>' + d.cuentas.map(c => esc(c.correo) + (c.correoVerificado ? ' ✓ verificado' : ' (sin verificar)') + (c.dominioCoincide ? ' · dominio institucional' : '')).join('<br>') + '</dd>' +
+      '<dt>Teléfono</dt><dd>' + esc(d.solicitante.telefono || '—') + '</dd><dt>Registro</dt><dd>' + fecha(d.fechaRegistro) + '</dd></div></dl>' +
+      '<h3 class="h6 mt-2">Requisitos</h3>' + requisitos +
+      '<h3 class="h6">Documentos</h3>' + documentos + acciones +
+      '<details class="mt-3"><summary class="small fw-semibold">Historial</summary>' + historial + '</details>' +
+      '<div id="detalle-mensaje" role="alert" class="mt-2"></div>';
+  } catch (err) {
+    panel.innerHTML = '<p class="text-danger">' + esc(err.message) + '</p>';
+  }
+}
+
+async function accion(ruta, cuerpo) {
+  const mensaje = document.getElementById('detalle-mensaje');
+  try {
+    await apiJson(ruta, { method: 'POST', body: JSON.stringify(cuerpo) });
+    mostrarNotificacion('Acción registrada.', 'success');
+    await cargarLista();
+    await verDetalle(seleccionada);
+  } catch (err) {
+    mensaje.className = 'alert alert-danger small mt-2';
+    mensaje.textContent = err.message + (err.datos?.requisitos ? ' Faltan: ' + err.datos.requisitos.faltantes.join(', ') : '');
+  }
+}
+
+document.getElementById('detalle').addEventListener('click', async e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  const base = '/api/verificacion/admin/solicitudes/' + seleccionada;
+  if (b.dataset.doc) {
+    const resp = await api('/api/verificacion/admin/documentos/' + b.dataset.doc);
+    if (!resp.ok) return mostrarNotificacion('No se pudo descargar.', 'error');
+    const url = URL.createObjectURL(await resp.blob());
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (resp.headers.get('Content-Disposition') || '').match(/filename="([^"]+)"/)?.[1] || 'documento';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } else if (b.dataset.decision) {
+    if (b.dataset.decision !== 'aprobar' || await confirmarAccion('¿Aprobar esta cuenta? Podrá ver precios y comprar productos de su institución.')) {
+      accion(base + '/decision', { decision: b.dataset.decision, motivo: document.getElementById('motivo-decision').value });
+    }
+  } else if (b.dataset.cambio) {
+    accion(base + '/cambio-tipo', { decision: b.dataset.cambio, motivo: document.getElementById('motivo-cambio').value });
+  } else if (b.dataset.restringidos) {
+    accion(base + '/restringidos', { autorizar: b.dataset.restringidos === 'true', motivo: document.getElementById('motivo-restringidos').value });
+  } else if (b.dataset.suspension) {
+    if (await confirmarAccion(b.dataset.suspension === 'suspender' ? '¿Suspender la cuenta? Se cerrarán todas sus sesiones.' : '¿Reactivar la cuenta?')) {
+      accion(base + '/suspension', { accion: b.dataset.suspension, motivo: document.getElementById('motivo-suspension').value });
+    }
+  }
+});
+
+document.getElementById('lista').addEventListener('click', e => { const tr = e.target.closest('tr[data-id]'); if (tr) verDetalle(tr.dataset.id); });
+document.getElementById('lista').addEventListener('keydown', e => { const tr = e.target.closest('tr[data-id]'); if (tr && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); verDetalle(tr.dataset.id); } });
+document.getElementById('conteos').addEventListener('click', e => { const b = e.target.closest('[data-estado]'); if (b) { filtroEstado = b.dataset.estado; cargarLista(); } });
+document.getElementById('filtros').addEventListener('submit', e => { e.preventDefault(); cargarLista(); });
+
+// ---------------- Productos ----------------
+const INSTITUCIONES = ['policia', 'defensa', 'bomberos', 'socorro', 'penitenciario', 'corporativo', 'general'];
+async function cargarProductos() {
+  const params = new URLSearchParams();
+  const revision = document.getElementById('p-revision').value;
+  if (revision) params.set('revision', revision);
+  if (document.getElementById('p-restringido').checked) params.set('restringido', '1');
+  const q = document.getElementById('p-q').value.trim();
+  if (q) params.set('q', q);
+  const tbody = document.getElementById('productos');
+  try {
+    const lista = await apiJson('/api/verificacion/admin/productos?' + params);
+    tbody.innerHTML = lista.map(p => '<tr data-producto="' + p.id + '">' +
+      '<td><strong>' + esc(p.nombre) + '</strong><div class="small text-muted">' + esc(p.categoria || '') + (p.estado !== 'activo' ? ' · inactivo' : '') + '</div></td>' +
+      '<td>' + esc(p.institucion) + '</td>' +
+      '<td><select multiple size="3" class="form-select form-select-sm" data-campo="elegibles" aria-label="Instituciones adicionales">' +
+      INSTITUCIONES.filter(i => i !== p.institucion).map(i => '<option value="' + i + '"' + (p.institucionesElegibles.includes(i) ? ' selected' : '') + '>' + i + '</option>').join('') + '</select></td>' +
+      '<td><input type="checkbox" class="form-check-input" data-campo="restringido" aria-label="Restringido"' + (p.restringido ? ' checked' : '') + '></td>' +
+      '<td><select class="form-select form-select-sm" data-campo="revision" aria-label="Revisión legal">' +
+      Object.entries(REVISIONES).map(([v, t]) => '<option value="' + v + '"' + (v === p.revisionLegal ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></td>' +
+      '<td><input class="form-control form-control-sm" data-campo="motivo" maxlength="500" placeholder="Sustento (mín. 10)" aria-label="Sustento"></td>' +
+      '<td><button class="btn btn-sm btn-dark" data-guardar>Guardar</button></td></tr>').join('') || '<tr><td colspan="7" class="text-muted">Sin resultados.</td></tr>';
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-danger">' + esc(err.message) + '</td></tr>';
+  }
+}
+document.getElementById('filtros-productos').addEventListener('submit', e => { e.preventDefault(); cargarProductos(); });
+document.getElementById('productos').addEventListener('click', async e => {
+  if (!e.target.closest('[data-guardar]')) return;
+  const tr = e.target.closest('tr');
+  const campo = c => tr.querySelector('[data-campo="' + c + '"]');
+  try {
+    await apiJson('/api/verificacion/admin/productos/' + tr.dataset.producto + '/cumplimiento', {
+      method: 'PUT',
+      body: JSON.stringify({
+        restringido: campo('restringido').checked,
+        revisionLegal: campo('revision').value,
+        institucionesElegibles: [...campo('elegibles').selectedOptions].map(o => o.value),
+        motivo: campo('motivo').value
+      })
+    });
+    mostrarNotificacion('Producto actualizado.', 'success');
+    cargarProductos();
+  } catch (err) {
+    mostrarNotificacion(err.message, 'error', 6000);
+  }
+});
+
+// ---------------- Personal ----------------
+async function cargarPersonal() {
+  const cont = document.getElementById('personal');
+  try {
+    const datos = await apiJson('/api/verificacion/admin/permisos');
+    const claves = Object.keys(datos.catalogo);
+    cont.innerHTML = '<table class="vf-tabla"><thead><tr><th>Correo</th>' + claves.map(k => '<th title="' + esc(datos.catalogo[k]) + '">' + esc(k) + '</th>').join('') + '<th></th></tr></thead><tbody>' +
+      datos.personal.map(p => '<tr data-usuario="' + p.usuarioId + '"><td>' + esc(p.correo) + '</td>' +
+        claves.map(k => '<td><input type="checkbox" class="form-check-input" value="' + k + '" aria-label="' + esc(datos.catalogo[k]) + '"' + (p.permisos.includes(k) ? ' checked' : '') + '></td>').join('') +
+        '<td><button class="btn btn-sm btn-dark" data-guardar-permisos>Guardar</button></td></tr>').join('') + '</tbody></table>';
+  } catch (err) {
+    cont.innerHTML = '<p class="text-danger">' + esc(err.message) + '</p>';
+  }
+}
+document.getElementById('personal').addEventListener('click', async e => {
+  if (!e.target.closest('[data-guardar-permisos]')) return;
+  const tr = e.target.closest('tr');
+  try {
+    await apiJson('/api/verificacion/admin/permisos/' + tr.dataset.usuario, {
+      method: 'PUT',
+      body: JSON.stringify({ permisos: [...tr.querySelectorAll('input:checked')].map(i => i.value) })
+    });
+    mostrarNotificacion('Permisos actualizados.', 'success');
+  } catch (err) {
+    mostrarNotificacion(err.message, 'error', 6000);
+  }
+  cargarPersonal();
+});
+document.getElementById('form-personal').addEventListener('submit', async e => {
+  e.preventDefault();
+  try {
+    await apiJson('/api/verificacion/admin/personal', {
+      method: 'POST',
+      body: JSON.stringify({ correo: document.getElementById('np-correo').value, password: document.getElementById('np-pass').value, permisos: [] })
+    });
+    e.target.reset();
+    mostrarNotificacion('Usuario creado sin permisos.', 'success');
+    cargarPersonal();
+  } catch (err) {
+    mostrarNotificacion(err.message, 'error', 6000);
+  }
+});
+
+// ---------------- Inicio ----------------
+async function iniciar() {
+  const sesion = authLeer();
+  if (!sesion?.token || sesion.rol !== 'admin') {
+    window.location.replace('login.html?redirect=admin-verificaciones.html');
+    return;
+  }
+  try {
+    const [mis, cfg] = await Promise.all([
+      apiJson('/api/verificacion/admin/mis-permisos'),
+      fetch(API_BASE + '/api/auth/registro/tipos').then(r => r.json())
+    ]);
+    permisos = new Set(mis.permisos);
+    catalogoPermisos = mis.catalogo;
+    tipos = cfg.tipos || [];
+  } catch (err) {
+    document.getElementById('permisos-aviso').textContent = err.message;
+    document.getElementById('permisos-aviso').hidden = false;
+    return;
+  }
+  document.getElementById('f-tipo').insertAdjacentHTML('beforeend', tipos.map(t => '<option value="' + t.id + '">' + esc(t.etiqueta) + '</option>').join(''));
+  // Las pestañas sin permiso no se muestran; el servidor igual las rechazaría.
+  document.querySelectorAll('[data-requiere]').forEach(tab => {
+    if (!permisos.has(tab.dataset.requiere)) tab.closest('li').hidden = true;
+  });
+  if (!permisos.size) {
+    document.getElementById('permisos-aviso').textContent = 'Tu usuario administrativo no tiene permisos de verificación asignados. Solicítalos a quien administra los permisos.';
+    document.getElementById('permisos-aviso').hidden = false;
+  }
+  const primera = document.querySelector('[data-requiere]:not([hidden])');
+  if (permisos.has('verificacion.ver')) cargarLista();
+  else {
+    const visible = [...document.querySelectorAll('[data-requiere]')].find(t => !t.closest('li').hidden);
+    if (visible) bootstrap.Tab.getOrCreateInstance(visible).show();
+  }
+  if (permisos.has('productos.cumplimiento')) cargarProductos();
+  if (permisos.has('staff.permisos')) cargarPersonal();
+}
+document.addEventListener('DOMContentLoaded', iniciar);
+</script>
+</body>
+</html>

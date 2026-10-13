@@ -1,0 +1,153 @@
+{
+  "name": "W10 - Resolver contexto institucional (subflujo)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "31000000-0000-4000-8000-000000000001",
+      "name": "Entrada de subflujo",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const input = $input.first()?.json || {};\nconst known = new Set(['policia', 'defensa', 'bomberos', 'socorro', 'penitenciario', 'corporativo', 'general']);\nconst domains = {\n  'policia.gov.co': 'policia', 'policia.mil.co': 'policia',\n  'ejercito.mil.co': 'defensa', 'armada.mil.co': 'defensa',\n  'fac.mil.co': 'defensa', 'dimar.mil.co': 'defensa',\n  'mindefensa.gov.co': 'defensa', 'dnbc.gov.co': 'bomberos',\n  'bomberos.gov.co': 'bomberos', 'defensacivil.gov.co': 'socorro',\n  'defensacivil.org.co': 'socorro', 'inpec.gov.co': 'penitenciario'\n};\nconst email = typeof input.email === 'string' ? input.email.trim().toLowerCase() : '';\nconst requested = typeof input.institucion_id === 'string' ? input.institucion_id.trim().toLowerCase() : '';\nconst domain = email.includes('@') ? email.split('@').pop() : '';\nconst institution = known.has(requested) ? requested : (domains[domain] || 'corporativo');\nconst contexts = {\n  policia: { tema: 'policia', ruta_catalogo: '/index.html?vertical=policia', token_env: 'TENANT_POLICIA_ACCESS_TOKEN' },\n  defensa: { tema: 'defensa', ruta_catalogo: '/index.html?vertical=defensa', token_env: 'TENANT_DEFENSA_ACCESS_TOKEN' },\n  bomberos: { tema: 'bomberos', ruta_catalogo: '/index.html?vertical=bomberos', token_env: 'TENANT_BOMBEROS_ACCESS_TOKEN' },\n  socorro: { tema: 'socorro', ruta_catalogo: '/index.html?vertical=socorro', token_env: 'TENANT_SOCORRO_ACCESS_TOKEN' },\n  penitenciario: { tema: 'penitenciario', ruta_catalogo: '/index.html?vertical=penitenciario', token_env: 'TENANT_PENITENCIARIO_ACCESS_TOKEN' },\n  corporativo: { tema: 'corporativo', ruta_catalogo: '/index.html?vertical=corporativo', token_env: 'TENANT_CORPORATIVO_ACCESS_TOKEN' },\n  general: { tema: 'general', ruta_catalogo: '/index.html', token_env: null }\n};\nreturn [{ json: { institucion_id: institution, ...contexts[institution] } }];"
+      },
+      "id": "31000000-0000-4000-8000-000000000002",
+      "name": "Validar ámbito y preparar ruta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":2},"conditions":[{"leftValue":"={{ $json.institucion_id }}","rightValue":"policia","operator":{"type":"string","operation":"equals"}}],"combinator":"and"},"renameOutput":true,"outputKey":"policia"},
+            {"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":2},"conditions":[{"leftValue":"={{ $json.institucion_id }}","rightValue":"defensa","operator":{"type":"string","operation":"equals"}}],"combinator":"and"},"renameOutput":true,"outputKey":"defensa"},
+            {"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":2},"conditions":[{"leftValue":"={{ $json.institucion_id }}","rightValue":"bomberos","operator":{"type":"string","operation":"equals"}}],"combinator":"and"},"renameOutput":true,"outputKey":"bomberos"},
+            {"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":2},"conditions":[{"leftValue":"={{ $json.institucion_id }}","rightValue":"socorro","operator":{"type":"string","operation":"equals"}}],"combinator":"and"},"renameOutput":true,"outputKey":"socorro"},
+            {"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":2},"conditions":[{"leftValue":"={{ $json.institucion_id }}","rightValue":"penitenciario","operator":{"type":"string","operation":"equals"}}],"combinator":"and"},"renameOutput":true,"outputKey":"penitenciario"},
+            {"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":2},"conditions":[{"leftValue":"={{ $json.institucion_id }}","rightValue":"corporativo","operator":{"type":"string","operation":"equals"}}],"combinator":"and"},"renameOutput":true,"outputKey":"corporativo"},
+            {"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":2},"conditions":[{"leftValue":"={{ $json.institucion_id }}","rightValue":"general","operator":{"type":"string","operation":"equals"}}],"combinator":"and"},"renameOutput":true,"outputKey":"general"}
+          ]
+        },
+        "options": {"fallbackOutput":"extra"}
+      },
+      "id": "31000000-0000-4000-8000-000000000003",
+      "name": "Switch por institución",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [500, 0]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{institucion_id:'policia',tema:'policia',ruta_catalogo:'/index.html?vertical=policia',token_env:'TENANT_POLICIA_ACCESS_TOKEN'}}];"
+      },
+      "id": "31000000-0000-4000-8000-000000000004",
+      "name": "Contexto Policía",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, -360]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{institucion_id:'defensa',tema:'defensa',ruta_catalogo:'/index.html?vertical=defensa',token_env:'TENANT_DEFENSA_ACCESS_TOKEN'}}];"
+      },
+      "id": "31000000-0000-4000-8000-000000000005",
+      "name": "Contexto Defensa",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, -240]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{institucion_id:'bomberos',tema:'bomberos',ruta_catalogo:'/index.html?vertical=bomberos',token_env:'TENANT_BOMBEROS_ACCESS_TOKEN'}}];"
+      },
+      "id": "31000000-0000-4000-8000-000000000006",
+      "name": "Contexto Bomberos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, -120]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{institucion_id:'socorro',tema:'socorro',ruta_catalogo:'/index.html?vertical=socorro',token_env:'TENANT_SOCORRO_ACCESS_TOKEN'}}];"
+      },
+      "id": "31000000-0000-4000-8000-000000000007",
+      "name": "Contexto Socorro",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 0]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{institucion_id:'penitenciario',tema:'penitenciario',ruta_catalogo:'/index.html?vertical=penitenciario',token_env:'TENANT_PENITENCIARIO_ACCESS_TOKEN'}}];"
+      },
+      "id": "31000000-0000-4000-8000-000000000008",
+      "name": "Contexto Penitenciario",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 120]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{institucion_id:'corporativo',tema:'corporativo',ruta_catalogo:'/index.html?vertical=corporativo',token_env:'TENANT_CORPORATIVO_ACCESS_TOKEN'}}];"
+      },
+      "id": "31000000-0000-4000-8000-000000000009",
+      "name": "Contexto Corporativo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 240]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{institucion_id:'general',tema:'general',ruta_catalogo:'/index.html',token_env:null}}];"
+      },
+      "id": "31000000-0000-4000-8000-000000000010",
+      "name": "Contexto General",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 360]
+    }
+  ],
+  "connections": {
+    "Entrada de subflujo": {
+      "main": [[{"node":"Validar ámbito y preparar ruta","type":"main","index":0}]]
+    },
+    "Validar ámbito y preparar ruta": {
+      "main": [[{"node":"Switch por institución","type":"main","index":0}]]
+    },
+    "Switch por institución": {
+      "main": [
+        [{"node":"Contexto Policía","type":"main","index":0}],
+        [{"node":"Contexto Defensa","type":"main","index":0}],
+        [{"node":"Contexto Bomberos","type":"main","index":0}],
+        [{"node":"Contexto Socorro","type":"main","index":0}],
+        [{"node":"Contexto Penitenciario","type":"main","index":0}],
+        [{"node":"Contexto Corporativo","type":"main","index":0}],
+        [{"node":"Contexto General","type":"main","index":0}],
+        [{"node":"Contexto Corporativo","type":"main","index":0}]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "31000000-0000-4000-8000-000000000011",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

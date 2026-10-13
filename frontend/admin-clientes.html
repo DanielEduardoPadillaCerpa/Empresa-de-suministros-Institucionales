@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clientes registrados — Panel administrativo</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .clientes-page { background: #f8fafc; min-height: 100vh; }
+  .navbar-clientes { box-shadow: 0 1px 12px rgba(15, 23, 42, .1); }
+  .clientes-intro { padding: 2.25rem 0 1.5rem; }
+  .clientes-intro h1 { color: #0f172a; font-weight: 700; }
+  .clientes-toolbar { background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1rem 1.25rem; box-shadow: 0 4px 16px rgba(15, 23, 42, .04); }
+  .btn-nuevo-cliente { background: #0284c7; border-color: #0284c7; color: #fff; font-weight: 700; }
+  .btn-nuevo-cliente:hover, .btn-nuevo-cliente:focus { background: #dc2626; border-color: #dc2626; color: #fff; }
+  .clientes-seccion { margin-top: 2rem; }
+  .clientes-seccion h2 { color: #0f172a; font-size: 1.15rem; font-weight: 700; }
+  .clientes-seccion h2 span { color: #64748b; font-size: .8rem; font-weight: 500; }
+  .clientes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(285px, 1fr)); gap: 1rem; }
+  .cliente-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.15rem; box-shadow: 0 5px 18px rgba(15, 23, 42, .05); }
+  .cliente-card h3 { color: #0f172a; font-size: 1rem; font-weight: 700; margin: 0; }
+  .cliente-meta { color: #64748b; font-size: .82rem; }
+  .cliente-dato { border-top: 1px solid #f1f5f9; padding-top: .65rem; margin-top: .65rem; }
+  .cliente-dato strong { color: #334155; font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; }
+  .cliente-dato div { color: #0f172a; overflow-wrap: anywhere; }
+  .cliente-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: 1rem; }
+  .estado-vacio { border: 1px dashed #cbd5e1; border-radius: 1rem; color: #64748b; padding: 2.5rem 1rem; text-align: center; background: #fff; }
+  .badge-tipo { background: #e0f2fe; color: #0369a1; font-size: .68rem; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/theme-modern.css">
+<link rel="stylesheet" href="css/global-ui.css">
+<link rel="stylesheet" href="css/admin-console.css">
+</head>
+<body class="clientes-page admin-console-page admin-clients-page" data-gl-nav="off" data-gl-cart="off">
+
+<script src="js/global-layout.js"></script>
+<nav class="navbar navbar-expand-lg navbar-institucional py-2 navbar-clientes">
+  <div class="container">
+    <a class="navbar-brand" href="landing.html" aria-label="Suministros Institucionales - Ir al inicio">
+      <img class="brand-logo" src="http://localhost:8081/img/logo-suministros.png" alt="Suministros Institucionales" width="171" height="46">
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav1">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="nav1">
+      <ul class="navbar-nav ms-auto gap-lg-3 align-items-lg-center">
+        <li class="nav-item"><a class="nav-link" href="admin-dashboard.html" data-i18n="nav_dashboard">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link active" href="admin-clientes.html">Clientes</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-productos.html">Productos</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-pedidos.html">Pedidos</a></li>
+        <li class="nav-item dropdown selector-idioma"></li>
+        <li class="nav-item d-flex align-items-center" id="auth-nav-slot" data-i18n="nav_auth">Autenticación</li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-5">
+  <div class="clientes-intro admin-console-hero">
+    <div class="eyebrow mb-2" data-i18n="admin_clients_header">Panel administrativo · Acceso restringido</div>
+    <h1 class="h2 mb-2" data-i18n="admin_clients_title">Clientes registrados</h1>
+    <p class="text-secondary mb-0" data-i18n="admin_clients_lead">Datos privados descifrados solo para personal autorizado. No compartas esta pantalla ni la dejes accesible sin control de acceso en producción.</p>
+  </div>
+  <div class="clientes-toolbar mb-4 d-flex flex-wrap gap-2 align-items-center justify-content-between">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <input type="hidden" id="apiBase" value="http://localhost:8081">
+      <button class="btn btn-sm btn-outline-secondary" onclick="cargarClientes()" data-i18n="admin_clients_load_btn">Actualizar clientes</button>
+    </div>
+    <button class="btn btn-sm btn-nuevo-cliente"
+        onclick="abrirRegistroCliente()"
+          data-i18n="admin_clients_new_btn">
+      + Nuevo cliente
+    </button>
+
+    </div>
+
+  <div id="estado" class="d-none"></div>
+  <div id="clientesB2B" class="clientes-seccion">
+    <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="mb-0">Clientes B2B <span>· Empresas e instituciones con NIT</span></h2><span class="badge rounded-pill bg-light text-secondary" id="contadorB2B">0</span></div>
+    <div id="gridB2B" class="clientes-grid"><div class="estado-vacio">Sin datos cargados todavía.</div></div>
+  </div>
+  <div id="clientesB2C" class="clientes-seccion">
+    <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="mb-0">Clientes B2C <span>· Personas con cédula y estaciones asociadas</span></h2><span class="badge rounded-pill bg-light text-secondary" id="contadorB2C">0</span></div>
+    <div id="gridB2C" class="clientes-grid"><div class="estado-vacio">Sin datos cargados todavía.</div></div>
+  </div>
+</main>
+
+<!-- Modal para ver compras -->
+<div class="modal fade" id="modalCompras" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" data-i18n="admin_clients_purchases_title">Compras del cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th data-i18n="admin_clients_purchase_id">ID Pedido</th>
+              <th data-i18n="admin_clients_purchase_date">Fecha</th>
+              <th data-i18n="admin_clients_purchase_products">Productos</th>
+              <th data-i18n="admin_clients_purchase_total">Total</th>
+              <th data-i18n="admin_clients_purchase_status">Estado</th>
+            </tr>
+          </thead>
+          <tbody id="modalComprasBody">
+            <tr><td colspan="5" class="text-center text-muted" data-i18n="admin_clients_purchase_no_data">Sin compras registradas.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para crear/editar cliente -->
+<div class="modal fade" id="modalClienteForm" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalClienteFormTitulo" data-i18n="admin_clients_form_title">Nuevo cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formCliente" onsubmit="return false;">
+          <input type="hidden" id="clienteId" value="">
+          <div class="mb-3">
+            <label class="form-label small" data-i18n="admin_clients_form_unit">Unidad</label>
+            <input type="text" class="form-control" id="clienteNombreUnidad" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small" data-i18n="admin_clients_form_nit">NIT</label>
+            <input type="text" class="form-control" id="clienteNit" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small" data-i18n="admin_clients_form_responsible">Funcionario responsable</label>
+            <input type="text" class="form-control" id="clienteNombreFuncionario" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small" data-i18n="admin_clients_form_email">Correo</label>
+            <input type="email" class="form-control" id="clienteCorreo" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small" data-i18n="admin_clients_form_phone">Teléfono</label>
+            <input type="text" class="form-control" id="clienteTelefono">
+          </div>
+          <div id="formClienteError" class="small text-danger" style="display:none;"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal" data-i18n="admin_clients_form_cancel">Cancelar</button>
+        <button type="button" class="btn btn-sm btn-dark" id="btnGuardarCliente" onclick="guardarCliente()" data-i18n="admin_clients_form_save">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="institucional py-4">
+  <div class="container d-flex flex-wrap justify-content-between small">
+    <span data-i18n="admin_clients_footer_copyright">© 2026 Suministros Institucionales S.A.S.</span>
+    <span data-i18n="admin_clients_footer_internal">Vista de uso interno — no exponer públicamente sin autenticación</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/chatbot.js"></script>
+<script>
+function apiBaseUrl() {
+  return document.getElementById('apiBase').value.replace(/\/$/, '');
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
+}
+
+// Redirige a login si no hay sesión, y devuelve la sesión si la hay.
+function exigirSesion() {
+  const sesion = authLeer();
+  if (!sesion?.token) {
+    window.location.href = 'login.html?redirect=admin-clientes.html';
+    return null;
+  }
+  if (sesion.rol !== 'admin') {
+    window.location.href = 'index.html';
+    return null;
+  }
+  return sesion;
+}
+
+function authHeaders(sesion, extra) {
+  return Object.assign({ Authorization: 'Bearer ' + sesion.token }, extra || {});
+}
+
+// Cache local de los clientes cargados, para poder rellenar el
+// formulario de edición sin volver a pedirlos al backend.
+let clientesCache = [];
+
+function esClienteB2C(cliente) {
+  return String(cliente.tipo || cliente.tipoCliente || '').toUpperCase() === 'B2C'
+    || Boolean(cliente.cedula || cliente.documento || cliente.estaciones);
+}
+
+function renderClienteCard(cliente, b2c) {
+  const documento = b2c ? (cliente.cedula || cliente.documento || 'No registrado') : (cliente.nit || 'No registrado');
+  const estaciones = b2c ? (Array.isArray(cliente.estaciones) ? cliente.estaciones.join(', ') : (cliente.estaciones || 'Sin estaciones asociadas')) : '';
+  return `<article class="cliente-card">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <div><span class="badge rounded-pill badge-tipo">${b2c ? 'B2C · Cédula' : 'B2B · NIT'}</span><h3 class="mt-2">${escapeHtml(cliente.nombreUnidad || cliente.nombre || 'Cliente sin nombre')}</h3></div>
+      <span class="cliente-meta">#${escapeHtml(cliente.id)}</span>
+    </div>
+    <div class="cliente-dato"><strong>${b2c ? 'Cédula' : 'NIT'}</strong><div>${escapeHtml(documento)}</div></div>
+    ${b2c ? `<div class="cliente-dato"><strong>Estaciones</strong><div>${escapeHtml(estaciones)}</div></div>` : `<div class="cliente-dato"><strong>Funcionario responsable</strong><div>${escapeHtml(cliente.nombreFuncionario || 'No registrado')}</div></div>`}
+    <div class="cliente-dato"><strong>Contacto</strong><div>${escapeHtml(cliente.correo || 'Sin correo')} · ${escapeHtml(cliente.telefono || 'Sin teléfono')}</div></div>
+    <div class="cliente-meta mt-2">Registrado: ${escapeHtml((cliente.fechaRegistro ?? '').toString().replace('T', ' ').slice(0, 16) || 'Sin fecha')}</div>
+    <div class="cliente-actions">
+      <button class="btn btn-sm btn-primary" onclick="verCompras(${JSON.stringify(cliente.id)})">Ver compras</button>
+      <button class="btn btn-sm btn-outline-secondary" onclick="abrirModalEditarCliente(${JSON.stringify(cliente.id)})">Editar</button>
+      <button class="btn btn-sm btn-outline-danger" onclick="eliminarCliente(${JSON.stringify(cliente.id)})">Eliminar</button>
+    </div>
+  </article>`;
+}
+
+function renderClientes(clientes) {
+  const b2b = clientes.filter(c => !esClienteB2C(c));
+  const b2c = clientes.filter(esClienteB2C);
+  document.getElementById('contadorB2B').textContent = b2b.length;
+  document.getElementById('contadorB2C').textContent = b2c.length;
+  document.getElementById('gridB2B').innerHTML = b2b.length ? b2b.map(c => renderClienteCard(c, false)).join('') : '<div class="estado-vacio">No hay clientes B2B registrados.</div>';
+  document.getElementById('gridB2C').innerHTML = b2c.length ? b2c.map(c => renderClienteCard(c, true)).join('') : '<div class="estado-vacio">No hay clientes B2C registrados.</div>';
+}
+
+async function cargarClientes() {
+  const sesion = exigirSesion();
+  if (!sesion) return;
+
+  const base = apiBaseUrl();
+  const estado = document.getElementById('estado');
+  estado.textContent = 'Consultando ' + base + '/api/clientes ...';
+  try {
+    const resp = await fetch(base + '/api/clientes', {
+      headers: authHeaders(sesion)
+    });
+    if (resp.status === 401) {
+      window.location.href = 'login.html?redirect=admin-clientes.html';
+      return;
+    }
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const clientes = await resp.json();
+    clientesCache = clientes;
+    renderClientes(clientes);
+    estado.textContent = clientes.length + ' cliente(s) cargado(s).';
+  } catch (err) {
+    estado.textContent = '';
+    renderClientes([]);
+    mostrarNotificacion('Portal temporalmente fuera de línea. Reconectando con el servidor central...', 'error');
+  }
+}
+
+async function verCompras(clienteId) {
+  const sesion = exigirSesion();
+  if (!sesion) return;
+  const modalBody = document.getElementById('modalComprasBody');
+  modalBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" data-i18n="admin_clients_modal_purchases_loading">Consultando compras...</td></tr>';
+  try {
+    const resp = await fetch(apiBaseUrl() + '/api/pedidos/' + encodeURIComponent(clienteId), {
+      headers: authHeaders(sesion)
+    });
+    if (resp.status === 401) {
+      window.location.href = 'login.html?redirect=admin-clientes.html';
+      return;
+    }
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const pedidos = await resp.json();
+    if (!pedidos.length) {
+      modalBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" data-i18n="admin_clients_modal_purchases_none">Este cliente no tiene compras registradas.</td></tr>';
+    } else {
+      modalBody.innerHTML = pedidos.map(p => `
+        <tr>
+          <td>${escapeHtml(p.id)}</td>
+          <td>${escapeHtml(new Date(p.fechaPedido).toLocaleString())}</td>
+          <td>${escapeHtml(p.items.map(i => i.nombre + ' × ' + i.cantidad).join(', '))}</td>
+          <td>$${escapeHtml(p.total)}</td>
+          <td>${escapeHtml(p.estado)}</td>
+        </tr>`).join('');
+    }
+    new bootstrap.Modal(document.getElementById('modalCompras')).show();
+  } catch (err) {
+    modalBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Sin compras disponibles temporalmente.</td></tr>';
+    mostrarNotificacion('Portal temporalmente fuera de línea. Reconectando con el servidor central...', 'error');
+  }
+}
+
+// ---------- Crear / Editar ----------
+
+function limpiarFormCliente() {
+  document.getElementById('clienteId').value = '';
+  document.getElementById('clienteNombreUnidad').value = '';
+  document.getElementById('clienteNit').value = '';
+  document.getElementById('clienteNombreFuncionario').value = '';
+  document.getElementById('clienteCorreo').value = '';
+  document.getElementById('clienteTelefono').value = '';
+  const err = document.getElementById('formClienteError');
+  err.style.display = 'none';
+  err.textContent = '';
+}
+
+function abrirModalNuevoCliente() {
+  if (!exigirSesion()) return;
+  abrirRegistroCliente();
+}
+
+function abrirModalEditarCliente(clienteId) {
+  if (!exigirSesion()) return;
+  const c = clientesCache.find(x => String(x.id) === String(clienteId));
+  if (!c) {
+    mostrarNotificacion(textoI18n('admin_clients_not_found', 'No se encontró el cliente en la lista cargada. Vuelve a cargar clientes e inténtalo de nuevo.'), 'error');
+    return;
+  }
+  abrirRegistroCliente(c.id);
+}
+
+function abrirRegistroCliente(clienteId) {
+  const sesion = exigirSesion();
+  if (!sesion) return;
+  const destino = new URL('registro.html', window.location.href);
+  destino.searchParams.set('modo', 'admin');
+  if (clienteId !== undefined && clienteId !== null) {
+    destino.searchParams.set('id', String(clienteId));
+  }
+  window.location.href = destino.href;
+}
+
+async function guardarCliente() {
+  const sesion = exigirSesion();
+  if (!sesion) return;
+
+  const errEl = document.getElementById('formClienteError');
+  errEl.style.display = 'none';
+
+  const form = document.getElementById('formCliente');
+  if (!form.reportValidity()) return;
+
+  const id = document.getElementById('clienteId').value;
+  const payload = {
+    nombreUnidad: document.getElementById('clienteNombreUnidad').value.trim(),
+    nit: document.getElementById('clienteNit').value.trim(),
+    nombreFuncionario: document.getElementById('clienteNombreFuncionario').value.trim(),
+    correo: document.getElementById('clienteCorreo').value.trim(),
+    telefono: document.getElementById('clienteTelefono').value.trim()
+  };
+
+  const esEdicion = !!id;
+  const url = apiBaseUrl() + '/api/clientes' + (esEdicion ? '/' + encodeURIComponent(id) : '');
+  const metodo = esEdicion ? 'PUT' : 'POST';
+
+  const btn = document.getElementById('btnGuardarCliente');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    const resp = await fetch(url, {
+      method: metodo,
+      headers: authHeaders(sesion, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify(payload)
+    });
+    if (resp.status === 401) {
+      window.location.href = 'login.html?redirect=admin-clientes.html';
+      return;
+    }
+    if (!resp.ok) {
+      let detalle = 'HTTP ' + resp.status;
+      try {
+        const cuerpo = await resp.json();
+        if (cuerpo?.mensaje) detalle = cuerpo.mensaje;
+      } catch {}
+      throw new Error(detalle);
+    }
+    bootstrap.Modal.getInstance(document.getElementById('modalClienteForm')).hide();
+    await cargarClientes();
+  } catch (err) {
+    errEl.textContent = 'No se pudo guardar el cliente (' + err.message + ').';
+    errEl.style.display = 'block';
+    mostrarNotificacion('Portal temporalmente fuera de línea. Reconectando con el servidor central...', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Guardar';
+  }
+}
+
+// ---------- Eliminar ----------
+
+async function eliminarCliente(clienteId) {
+  const sesion = exigirSesion();
+  if (!sesion) return;
+
+  const c = clientesCache.find(x => String(x.id) === String(clienteId));
+  const nombre = c?.nombreUnidad ?? ('cliente #' + clienteId);
+  if (!await confirmarAccion(textoI18n('admin_clients_delete_confirm', '¿Eliminar "{nombre}"? Esta acción no se puede deshacer.').replace('{nombre}', nombre))) return;
+
+  const estado = document.getElementById('estado');
+  try {
+    const resp = await fetch(apiBaseUrl() + '/api/clientes/' + encodeURIComponent(clienteId), {
+      method: 'DELETE',
+      headers: authHeaders(sesion)
+    });
+    if (resp.status === 401) {
+      window.location.href = 'login.html?redirect=admin-clientes.html';
+      return;
+    }
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    estado.textContent = 'Cliente eliminado correctamente.';
+    await cargarClientes();
+  } catch (err) {
+    estado.textContent = 'No se pudo eliminar el cliente (' + err.message + ').';
+    mostrarNotificacion('Portal temporalmente fuera de línea. Reconectando con el servidor central...', 'error');
+  }
+}
+</script>
+</body>
+</html>

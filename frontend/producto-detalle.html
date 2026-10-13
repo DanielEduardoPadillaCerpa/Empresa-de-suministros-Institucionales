@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="detail_page_title">Detalle de producto — Suministros Institucionales</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/theme-modern.css">
+<link rel="stylesheet" href="css/catalogo.css">
+<style>
+  /* ============================================================
+     DETALLE DE PRODUCTO — capa visual premium
+     Scoped a body.detalle-page. Sin cambios en ids, clases de JS ni lógica.
+     ============================================================ */
+  body.detalle-page {
+    --dp-navy: #0B2D4A;
+    --dp-navy-deep: #071c30;
+    --dp-green: #00B060;
+    --dp-green-dark: #009a53;
+    --dp-ink: #0b2340;
+    --dp-soft: #6b7b90;
+    --dp-line: rgba(11,45,74,.10);
+  }
+
+  /* ---------- Fondo corporativo con patrones vectoriales en esquinas ---------- */
+  body.detalle-page .detalle-shell {
+    position: relative;
+    background:
+      /* patrón esquina superior izquierda (baja opacidad) */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='460' height='320' viewBox='0 0 460 320' fill='none' stroke='%2322c55e' stroke-width='1.2' stroke-opacity='.32'%3E%3Cpath d='M0 60h110l60 60v90M0 130h60l50 50M40 0l90 90h120M0 220h40l40 40v60M170 0v40l50 50'/%3E%3Ccircle cx='110' cy='60' r='3' fill='%2322c55e' fill-opacity='.5'/%3E%3Ccircle cx='170' cy='210' r='3' fill='%2322c55e' fill-opacity='.5'/%3E%3Ccircle cx='250' cy='90' r='3' fill='%2322c55e' fill-opacity='.5'/%3E%3C/svg%3E") left top / 460px 320px no-repeat,
+      /* patrón esquina superior derecha */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='460' height='320' viewBox='0 0 460 320' fill='none' stroke='%2322c55e' stroke-width='1.2' stroke-opacity='.32'%3E%3Cpath d='M460 70h-100l-60 60v80M460 140h-60l-50 50M420 0l-90 90h-120M460 230h-40l-40 40v50M290 0v40l-50 50'/%3E%3Ccircle cx='360' cy='70' r='3' fill='%2322c55e' fill-opacity='.5'/%3E%3Ccircle cx='300' cy='220' r='3' fill='%2322c55e' fill-opacity='.5'/%3E%3Ccircle cx='210' cy='90' r='3' fill='%2322c55e' fill-opacity='.5'/%3E%3C/svg%3E") right top / 460px 320px no-repeat,
+      radial-gradient(900px 480px at 88% 105%, rgba(0,176,96,.20), transparent 62%),
+      radial-gradient(700px 400px at 5% 100%, rgba(29,95,232,.14), transparent 60%),
+      linear-gradient(180deg, #0B2D4A 0%, #08233b 55%, #071c30 100%);
+  }
+  body.detalle-page .detalle-shell .navbar-institucional {
+    background: rgba(11,45,74,.72) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    backdrop-filter: blur(14px) saturate(150%);
+    border-bottom: 1px solid rgba(255,255,255,.08) !important;
+    box-shadow: none !important;
+  }
+  body.catalogo-page.detalle-page .navbar-institucional .nav-link { letter-spacing: .01em; }
+
+  body.detalle-page main.detalle-main { padding-top: 1.75rem; padding-bottom: 4rem; }
+  body.detalle-page .detalle-shell #estado-detalle { color: #cfe0f0 !important; font-size: .95rem; }
+
+  /* ---------- Botón volver ---------- */
+  .btn-volver {
+    display: inline-flex; align-items: center; gap: .5rem;
+    margin-bottom: 1.75rem; padding: .6rem 1.15rem;
+    font-size: .86rem; font-weight: 600; text-decoration: none;
+    color: var(--dp-navy); background: #fff;
+    border: 1px solid rgba(255,255,255,.6); border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.10), 0 10px 24px rgba(0,0,0,.18);
+    transition: transform .2s ease, box-shadow .2s ease, color .2s ease;
+  }
+  .btn-volver:hover {
+    color: var(--dp-green-dark); transform: translateX(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,.12), 0 14px 30px rgba(0,0,0,.24);
+  }
+
+  /* ---------- Imagen ---------- */
+  .detalle-img {
+    position: sticky; top: 6.5rem; width: 100%; overflow: hidden;
+    background: #eef2f8; border: 1px solid rgba(255,255,255,.14); border-radius: 22px;
+    box-shadow: 0 4px 10px rgba(0,0,0,.18), 0 24px 56px rgba(0,0,0,.35);
+  }
+  .detalle-img img { display: block; width: 100%; height: 100%; min-height: 340px; object-fit: cover; }
+
+  /* ---------- Información principal (texto claro sobre fondo oscuro) ---------- */
+  body.detalle-page .detalle-info #detalle-categoria { color: #22c55e !important; }
+  body.detalle-page .detalle-info h1 {
+    font-family: "Plus Jakarta Sans", "Inter", sans-serif; font-weight: 800;
+    font-size: clamp(1.7rem, 2.6vw, 2.35rem); line-height: 1.15; letter-spacing: -.025em;
+    color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,.3);
+  }
+  body.detalle-page .detalle-info #detalle-descripcion {
+    max-width: 52ch; font-size: 1.02rem; line-height: 1.65; color: rgba(235,242,250,.86) !important;
+  }
+  .detalle-precio {
+    font-family: "Plus Jakarta Sans", "Inter", sans-serif; font-size: clamp(2.2rem, 3.4vw, 2.9rem);
+    font-weight: 800; letter-spacing: -.03em; color: #fff; text-shadow: 0 2px 18px rgba(0,0,0,.3);
+  }
+  body.detalle-page .badge-restringido { background: linear-gradient(135deg,#dc2626,#991b1b) !important; color: #fff !important; border: 0 !important; }
+  body.detalle-page .detalle-info .aviso-sensible {
+    color: #7f1d1d; background: rgba(255,255,255,.96); border: 1px solid rgba(220,38,38,.35);
+    border-left: 4px solid #dc2626; border-radius: 14px; padding: .85rem 1rem; font-size: .88rem;
+    box-shadow: 0 8px 20px rgba(0,0,0,.18);
+  }
+
+  /* ---------- Cajas Disponibilidad / Despacho ---------- */
+  .caja-info {
+    display: flex; align-items: center; gap: 1rem; margin-bottom: .85rem; padding: 1rem 1.15rem;
+    background: #fff; border: 1px solid rgba(255,255,255,.7) !important; border-radius: 18px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,.08), 0 12px 28px rgba(0,0,0,.20);
+  }
+  .caja-info:hover { transform: none; }
+  .caja-info-icono {
+    flex: 0 0 auto; width: 46px; height: 46px; border-radius: 14px; color: #fff;
+    background: linear-gradient(135deg, #1fd47e, var(--dp-green)); box-shadow: 0 8px 16px rgba(0,176,96,.35);
+  }
+  .caja-info-icono svg { width: 22px; height: 22px; }
+  .caja-info-titulo { font-size: .95rem; font-weight: 800; color: var(--dp-ink); line-height: 1.25; }
+  .caja-info-sub { font-size: .85rem; color: var(--dp-soft); line-height: 1.4; }
+
+  /* ---------- Tarjeta de compra ---------- */
+  .buy-box {
+    position: sticky; top: 6.5rem; padding: 1.6rem; background: #fff;
+    border: 1px solid rgba(255,255,255,.7) !important; border-radius: 22px !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,.12), 0 28px 60px rgba(0,0,0,.32);
+  }
+  .buy-box:hover { transform: none; }
+  .buy-box-titulo {
+    margin-bottom: .85rem; font-size: .72rem; font-weight: 800; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--dp-soft);
+  }
+
+  /* Tallas */
+  .tallas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin-bottom: 1.5rem; }
+  .talla-btn {
+    width: 100%; padding: .6rem 0; font-size: .92rem; font-weight: 700; text-align: center; cursor: pointer;
+    color: var(--dp-ink); background: #fff; border: 1.5px solid rgba(11,45,74,.16); border-radius: 12px;
+    transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
+  }
+  .talla-btn:hover { border-color: var(--dp-green); transform: translateY(-1px); }
+  .talla-btn.seleccionada {
+    border-color: var(--dp-green); background: rgba(0,176,96,.10); color: #067a43;
+    box-shadow: 0 0 0 3px rgba(0,176,96,.18);
+  }
+  .talla-btn.agotada { color: #b6c0cc; border-color: rgba(11,45,74,.07); background: #f4f6f9; cursor: not-allowed; transform: none; }
+  .talla-agotada-label { margin-top: .25rem; font-size: .62rem; text-align: center; color: #aab4c0; }
+
+  /* Selector de cantidad */
+  .stepper {
+    display: inline-flex; align-items: center; overflow: hidden;
+    background: #f4f7fb; border: 1.5px solid rgba(11,45,74,.14); border-radius: 12px;
+  }
+  .stepper button {
+    width: 2.4rem; height: 2.9rem; font-size: 1.1rem; font-weight: 700; color: var(--dp-ink);
+    background: transparent; border: 0; cursor: pointer; transition: background .15s ease, color .15s ease;
+  }
+  .stepper button:hover { background: rgba(0,176,96,.12); color: #067a43; }
+  .stepper input {
+    width: 3rem; height: 2.9rem; padding: 0; font-weight: 700; text-align: center; color: var(--dp-ink);
+    background: transparent; border: 0; box-shadow: none; -moz-appearance: textfield;
+  }
+  .stepper input:focus { outline: none; box-shadow: none; }
+  .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  /* Botón principal (verde esmeralda plano) */
+  .btn-agregar-carrito {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    color: #fff !important; font-weight: 700; background: var(--dp-green) !important; background-image: none !important;
+    border: 0 !important; border-radius: 12px; box-shadow: 0 8px 18px rgba(0,176,96,.32);
+  }
+  .btn-agregar-carrito::before {
+    content: ""; width: 18px; height: 18px; background: currentColor; flex: 0 0 auto;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='21' r='1'/%3E%3Ccircle cx='20' cy='21' r='1'/%3E%3Cpath d='M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='21' r='1'/%3E%3Ccircle cx='20' cy='21' r='1'/%3E%3Cpath d='M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+  .btn-agregar-carrito:hover { background: var(--dp-green-dark) !important; color: #fff !important; transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,176,96,.42); }
+  .btn-agregar-carrito:disabled { background: #b4bdc8 !important; box-shadow: none; transform: none; }
+
+  .confirmacion-agregado {
+    display: none; align-items: center; gap: .4rem; margin-top: .7rem;
+    font-size: .86rem; font-weight: 700; color: #067a43;
+  }
+
+  .btn-cotizacion {
+    display: block; width: 100%; margin-top: 1rem; padding: .75rem; text-align: center; text-decoration: none;
+    font-size: .86rem; font-weight: 700; color: var(--dp-ink); background: #fff;
+    border: 1.5px solid rgba(11,45,74,.16); border-radius: 12px; transition: all .2s ease;
+  }
+  .btn-cotizacion:hover { color: #067a43; border-color: var(--dp-green); background: rgba(0,176,96,.06); }
+
+  /* Ficha técnica y garantías */
+  .ficha-lista { margin: 1.1rem 0 0; padding: 0; list-style: none; }
+  .ficha-lista li { display: flex; align-items: flex-start; gap: .85rem; padding: .8rem 0; font-size: .88rem; color: #4a5b70; border-top: 1px solid var(--dp-line); }
+  .ficha-lista li:first-child { border-top: 0; }
+  .ficha-lista strong { color: var(--dp-ink); }
+  .ficha-icono {
+    flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; color: #067a43;
+    background: rgba(0,176,96,.12); box-shadow: none;
+  }
+  .ficha-icono svg { width: 16px; height: 16px; }
+  .ficha-lista .btn-link { color: var(--dp-ink); font-weight: 700; }
+  .ficha-lista .btn-link:hover { color: #067a43; text-decoration: none; }
+  .ficha-nota { margin-top: .6rem; font-size: .74rem; line-height: 1.5; color: #98a5b5; }
+
+  /* ---------- Chatbot flotante verde esmeralda ---------- */
+  body.detalle-page #chatbot-toggle {
+    background: var(--dp-green) !important; color: #fff !important; border: 0 !important;
+    box-shadow: 0 4px 10px rgba(0,176,96,.35), 0 16px 36px rgba(0,60,35,.45);
+  }
+  body.detalle-page #chatbot-toggle i { display: inline-flex; font-style: normal; }
+  body.detalle-page #chatbot-toggle svg { width: 28px; height: 28px; }
+
+  @media (max-width: 991.98px) {
+    .detalle-img, .buy-box { position: static; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn-volver, .btn-agregar-carrito, .talla-btn { transition: none; }
+  }
+</style>
+<link rel="stylesheet" href="css/global-ui.css">
+</head>
+<body class="catalogo-page detalle-page">
+
+<div class="detalle-shell">
+
+<script src="js/global-layout.js"></script>
+
+<main class="container detalle-main">
+
+  <a href="index.html" class="btn-volver">← <span data-i18n="detail_back_link">Volver a Productos Disponibles</span></a>
+
+  <div id="estado-detalle" class="text-muted small mb-3"></div>
+
+  <div id="detalle-contenido" class="row g-4" style="display:none;">
+
+    <!-- ── Imagen ── -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="detalle-img">
+        <img id="detalle-imagen" src="" alt="">
+      </div>
+    </div>
+
+    <!-- ── Información principal ── -->
+    <div class="col-12 col-md-6 col-lg-4 detalle-info">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <span class="eyebrow" id="detalle-categoria" data-i18n-ignore></span>
+        <span class="badge-restringido badge rounded-pill" id="detalle-restringido" style="display:none;" data-i18n="detail_restricted_badge">Equipo restringido</span>
+      </div>
+      <h1 class="display-serif h3 mb-3" id="detalle-nombre" data-i18n-ignore></h1>
+      <p class="text-muted" id="detalle-descripcion" data-i18n-ignore></p>
+
+      <div class="detalle-precio my-3" id="detalle-precio"></div>
+
+      <div id="detalle-aviso-restringido" class="aviso-sensible mb-3" style="display:none;">
+        <span data-i18n="detail_restricted_notice">Este producto requiere validación especial: tu cuenta debe tener registrada la autorización/verificación de antecedentes para poder comprarlo.</span>
+        <a href="registro.html" data-i18n="cart_restricted_notice_link">formulario de registro</a>.
+      </div>
+
+      <div class="caja-info d-flex align-items-center gap-3 rounded-3">
+        <div class="caja-info-icono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg>
+        </div>
+        <div>
+          <div class="caja-info-titulo" data-i18n="detail_availability">Disponibilidad</div>
+          <div class="caja-info-sub" id="detalle-disponibilidad"></div>
+        </div>
+      </div>
+      <div class="caja-info d-flex align-items-center gap-3 rounded-3">
+        <div class="caja-info-icono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 3h13v13H1z"/><path d="M14 8h4l4 4v4h-8"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="18.5" cy="18.5" r="2"/></svg>
+        </div>
+        <div>
+          <div class="caja-info-titulo" data-i18n="detail_shipping">Despacho</div>
+          <div class="caja-info-sub" data-i18n="products_shipping_note">A la instalación registrada en 3–5 días hábiles</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Buy box ── -->
+    <div class="col-12 col-lg-4">
+      <div class="buy-box">
+
+        <!-- Selector de tallas: solo aparece si el producto trae el campo `tallas` -->
+        <div id="detalle-tallas-wrap" style="display:none;">
+          <div class="buy-box-titulo">Selector de tallas</div>
+          <div id="detalle-tallas-grid" class="tallas-grid"></div>
+        </div>
+
+        <div class="buy-box-titulo">Acciones de compra</div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div class="stepper">
+            <button type="button" id="detalle-cantidad-menos">−</button>
+            <input type="number" id="detalle-cantidad" value="1" min="1">
+            <button type="button" id="detalle-cantidad-mas">+</button>
+          </div>
+          <button id="detalle-btn-agregar" class="btn btn-agregar-carrito flex-grow-1 py-2" data-i18n="detail_add_to_cart">Agregar al carrito</button>
+        </div>
+        <div id="detalle-confirmacion" class="confirmacion-agregado">✅ Agregado al carrito</div>
+
+        <a id="detalle-cotizacion-b2b" href="#" class="btn-cotizacion">Solicitar cotización B2B (más de 12 unidades)</a>
+
+        <div class="buy-box-titulo mt-4">Ficha técnica y garantía</div>
+        <ul class="ficha-lista">
+          <li>
+            <span class="ficha-icono d-inline-flex align-items-center justify-content-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+            </span>
+            <div class="flex-grow-1">
+              <button class="btn btn-link p-0 small fw-semibold text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#detalle-ficha-tecnica">
+                Ficha técnica (ver detalle) ▾
+              </button>
+              <div class="collapse small text-muted mt-1" id="detalle-ficha-tecnica" data-i18n-ignore></div>
+            </div>
+          </li>
+          <li>
+            <span class="ficha-icono d-inline-flex align-items-center justify-content-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            </span>
+            <div><strong>Garantía:</strong> 6 meses de fábrica</div>
+          </li>
+          <li>
+            <span class="ficha-icono d-inline-flex align-items-center justify-content-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>
+            </span>
+            <div><strong>Cambios:</strong> primer cambio de talla sin costo</div>
+          </li>
+        </ul>
+        <div class="ficha-nota">La garantía y política de cambios corresponden a las condiciones generales de la tienda.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+</div><!-- /detalle-shell -->
+
+<footer class="institucional py-4">
+  <div class="container d-flex flex-wrap justify-content-between small">
+    <span data-i18n="footer_rights">© 2026 Suministros Institucionales S.A.S. · NIT 900.XXX.XXX-1</span>
+    <span><span data-i18n="footer_privacy">Tratamiento de datos conforme a la Ley 1581 de 2012</span> · <a href="registro.html" data-i18n="footer_policy_link">Ver política</a></span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/imagenes.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/navbar.js"></script>
+<script src="js/chatbot.js"></script>
+
+<script>
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function formatearPrecio(valor) {
+  const n = Number(valor) || 0;
+  return '$' + n.toLocaleString('es-CO');
+}
+
+let productoActual = null;
+let categoriaActual = '';
+let tallaSeleccionada = null;
+
+function actualizarTextoDetalle() {
+  if (!productoActual) return;
+  const nombre = traducirDatoDinamico(productoActual, 'nombre');
+  const descripcion = traducirDatoDinamico(productoActual, 'descripcion');
+  document.title = nombre + ' — Suministros Institucionales';
+  document.getElementById('detalle-imagen').alt = nombre;
+  document.getElementById('detalle-categoria').textContent = categoriaActual
+    ? 'Línea de ' + traducirDatoDinamico({ nombre: categoriaActual }, 'nombre')
+    : 'Catálogo institucional';
+  document.getElementById('detalle-nombre').textContent = nombre;
+  document.getElementById('detalle-descripcion').textContent = descripcion;
+  document.getElementById('detalle-ficha-tecnica').textContent = descripcion ||
+    'Sin información técnica adicional para este producto.';
+}
+
+async function cargarDetalle() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  const estadoEl = document.getElementById('estado-detalle');
+
+  if (!id) {
+    estadoEl.style.display = 'block';
+    estadoEl.textContent = 'No se indicó qué producto mostrar.';
+    return;
+  }
+
+  // Mostrar mientras carga
+  estadoEl.style.display = 'block';
+  estadoEl.textContent = 'Cargando producto...';
+
+  try {
+    const [respProducto, respCategorias] = await Promise.all([
+      fetch(API_BASE + '/api/productos/' + encodeURIComponent(id), {
+        headers: typeof authLeer === 'function' && authLeer()?.token
+          ? { Authorization: 'Bearer ' + authLeer().token }
+          : {}
+      }),
+      fetch(API_BASE + '/api/categorias')
+    ]);
+    if (!respProducto.ok) throw new Error(respProducto.status === 404 ? 'Producto no encontrado' : 'HTTP ' + respProducto.status);
+
+    const p = await respProducto.json();
+    const categorias = respCategorias.ok ? await respCategorias.json() : [];
+    categoriaActual = (categorias.find(c => String(c.id) === String(p.categoria_id)) || {}).nombre || '';
+
+    productoActual = p;
+
+    document.getElementById('detalle-imagen').src = imgProducto(p);
+    actualizarTextoDetalle();
+    const requiereLogin = p.requiere_login === true;
+    const cotizacionRequerida = p.metadatos?.cotizacion_requerida === true;
+    document.getElementById('detalle-precio').textContent = requiereLogin
+      ? 'Inicia sesión para consultar el precio institucional.'
+      : cotizacionRequerida
+      ? 'Precio y disponibilidad sujetos a cotización institucional.'
+      : formatearPrecio(p.precio);
+
+    // Cotización B2B
+    const enlaceCotizacion = document.getElementById('detalle-cotizacion-b2b');
+    enlaceCotizacion.href = cotizacionRequerida
+      ? 'contacto.html?tipo=cotizacion&producto=' + encodeURIComponent(p.nombre)
+      : 'mailto:ventas@suministrosinstitucionales.com?subject=' + encodeURIComponent('Cotización mayorista — ' + p.nombre);
+    if (cotizacionRequerida) enlaceCotizacion.textContent = 'Solicitar cotización institucional';
+
+    const esRestringido = p.restringido === 1 || p.restringido === true;
+    document.getElementById('detalle-restringido').style.display = esRestringido ? 'inline-block' : 'none';
+    document.getElementById('detalle-aviso-restringido').style.display = esRestringido ? 'block' : 'none';
+
+    const sinStock = !requiereLogin && Number(p.cantidad_disponible) <= 0;
+    const disponibilidadEl = document.getElementById('detalle-disponibilidad');
+    const cantidadInput = document.getElementById('detalle-cantidad');
+    const btnAgregar = document.getElementById('detalle-btn-agregar');
+
+    const motivoAcceso = p.acceso?.motivo || null;
+    if (motivoAcceso === 'cuenta_no_aprobada') {
+      // Sesión iniciada pero la cuenta aún no está aprobada por verificación institucional.
+      document.getElementById('detalle-precio').textContent = 'El precio institucional se muestra cuando tu cuenta esté aprobada.';
+      disponibilidadEl.textContent = 'Tu cuenta está en proceso de verificación institucional.';
+      cantidadInput.closest('.stepper').hidden = true;
+      btnAgregar.disabled = true;
+      btnAgregar.textContent = 'Completa tu verificación para comprar';
+      document.getElementById('detalle-cotizacion-b2b').href = 'mi-verificacion.html';
+      document.getElementById('detalle-cotizacion-b2b').textContent = 'Ver el estado de mi verificación';
+      tallasOcultarFicha();
+    } else if (motivoAcceso === 'requiere_autorizacion_restringidos' || motivoAcceso === 'revision_legal_pendiente') {
+      disponibilidadEl.textContent = motivoAcceso === 'revision_legal_pendiente'
+        ? 'Este producto está en revisión de cumplimiento normativo y no puede comprarse por ahora.'
+        : 'Este producto es restringido: tu cuenta necesita una autorización adicional. Solicítala adjuntando la evidencia desde Mi verificación o escribiendo a soporte.';
+      cantidadInput.disabled = true;
+      btnAgregar.disabled = true;
+      btnAgregar.textContent = motivoAcceso === 'revision_legal_pendiente' ? 'En revisión de cumplimiento' : 'Requiere autorización adicional';
+    } else if (requiereLogin) {
+      disponibilidadEl.textContent = 'Inventario y disponibilidad visibles al iniciar sesión.';
+      cantidadInput.closest('.stepper').hidden = true;
+      btnAgregar.disabled = true;
+      btnAgregar.textContent = 'Inicia sesión para comprar';
+      document.getElementById('detalle-cotizacion-b2b').href =
+        'login.html?redirect=' + encodeURIComponent('producto-detalle.html?id=' + p.id);
+      tallasOcultarFicha();
+      document.querySelector('.ficha-lista')?.setAttribute('hidden', '');
+      document.querySelector('.buy-box > .buy-box-titulo.mt-4')?.setAttribute('hidden', '');
+    } else if (cotizacionRequerida) {
+      disponibilidadEl.textContent = 'Referencia para cotización; precio y disponibilidad se confirman con la entidad.';
+      cantidadInput.closest('.d-flex')?.setAttribute('hidden', '');
+      document.getElementById('detalle-confirmacion').hidden = true;
+      document.querySelector('.ficha-lista')?.setAttribute('hidden', '');
+      document.querySelector('.buy-box > .buy-box-titulo.mt-4')?.setAttribute('hidden', '');
+    } else if (sinStock) {
+      disponibilidadEl.innerHTML = '<span class="badge bg-secondary" data-i18n="detail_out_of_stock">Agotado</span>';
+      cantidadInput.disabled = true;
+      btnAgregar.disabled = true;
+      btnAgregar.textContent = 'Sin inventario';
+    } else {
+      disponibilidadEl.textContent = p.cantidad_disponible + ' unidades disponibles';
+      cantidadInput.max = p.cantidad_disponible;
+    }
+
+    // ── Selector de tallas ──
+    tallaSeleccionada = null;
+    const tallasWrap = document.getElementById('detalle-tallas-wrap');
+    if (!requiereLogin && Array.isArray(p.tallas) && p.tallas.length) {
+      tallasWrap.style.display = 'block';
+      document.getElementById('detalle-tallas-grid').innerHTML = p.tallas.map(t => `
+        <div>
+          <button type="button" class="talla-btn ${t.disponible ? '' : 'agotada'}"
+                  data-talla="${escapeHtml(t.talla)}" ${t.disponible ? '' : 'disabled'}>
+            ${escapeHtml(t.talla)}
+          </button>
+          ${t.disponible ? '' : '<div class="talla-agotada-label">Agotado</div>'}
+        </div>`).join('');
+
+      document.querySelectorAll('#detalle-tallas-grid .talla-btn:not(.agotada)').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#detalle-tallas-grid .talla-btn').forEach(b => b.classList.remove('seleccionada'));
+          btn.classList.add('seleccionada');
+          tallaSeleccionada = btn.dataset.talla;
+        });
+      });
+    } else {
+      tallasWrap.style.display = 'none';
+    }
+
+    document.getElementById('detalle-contenido').style.display = 'flex';
+
+    // Ocultar mensaje al terminar
+    estadoEl.style.display = 'none';
+    estadoEl.textContent = '';
+
+    if (typeof aplicarIdioma === 'function') aplicarIdioma(idiomaGuardado());
+  } catch (err) {
+    estadoEl.style.display = 'block';
+    estadoEl.textContent = 'No se pudo cargar el producto (' + err.message + ').';
+  }
+}
+
+function tallasOcultarFicha() {
+  document.getElementById('detalle-tallas-wrap').hidden = true;
+}
+
+
+// ── Stepper de cantidad ────────────────────────────────
+document.getElementById('detalle-cantidad-menos').addEventListener('click', () => {
+  const input = document.getElementById('detalle-cantidad');
+  input.value = Math.max(1, (parseInt(input.value, 10) || 1) - 1);
+});
+document.getElementById('detalle-cantidad-mas').addEventListener('click', () => {
+  const input = document.getElementById('detalle-cantidad');
+  const max = productoActual ? Number(productoActual.cantidad_disponible) : Infinity;
+  input.value = Math.min(max || Infinity, (parseInt(input.value, 10) || 1) + 1);
+});
+
+document.getElementById('detalle-btn-agregar')?.addEventListener('click', () => {
+  if (!productoActual) return;
+
+  // Si el producto tiene tallas, exige seleccionar una antes de agregar
+  if (Array.isArray(productoActual.tallas) && productoActual.tallas.length && !tallaSeleccionada) {
+    mostrarNotificacion('Selecciona una talla antes de agregar al carrito.', 'info');
+    return;
+  }
+
+  const cantidadDeseada = Math.max(1, parseInt(document.getElementById('detalle-cantidad').value, 10) || 1);
+
+  const items = carritoLeer();
+  const idItem = String(productoActual.id) + (tallaSeleccionada ? '-' + tallaSeleccionada : '');
+  const existente = items.find(i => i.id === idItem);
+  const totalEnCarrito = (existente?.cantidad || 0) + cantidadDeseada;
+
+  if (totalEnCarrito > productoActual.cantidad_disponible) {
+    mostrarNotificacion('No hay suficiente inventario disponible para esa cantidad.', 'error');
+    return;
+  }
+
+  if (existente) {
+    existente.cantidad = totalEnCarrito;
+  } else {
+    items.push({
+      id: idItem,
+      productoId: Number(productoActual.id),
+      variacion: tallaSeleccionada,
+      nombre: productoActual.nombre + (tallaSeleccionada ? ' (Talla ' + tallaSeleccionada + ')' : ''),
+      precio: Number(productoActual.precio),
+      restringido: productoActual.restringido === 1 || productoActual.restringido === true,
+      cantidad: cantidadDeseada
+    });
+  }
+  carritoGuardar(items);
+
+  const confirmacion = document.getElementById('detalle-confirmacion');
+  confirmacion.style.display = 'flex';
+  setTimeout(() => { confirmacion.style.display = 'none'; }, 2000);
+});
+
+document.addEventListener('DOMContentLoaded', cargarDetalle);
+window.addEventListener('idioma:cambiado', actualizarTextoDetalle);
+</script>
+</body>
+</html>

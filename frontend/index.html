@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suministros Institucionales — Catálogo</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .producto-img-placeholder {
+    height: 150px;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: .75rem;
+    background: #f1efe9;
+  }
+  .producto-img-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    cursor: pointer;
+  }
+  .producto-titulo-link {
+    color: inherit;
+    text-decoration: none;
+  }
+  .producto-titulo-link:hover {
+    color: var(--brass-600, #b08d57);
+    text-decoration: underline;
+  }
+  .producto-rating {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .85rem;
+  }
+  .producto-rating .estrellas { color: var(--brass-600, #b08d57); letter-spacing: 1px; }
+  .producto-compras {
+    font-size: .78rem;
+    color: #6c757d;
+  }
+  .producto-envio {
+    font-size: .78rem;
+    color: #6c757d;
+    margin-bottom: .5rem;
+  }
+  .badge-restringido {
+    font-size: .62rem;
+    background: var(--tag-privado, #9c3b3b);
+    color: #fff;
+    align-self: flex-start;
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/theme-modern.css">
+<link rel="stylesheet" href="css/catalogo.css">
+<link rel="stylesheet" href="css/global-ui.css">
+</head>
+<body class="catalogo-page">
+
+<script src="js/global-layout.js"></script>
+
+
+<header class="catalogo-hero">
+  <div class="container">
+    <div class="catalogo-hero-content">
+      <div class="eyebrow" data-i18n="hero_index_eyebrow">
+        Catálogo institucional 2026
+      </div>
+      <h2 class="display-serif" data-i18n="hero_index_title">
+        Dotación y suministro para instituciones
+      </h2>
+      <p class="lead" data-i18n="hero_index_lead">
+        Soluciones para Fuerza Pública, emergencias y sector corporativo, con despacho a la instalación registrada.
+        Catálogos y atención según el perfil institucional.
+      </p>
+    </div>
+  </div>
+</header>
+
+
+<main class="container catalogo-main pb-4">
+  <section class="catalog-panel" aria-label="Filtros del catálogo">
+    <div class="catalog-head">
+      <h2 data-i18n="products_heading">Productos disponibles</h2>
+      <span class="eyebrow" id="products-count" data-i18n="products_count">Cargando referencias...</span>
+    </div>
+
+    <div id="estado-productos" class="text-muted small mb-2"></div>
+
+    <div class="catalog-toolbar">
+      <div class="macro-opciones" role="group" aria-label="Macro-categorías">
+        <button type="button" class="macro-btn activo">Ver Todo</button>
+        <button type="button" class="macro-btn">Vestimenta & Moda</button>
+        <button type="button" class="macro-btn">Herramientas & Equipos</button>
+      </div>
+
+      <div class="toolbar-selects">
+        <label class="select-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          <select id="filtroCategoria" class="filtro-select" aria-label="Tipo de producto">
+            <option value="">Todos los productos</option>
+          </select>
+        </label>
+        <label class="select-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h13M3 12h9M3 18h5M17 10l4 4 4-4M21 14V4" transform="translate(-2 3) scale(.9)"/></svg>
+          <select id="filtroOrden" class="filtro-select" aria-label="Ordenar por">
+            <option value="">Orden por defecto</option>
+            <option value="nombre-asc">Nombre A-Z</option>
+            <option value="nombre-desc">Nombre Z-A</option>
+            <option value="precio-asc">Precio: menor a mayor</option>
+            <option value="precio-desc">Precio: mayor a menor</option>
+            <option value="stock">Mayor disponibilidad</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="chips-list" data-label="Filtros rápidos">
+        <button type="button" class="chip" data-filtro="disponible">En stock</button>
+        <button type="button" class="chip" data-filtro="restringido">Restringido</button>
+        <button type="button" class="chip" data-filtro="economico">Hasta $100.000</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- El grid de productos se genera dinámicamente desde /api/productos -->
+  <div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-5" id="catalogo-grid"></div>
+
+  <section class="trust-strip" aria-label="Garantías de compra">
+    <div class="trust-strip-inner">
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 3h13v13H1z"/><path d="M14 8h4l4 4v4h-8"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="18.5" cy="18.5" r="2"/></svg>
+        <div><strong>Envíos a nivel nacional</strong><span>Cobertura en todo el país</span></div>
+      </div>
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        <div><strong>Productos originales</strong><span>Garantía y respaldo</span></div>
+      </div>
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-7h3zM3 19a2 2 0 0 0 2 2h1v-7H3z"/></svg>
+        <div><strong>Atención personalizada</strong><span>Resolveremos tus dudas</span></div>
+      </div>
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20M6 15h4"/></svg>
+        <div><strong>Múltiples métodos de pago</strong><span>Seguro y confiable</span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="institucional py-4" id="contacto">
+  <div class="container d-flex flex-wrap justify-content-between small">
+    <span data-i18n="footer_rights">© 2026 Suministros Institucionales S.A.S. · NIT 900.XXX.XXX-1</span>
+    <span><span data-i18n="footer_privacy">Tratamiento de datos conforme a la Ley 1581 de 2012</span> · <a href="registro.html" data-i18n="footer_policy_link">Ver política</a></span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/imagenes.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/chatbot.js"></script>
+
+<!-- Carga del catálogo desde la base de datos -->
+<script>
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str ?? '';
+    return div.innerHTML;
+  }
+
+  function formatearPrecio(valor) {
+    const n = Number(valor) || 0;
+    return '$' + n.toLocaleString('es-CO');
+  }
+
+  function aplicarCupon() {
+    const codigo = document.getElementById('cuponDescuento')?.value.trim();
+    if (!codigo) { mostrarNotificacion('Ingresa un código de descuento.', 'info'); return; }
+    mostrarNotificacion('Función de cupones próximamente. El código "' + codigo + '" será validado cuando el módulo esté habilitado.', 'info');
+  }
+
+  let categoriasPorId = {};
+  let categoriasCatalogo = [];
+  let todosLosProductos = [];
+
+  async function cargarCategorias() {
+    const sel = document.getElementById('filtroCategoria');
+    try {
+      const resp = await fetch(API_BASE + '/api/categorias');
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const categorias = await resp.json();
+      categoriasCatalogo = categorias;
+      categoriasPorId = Object.fromEntries(categorias.map(c => [c.id, c.nombre]));
+      actualizarOpcionesCategoria();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function actualizarOpcionesCategoria() {
+    const sel = document.getElementById('filtroCategoria');
+    if (!sel) return;
+    const seleccion = sel.value;
+    sel.innerHTML = '<option value="">Todas</option>' +
+      categoriasCatalogo.map(c => `<option value="${c.id}">${escapeHtml(traducirDatoDinamico(c, 'nombre'))}</option>`).join('');
+    sel.value = seleccion;
+  }
+
+  function tarjetaProducto(p) {
+    const categoriaNombre = traducirDatoDinamico({ nombre: categoriasPorId[p.categoria_id] || '' }, 'nombre');
+    const nombreProducto = traducirDatoDinamico(p, 'nombre');
+    const descripcionProducto = traducirDatoDinamico(p, 'descripcion');
+    const sinStock = Number(p.cantidad_disponible) <= 0;
+    const detalleUrl = 'producto-detalle.html?id=' + encodeURIComponent(p.id);
+    const favorito = favoritosLeer().includes(String(p.id));
+    const requiereLogin = p.requiere_login === true;
+    const cotizacionRequerida = p.metadatos?.cotizacion_requerida === true;
+    const enlaceCotizacion = `contacto.html?tipo=cotizacion&producto=${encodeURIComponent(nombreProducto)}`;
+    // El servidor decide qué puede hacer la cuenta con cada producto (p.acceso).
+    const motivoAcceso = p.acceso?.motivo || null;
+    const cuentaNoAprobada = motivoAcceso === 'cuenta_no_aprobada';
+    const ventaBloqueada = !requiereLogin && (motivoAcceso === 'requiere_autorizacion_restringidos' || motivoAcceso === 'revision_legal_pendiente');
+    const textoBloqueo = motivoAcceso === 'revision_legal_pendiente' ? 'En revisión de cumplimiento' : 'Requiere autorización adicional';
+    const botonAccion = cuentaNoAprobada
+      ? `<a class="pc-btn pc-btn-detail" href="mi-verificacion.html">Completa tu verificación</a>`
+      : requiereLogin
+      ? `<a class="pc-btn pc-btn-detail" href="login.html?redirect=${encodeURIComponent(detalleUrl)}">Iniciar sesión institucional</a>`
+      : ventaBloqueada
+      ? `<a class="pc-btn pc-btn-detail" href="${detalleUrl}">${textoBloqueo}</a>`
+      : cotizacionRequerida
+      ? `<a class="pc-btn pc-btn-detail" href="${escapeHtml(enlaceCotizacion)}">Solicitar cotización</a>`
+      : sinStock
+      ? `<a class="pc-btn pc-btn-detail" href="${detalleUrl}">${textoI18n('products_details_btn', 'Detalles')}</a>`
+      : `<button type="button" class="pc-btn pc-btn-add"
+                  data-id="${escapeHtml(p.id)}"
+                  data-nombre="${escapeHtml(nombreProducto)}"
+                  data-precio="${escapeHtml(p.precio)}"
+                  data-imagen="${imgProducto(p)}"
+                  data-restringido="${p.restringido === 1 || p.restringido === true}"
+                  onclick="agregarAlCarrito(this)">${textoI18n('products_add_to_cart_btn', 'Agregar al carrito')}</button>`;
+    return `
+      <div class="col">
+        <div class="card card-producto h-100">
+          <div class="pc-top">
+            <div class="pc-top-left">
+              <span class="categoria-tag" data-i18n-ignore>${escapeHtml(categoriaNombre)}</span>
+              ${!requiereLogin && p.restringido ? `<span class="badge-restringido badge rounded-pill">${textoI18n('products_restricted_badge', 'Restringido')}</span>` : ''}
+            </div>
+            <button type="button" class="pc-fav ${favorito ? 'activo' : ''}" data-fav="${escapeHtml(p.id)}" aria-pressed="${favorito}" aria-label="Guardar en favoritos">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+            </button>
+          </div>
+          <a href="${detalleUrl}" class="producto-img-placeholder">
+            <img src="${imgProducto(p)}" alt="${escapeHtml(nombreProducto)}" loading="lazy">
+          </a>
+          <h3 class="h6"><a class="producto-titulo-link" data-i18n-ignore href="${detalleUrl}">${escapeHtml(nombreProducto)}</a></h3>
+          <p class="pc-desc" data-i18n-ignore>${escapeHtml(descripcionProducto)}</p>
+          <div class="pc-buy">
+            <div class="pc-price-row">
+              <span class="precio">${requiereLogin ? 'Precio institucional' : cotizacionRequerida ? 'Precio por cotizar' : formatearPrecio(p.precio)}</span>
+              ${cuentaNoAprobada
+                ? `<span class="pc-stock">Visible cuando aprueben tu cuenta</span>`
+                : requiereLogin
+                ? `<span class="pc-stock">Visible al iniciar sesión</span>`
+                : cotizacionRequerida
+                ? `<span class="pc-stock">Disponibilidad por confirmar</span>`
+                : sinStock
+                ? `<span class="badge bg-secondary">${textoI18n('products_stock_out_badge', 'Agotado')}</span>`
+                : `<span class="pc-stock">${escapeHtml(p.cantidad_disponible)} ${textoI18n('products_stock_available_suffix', 'disponibles')}</span>`}
+            </div>
+            ${botonAccion}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Favoritos: preferencia visual guardada solo en este navegador.
+  function favoritosLeer() {
+    try { return (JSON.parse(localStorage.getItem('si_favoritos')) || []).map(String); } catch { return []; }
+  }
+  function favoritosAlternar(id) {
+    const lista = favoritosLeer();
+    const i = lista.indexOf(String(id));
+    if (i >= 0) lista.splice(i, 1); else lista.push(String(id));
+    try { localStorage.setItem('si_favoritos', JSON.stringify(lista)); } catch {}
+    return i < 0;
+  }
+
+  async function cargarProductos() {
+    const grid = document.getElementById('catalogo-grid');
+    const estado = document.getElementById('estado-productos');
+    const contador = document.getElementById('products-count');
+
+    estado.textContent = 'Cargando productos...';
+    grid.innerHTML = '';
+
+    try {
+      const sesion = typeof authLeer === 'function' ? authLeer() : null;
+      const headers = sesion?.token ? { Authorization: 'Bearer ' + sesion.token } : {};
+      const resp = await fetch(API_BASE + '/api/productos', { headers });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      todosLosProductos = await resp.json();
+      aplicarFiltros();
+      estado.textContent = '';
+    } catch (err) {
+      console.error(err);
+      grid.innerHTML = '';
+      estado.textContent = 'El catálogo estará disponible nuevamente en breve.';
+      contador.textContent = '';
+      if (typeof mostrarNotificacion === 'function') {
+        mostrarNotificacion('Portal temporalmente fuera de línea. Reconectando con el servidor central...');
+      }
+    }
+  }
+
+  // ── Macro-categorías → IDs de categorías de la BD ──
+  const MACRO_MAP = {
+    'Vestimenta & Moda': ['Dotación', 'Uniformidad', 'Protección personal', 'Seguridad industrial'],
+    'Herramientas & Equipos': ['Equipo táctico', 'Herramientas', 'Fundas y portas',
+      'Tecnología', 'Tráfico y medición', 'Criminalística', 'Primeros auxilios',
+      'Salud y primeros auxilios', 'Emergencias y rescate', 'Comunicaciones',
+      'Archivo y papelería', 'Oficina', 'Papelería oficial']
+  };
+
+  function aplicarFiltros() {
+    let productos = [...todosLosProductos];
+    const grid = document.getElementById('catalogo-grid');
+    const contador = document.getElementById('products-count');
+
+    // 1. Macro-categoría
+    const macroActiva = document.querySelector('.macro-btn.activo')?.textContent.trim();
+    if (macroActiva && macroActiva !== 'Ver Todo') {
+      const categoriasPermitidas = MACRO_MAP[macroActiva] || [];
+      if (categoriasPermitidas.length) {
+        const idsPermitidos = Object.entries(categoriasPorId)
+          .filter(([_, nombre]) => categoriasPermitidas.includes(nombre))
+          .map(([id]) => Number(id));
+        productos = productos.filter(p => idsPermitidos.includes(Number(p.categoria_id)));
+      }
+    }
+
+    // 2. Categoría dropdown
+    const categoriaId = document.getElementById('filtroCategoria')?.value;
+    if (categoriaId) {
+      productos = productos.filter(p => String(p.categoria_id) === String(categoriaId));
+    }
+
+    // 3. Búsqueda por texto
+    const buscar = document.getElementById('filtroBuscar')?.value.trim().toLowerCase();
+    if (buscar) {
+      productos = productos.filter(p =>
+        p.nombre.toLowerCase().includes(buscar) ||
+        (p.descripcion || '').toLowerCase().includes(buscar)
+      );
+    }
+
+
+    // 5. Chips de filtro rápido
+    document.querySelectorAll('.chip.activo').forEach(chip => {
+      const filtro = chip.dataset.filtro;
+      if (filtro === 'disponible') productos = productos.filter(p => Number(p.cantidad_disponible) > 0);
+      if (filtro === 'restringido') productos = productos.filter(p => p.restringido);
+      if (filtro === 'economico') productos = productos.filter(p =>
+        p.metadatos?.cotizacion_requerida !== true && Number(p.precio) <= 100000
+      );
+    });
+
+    // 6. Ordenamiento
+    const orden = document.getElementById('filtroOrden')?.value;
+    if (orden === 'nombre-asc') productos.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    else if (orden === 'nombre-desc') productos.sort((a, b) => b.nombre.localeCompare(a.nombre));
+    else if (orden === 'precio-asc') productos.sort((a, b) => Number(a.precio) - Number(b.precio));
+    else if (orden === 'precio-desc') productos.sort((a, b) => Number(b.precio) - Number(a.precio));
+    else if (orden === 'stock') productos.sort((a, b) => Number(b.cantidad_disponible) - Number(a.cantidad_disponible));
+
+    // Renderizar
+    if (!productos.length) {
+      grid.innerHTML = '<div class="col-12 estado-vacio-catalogo">No hay productos que coincidan con los filtros seleccionados.</div>';
+      contador.textContent = '0 referencias activas';
+      return;
+    }
+    grid.innerHTML = productos.map(tarjetaProducto).join('');
+    contador.textContent = productos.length + ' referencias activas';
+  }
+
+  // ── Event listeners para todos los filtros ──
+  document.addEventListener('DOMContentLoaded', () => {
+    // Búsqueda que llega desde el landing (?q=...)
+    const qInicial = new URLSearchParams(window.location.search).get('q');
+    const inputBuscar = document.getElementById('filtroBuscar');
+    if (qInicial && inputBuscar) inputBuscar.value = qInicial;
+
+    // El buscador del navbar filtra en la misma página
+    document.getElementById('navSearchForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      aplicarFiltros();
+    });
+
+    // Favoritos (solo visual)
+    document.getElementById('catalogo-grid')?.addEventListener('click', (e) => {
+      const fav = e.target.closest('.pc-fav');
+      if (!fav) return;
+      const activo = favoritosAlternar(fav.dataset.fav);
+      fav.classList.toggle('activo', activo);
+      fav.setAttribute('aria-pressed', String(activo));
+    });
+
+    cargarCategorias().then(cargarProductos);
+    window.addEventListener('idioma:cambiado', () => {
+      actualizarOpcionesCategoria();
+      aplicarFiltros();
+    });
+
+    // Categoría dropdown
+    document.getElementById('filtroCategoria').addEventListener('change', aplicarFiltros);
+
+    // Macro-categorías
+    document.querySelector('.macro-opciones')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('.macro-btn');
+      if (!btn) return;
+      document.querySelectorAll('.macro-btn').forEach(b => b.classList.remove('activo'));
+      btn.classList.add('activo');
+      aplicarFiltros();
+    });
+
+    // Búsqueda con debounce
+    let buscadorTimeout;
+    document.getElementById('filtroBuscar')?.addEventListener('input', () => {
+      clearTimeout(buscadorTimeout);
+      buscadorTimeout = setTimeout(aplicarFiltros, 300);
+    });
+
+    // Ordenamiento
+    document.getElementById('filtroOrden')?.addEventListener('change', aplicarFiltros);
+
+
+
+    // Chips
+    document.querySelector('.chips-list')?.addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      chip.classList.toggle('activo');
+      aplicarFiltros();
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi verificación — Suministros Institucionales</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/theme-modern.css">
+<link rel="stylesheet" href="css/global-ui.css">
+<link rel="stylesheet" href="css/verificacion.css">
+</head>
+<body>
+
+<script src="js/global-layout.js"></script>
+
+<header class="hero py-5">
+  <div class="container py-3">
+    <div class="eyebrow mb-2">Panel del cliente</div>
+    <h1 class="display-serif h2 mb-2">Mi verificación institucional</h1>
+    <p class="lead col-lg-8 mb-0">Consulta el estado de tu solicitud, adjunta la evidencia requerida y envíala a revisión.</p>
+  </div>
+</header>
+
+<main class="container py-5">
+  <div id="vf-cargando" class="text-muted" role="status">Cargando tu solicitud…</div>
+  <div id="vf-error" class="alert alert-danger" role="alert" hidden></div>
+
+  <div id="vf-contenido" hidden>
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <section class="vf-panel mb-4" aria-labelledby="vf-estado-titulo">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+            <div>
+              <h2 id="vf-estado-titulo">Estado de la solicitud</h2>
+              <p class="vf-ayuda mb-0" id="vf-tipo"></p>
+            </div>
+            <span id="vf-estado" class="vf-estado"></span>
+          </div>
+          <p id="vf-explicacion" class="mt-3 mb-0"></p>
+          <div id="vf-motivo" class="alert alert-warning mt-3 mb-0" hidden></div>
+          <div id="vf-cambio" class="alert alert-info mt-3 mb-0" hidden></div>
+          <div id="vf-acciones-estado" class="mt-3 d-flex flex-wrap gap-2"></div>
+        </section>
+
+        <section class="vf-panel mb-4" id="vf-seccion-requisitos" aria-labelledby="vf-req-titulo">
+          <h2 id="vf-req-titulo">Requisitos</h2>
+          <ul class="vf-requisitos" id="vf-requisitos"></ul>
+        </section>
+
+        <section class="vf-panel mb-4" aria-labelledby="vf-docs-titulo">
+          <h2 id="vf-docs-titulo">Documentos adjuntos</h2>
+          <p class="vf-ayuda">PDF, JPG o PNG de máximo 5 MB. Se validan por su contenido y se guardan cifrados; solo el personal autorizado puede consultarlos.</p>
+          <div class="vf-tabla-wrap">
+            <table class="vf-tabla">
+              <thead><tr><th>Documento</th><th>Archivo</th><th>Fecha</th><th><span class="visually-hidden">Acciones</span></th></tr></thead>
+              <tbody id="vf-documentos"></tbody>
+            </table>
+          </div>
+          <form id="vf-form-documento" class="row g-2 align-items-end mt-3" hidden>
+            <div class="col-md-5">
+              <label class="form-label" for="vf-tipo-documento">Tipo de documento</label>
+              <select class="form-select" id="vf-tipo-documento" required></select>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label" for="vf-archivo">Archivo</label>
+              <input class="form-control" type="file" id="vf-archivo" accept="application/pdf,image/jpeg,image/png" required>
+            </div>
+            <div class="col-md-2 d-grid">
+              <button class="btn btn-dark" type="submit" id="vf-subir">Adjuntar</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="vf-panel mb-4" id="vf-seccion-clasificacion" aria-labelledby="vf-clasif-titulo" hidden>
+          <h2 id="vf-clasif-titulo">Clasificación de la organización</h2>
+          <p class="vf-ayuda" id="vf-clasif-ayuda"></p>
+          <form id="vf-form-clasificacion" novalidate>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label" for="cl-tipo">Tipo de institución *</label>
+                <select class="form-select" id="cl-tipo" required></select>
+              </div>
+              <div class="col-md-6 mb-3" id="cl-especificos"></div>
+              <div class="col-md-8 mb-3">
+                <label class="form-label" for="cl-nombreEntidad">Nombre de la entidad *</label>
+                <input class="form-control" id="cl-nombreEntidad" maxlength="200" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label" for="cl-nit">NIT con DV *</label>
+                <input class="form-control" id="cl-nit" placeholder="900123456-7" maxlength="25" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label" for="cl-dependencia">Unidad o dependencia *</label>
+                <input class="form-control" id="cl-dependencia" maxlength="200" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label" for="cl-cargo">Tu cargo *</label>
+                <input class="form-control" id="cl-cargo" maxlength="120" required>
+              </div>
+              <div class="col-md-4 col-6 mb-3">
+                <label class="form-label" for="cl-departamento">Departamento *</label>
+                <input class="form-control" id="cl-departamento" maxlength="80" required>
+              </div>
+              <div class="col-md-4 col-6 mb-3">
+                <label class="form-label" for="cl-municipio">Municipio *</label>
+                <input class="form-control" id="cl-municipio" maxlength="80" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label" for="cl-direccionInstalacion">Dirección de la sede *</label>
+                <input class="form-control" id="cl-direccionInstalacion" maxlength="255" required>
+              </div>
+            </div>
+            <div id="cl-mensaje" role="alert"></div>
+            <button class="btn btn-outline-dark" type="submit">Guardar clasificación</button>
+          </form>
+        </section>
+      </div>
+
+      <div class="col-lg-4">
+        <section class="vf-panel" aria-labelledby="vf-hist-titulo">
+          <h2 id="vf-hist-titulo" class="h5">Historial</h2>
+          <ol class="vf-timeline" id="vf-historial"></ol>
+        </section>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="institucional py-4">
+  <div class="container d-flex flex-wrap justify-content-between small">
+    <span>© 2026 Suministros Institucionales S.A.S.</span>
+    <span>Verificación institucional · Ley 1581 de 2012</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/imagenes.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/navbar.js"></script>
+<script>
+const ESTADOS = {
+  borrador: ['Borrador', 'Completa tus datos, adjunta la evidencia requerida y envía la solicitud a revisión. Mientras tanto no puedes ver precios ni comprar.'],
+  pendiente: ['Pendiente de verificación', 'Tu solicitud está en revisión. Te mostraremos aquí la decisión. No necesitas hacer nada más por ahora.'],
+  requiere_informacion: ['Requiere información adicional', 'El equipo de verificación necesita más información. Revisa el motivo, adjunta lo solicitado y vuelve a enviar la solicitud.'],
+  aprobado: ['Aprobada', 'Tu cuenta está aprobada: ya puedes ver precios y comprar los productos habilitados para tu institución.'],
+  rechazado: ['Rechazada', 'Tu solicitud fue rechazada. Revisa el motivo; si puedes corregirlo, adjunta la evidencia y vuelve a enviarla.'],
+  suspendido: ['Suspendida', 'Tu cuenta está suspendida y no puede realizar compras. Si crees que es un error, comunícate con soporte.']
+};
+const EVENTOS = {
+  registro: 'Registro creado', enviar: 'Enviada a revisión', aprobar: 'Aprobada', rechazar: 'Rechazada',
+  solicitar_informacion: 'Se solicitó información adicional', suspender: 'Cuenta suspendida', reactivar: 'Cuenta reactivada',
+  clasificacion: 'Clasificación actualizada', cambio_tipo_solicitado: 'Cambio de tipo solicitado',
+  cambio_tipo_aprobado: 'Cambio de tipo aprobado', cambio_tipo_rechazado: 'Cambio de tipo rechazado',
+  restringidos_autorizados: 'Autorización de restringidos concedida', restringidos_revocados: 'Autorización de restringidos revocada',
+  migracion_cuenta_heredada: 'Cuenta anterior pendiente de clasificación'
+};
+
+let tiposConfig = [];
+let solicitud = null;
+
+function escapar(texto) {
+  const span = document.createElement('span');
+  span.textContent = texto == null ? '' : String(texto);
+  return span.innerHTML;
+}
+
+function fecha(valor) {
+  return valor ? new Date(valor).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+}
+
+async function api(ruta, opciones = {}) {
+  if (!await authAsegurarTokenValido()) {
+    window.location.replace('login.html?redirect=' + encodeURIComponent('mi-verificacion.html'));
+    throw new Error('Sesión vencida');
+  }
+  const sesion = authLeer();
+  const resp = await fetch(API_BASE + ruta, {
+    ...opciones,
+    headers: { ...(opciones.headers || {}), Authorization: 'Bearer ' + sesion.token }
+  });
+  if (resp.status === 401) {
+    window.location.replace('login.html?redirect=' + encodeURIComponent('mi-verificacion.html'));
+    throw new Error('Tu sesión venció. Inicia sesión de nuevo.');
+  }
+  return resp;
+}
+
+function pintar() {
+  const s = solicitud;
+  const [etiqueta, explicacion] = ESTADOS[s.estado] || [s.estado, ''];
+  const estado = document.getElementById('vf-estado');
+  estado.className = 'vf-estado ' + s.estado;
+  estado.textContent = etiqueta;
+  document.getElementById('vf-tipo').textContent = s.tipoEtiqueta
+    ? 'Tipo de institución: ' + s.tipoEtiqueta + (s.organizacion?.nombreEntidad ? ' · ' + s.organizacion.nombreEntidad : '')
+    : 'Tipo de institución sin clasificar';
+  document.getElementById('vf-explicacion').textContent = explicacion;
+
+  const motivo = document.getElementById('vf-motivo');
+  motivo.hidden = !s.motivo;
+  motivo.innerHTML = s.motivo ? '<strong>Motivo indicado:</strong> ' + escapar(s.motivo) : '';
+
+  const cambio = document.getElementById('vf-cambio');
+  const tipoSolicitado = tiposConfig.find(t => t.id === s.tipoSolicitado);
+  cambio.hidden = !s.tipoSolicitado;
+  cambio.textContent = s.tipoSolicitado
+    ? 'Solicitaste cambiar tu tipo a "' + (tipoSolicitado?.etiqueta || s.tipoSolicitado) + '". Conservas tu acceso actual mientras se revisa. Adjunta la evidencia del nuevo tipo.'
+    : '';
+
+  const acciones = document.getElementById('vf-acciones-estado');
+  acciones.innerHTML = '';
+  if (s.estado === 'aprobado') {
+    acciones.innerHTML = '<a class="btn btn-success" href="index.html">Ir al catálogo</a>' +
+      (s.autorizacionRestringidos ? '<span class="vf-etiqueta cumplido align-self-center">Autorizada para productos restringidos</span>' : '');
+  }
+  if (['borrador', 'requiere_informacion', 'rechazado'].includes(s.estado)) {
+    const boton = document.createElement('button');
+    boton.className = 'btn btn-dark';
+    boton.textContent = 'Enviar a revisión';
+    boton.disabled = !s.puedeEnviar;
+    boton.addEventListener('click', enviar);
+    acciones.appendChild(boton);
+    if (!s.puedeEnviar) {
+      const ayuda = document.createElement('span');
+      ayuda.className = 'vf-ayuda align-self-center';
+      ayuda.textContent = s.estado === 'rechazado' && s.reintentosRestantes === 0
+        ? 'Agotaste los reenvíos tras un rechazo. Contacta a soporte.'
+        : 'Completa los requisitos marcados como pendientes para poder enviarla.';
+      acciones.appendChild(ayuda);
+    }
+  }
+
+  const req = s.requisitos;
+  const lista = [];
+  lista.push(req.tipoDefinido
+    ? '<li><span class="vf-etiqueta cumplido">Cumplido</span><span>Tipo de institución definido</span></li>'
+    : '<li><span class="vf-etiqueta obligatorio">Pendiente</span><span>Selecciona el tipo de institución en "Clasificación de la organización".</span></li>');
+  lista.push(req.correoVerificado
+    ? '<li><span class="vf-etiqueta cumplido">Cumplido</span><span>Correo verificado con código de seguridad' + (req.dominioVerificado ? ' (dominio institucional)' : '') + '</span></li>'
+    : '<li><span class="vf-etiqueta obligatorio">Pendiente</span><span>Verifica tu correo iniciando sesión con el código.</span></li>');
+  for (const r of req.requisitos) {
+    const clase = r.cumplido ? 'cumplido' : r.obligatorio ? 'obligatorio' : '';
+    const texto = r.cumplido ? 'Adjunto' : r.obligatorio ? 'Obligatorio' : 'Opcional';
+    lista.push('<li><span class="vf-etiqueta ' + clase + '">' + texto + '</span><span>' + escapar(r.etiqueta) + '</span></li>');
+  }
+  document.getElementById('vf-requisitos').innerHTML = lista.join('');
+
+  document.getElementById('vf-documentos').innerHTML = s.documentos.length
+    ? s.documentos.map(d => {
+      const etiquetaDoc = req.requisitos.find(r => r.tipo === d.tipo)?.etiqueta || d.tipo;
+      return '<tr><td>' + escapar(etiquetaDoc) + '</td><td>' + escapar(d.nombre) + ' <span class="text-muted">(' + Math.ceil(d.tamanoBytes / 1024) + ' KB)</span></td>' +
+        '<td>' + fecha(d.creadoEn) + '</td><td class="text-nowrap">' +
+        '<button type="button" class="btn btn-sm btn-link" data-descargar="' + d.id + '">Descargar</button>' +
+        (s.puedeSubirDocumentos ? '<button type="button" class="btn btn-sm btn-link text-danger" data-eliminar="' + d.id + '">Eliminar</button>' : '') +
+        '</td></tr>';
+    }).join('')
+    : '<tr><td colspan="4" class="text-muted">Aún no has adjuntado documentos.</td></tr>';
+
+  const formDoc = document.getElementById('vf-form-documento');
+  formDoc.hidden = !s.puedeSubirDocumentos;
+  document.getElementById('vf-tipo-documento').innerHTML = req.requisitos
+    .map(r => '<option value="' + escapar(r.tipo) + '">' + escapar(r.etiqueta) + (r.obligatorio ? ' (obligatorio)' : '') + '</option>').join('');
+
+  const clasif = document.getElementById('vf-seccion-clasificacion');
+  clasif.hidden = !s.puedeCambiarTipo;
+  document.getElementById('vf-clasif-ayuda').textContent = s.estado === 'aprobado'
+    ? 'Si tu organización cambió de tipo, solicita el cambio aquí. No se concede de inmediato: un revisor debe aprobarlo y mientras tanto conservas tu acceso actual.'
+    : 'Corrige o completa la clasificación de tu organización antes de enviar la solicitud.';
+  if (!clasif.hidden) prellenarClasificacion();
+
+  document.getElementById('vf-historial').innerHTML = s.historial.slice().reverse().map(h =>
+    '<li><strong>' + escapar(EVENTOS[h.evento] || h.evento) + '</strong>' +
+    (h.motivo ? '<div class="small">' + escapar(h.motivo) + '</div>' : '') +
+    '<time>' + fecha(h.fecha) + '</time></li>').join('');
+}
+
+function prellenarClasificacion() {
+  const select = document.getElementById('cl-tipo');
+  const actual = solicitud.tipoSolicitado || solicitud.tipoInstitucion || '';
+  select.innerHTML = '<option value="">Selecciona…</option>' + tiposConfig.map(t =>
+    '<option value="' + t.id + '"' + (t.id === actual ? ' selected' : '') + '>' + escapar(t.etiqueta) + '</option>').join('');
+  const org = solicitud.organizacion || {};
+  for (const campo of ['nombreEntidad', 'nit', 'dependencia', 'cargo', 'departamento', 'municipio', 'direccionInstalacion']) {
+    const el = document.getElementById('cl-' + campo);
+    if (el && !el.value) el.value = org[campo] || '';
+  }
+  pintarEspecificos(org);
+}
+
+function pintarEspecificos(org = {}) {
+  const tipo = tiposConfig.find(t => t.id === document.getElementById('cl-tipo').value);
+  document.getElementById('cl-especificos').innerHTML = (tipo?.camposEspecificos || []).map(c =>
+    '<label class="form-label" for="cl-' + c.campo + '">' + escapar(c.etiqueta) + ' *</label>' +
+    '<select class="form-select" id="cl-' + c.campo + '" data-especifico="' + c.campo + '" required><option value="">Selecciona…</option>' +
+    c.opciones.map(o => '<option value="' + escapar(o.valor) + '"' + (org[c.campo] === o.valor ? ' selected' : '') + '>' + escapar(o.etiqueta) + '</option>').join('') +
+    '</select>').join('');
+}
+
+async function cargar() {
+  const sesion = authLeer();
+  if (!sesion?.token || sesion.mfaVerified !== true) {
+    window.location.replace('login.html?redirect=' + encodeURIComponent('mi-verificacion.html'));
+    return;
+  }
+  if (sesion.rol === 'admin') {
+    window.location.replace('admin-verificaciones.html');
+    return;
+  }
+  try {
+    const [respTipos, resp] = await Promise.all([
+      fetch(API_BASE + '/api/auth/registro/tipos'),
+      api('/api/verificacion/mi-solicitud')
+    ]);
+    tiposConfig = (await respTipos.json()).tipos || [];
+    const datos = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(datos.error || 'No se pudo consultar tu solicitud.');
+    solicitud = datos;
+    // La apariencia del portal acompaña el estado real del servidor.
+    authGuardar({ ...authLeer(), estadoVerificacion: datos.estado, institucionId: datos.estado === 'aprobado' ? datos.institucionAprobada : null });
+    pintar();
+    document.getElementById('vf-contenido').hidden = false;
+  } catch (err) {
+    const error = document.getElementById('vf-error');
+    error.textContent = err.message === 'Failed to fetch' ? 'No hay comunicación con el servidor. Inténtalo de nuevo en unos minutos.' : err.message;
+    error.hidden = false;
+  } finally {
+    document.getElementById('vf-cargando').hidden = true;
+  }
+}
+
+async function enviar() {
+  const resp = await api('/api/verificacion/mi-solicitud/enviar', { method: 'POST' });
+  const datos = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    mostrarNotificacion(datos.error || 'No se pudo enviar la solicitud.', 'error', 5000);
+  } else {
+    mostrarNotificacion('Solicitud enviada a revisión.', 'success');
+  }
+  await cargar();
+}
+
+document.getElementById('vf-form-documento').addEventListener('submit', async e => {
+  e.preventDefault();
+  const archivo = document.getElementById('vf-archivo').files[0];
+  if (!archivo) return;
+  if (archivo.size > 5 * 1024 * 1024) {
+    mostrarNotificacion('El archivo supera el máximo de 5 MB.', 'error', 5000);
+    return;
+  }
+  const boton = document.getElementById('vf-subir');
+  boton.disabled = true;
+  boton.textContent = 'Subiendo…';
+  try {
+    const datosForm = new FormData();
+    datosForm.append('tipoDocumento', document.getElementById('vf-tipo-documento').value);
+    datosForm.append('archivo', archivo);
+    const resp = await api('/api/verificacion/mi-solicitud/documentos', { method: 'POST', body: datosForm });
+    const datos = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(datos.error || 'No se pudo adjuntar el documento.');
+    mostrarNotificacion('Documento adjuntado.', 'success');
+    document.getElementById('vf-archivo').value = '';
+    await cargar();
+  } catch (err) {
+    mostrarNotificacion(err.message, 'error', 6000);
+  } finally {
+    boton.disabled = false;
+    boton.textContent = 'Adjuntar';
+  }
+});
+
+document.getElementById('vf-documentos').addEventListener('click', async e => {
+  const descargar = e.target.closest('[data-descargar]');
+  const eliminar = e.target.closest('[data-eliminar]');
+  if (descargar) {
+    const resp = await api('/api/verificacion/mi-solicitud/documentos/' + descargar.dataset.descargar);
+    if (!resp.ok) return mostrarNotificacion('No se pudo descargar el documento.', 'error');
+    const url = URL.createObjectURL(await resp.blob());
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = (resp.headers.get('Content-Disposition') || '').match(/filename="([^"]+)"/)?.[1] || 'documento';
+    enlace.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  if (eliminar && await confirmarAccion('¿Eliminar este documento?')) {
+    const resp = await api('/api/verificacion/mi-solicitud/documentos/' + eliminar.dataset.eliminar, { method: 'DELETE' });
+    const datos = await resp.json().catch(() => ({}));
+    if (!resp.ok) mostrarNotificacion(datos.error || 'No se pudo eliminar.', 'error');
+    await cargar();
+  }
+});
+
+document.getElementById('cl-tipo').addEventListener('change', () => pintarEspecificos());
+
+document.getElementById('vf-form-clasificacion').addEventListener('submit', async e => {
+  e.preventDefault();
+  const mensaje = document.getElementById('cl-mensaje');
+  const payload = { tipoInstitucion: document.getElementById('cl-tipo').value };
+  for (const campo of ['nombreEntidad', 'nit', 'dependencia', 'cargo', 'departamento', 'municipio', 'direccionInstalacion']) {
+    payload[campo] = document.getElementById('cl-' + campo).value.trim();
+  }
+  document.querySelectorAll('[data-especifico]').forEach(el => { payload[el.dataset.especifico] = el.value; });
+  const resp = await api('/api/verificacion/mi-solicitud/clasificacion', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const datos = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    const detalles = datos.errores ? Object.values(datos.errores).join(' ') : '';
+    mensaje.className = 'alert alert-danger';
+    mensaje.textContent = (datos.error || 'No se pudo guardar.') + ' ' + detalles;
+    return;
+  }
+  mensaje.className = 'alert alert-success';
+  mensaje.textContent = datos.mensaje || 'Clasificación guardada.';
+  await cargar();
+});
+
+document.addEventListener('DOMContentLoaded', cargar);
+</script>
+</body>
+</html>

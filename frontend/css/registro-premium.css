@@ -1,0 +1,477 @@
+body.registration-page {
+  --registration-ink: #142b3e;
+  --registration-muted: #647789;
+  --registration-line: #e3ebef;
+  --registration-green: #00b060;
+  background:
+    radial-gradient(780px 360px at 100% 0, rgba(0, 176, 96, .07), transparent 62%),
+    linear-gradient(180deg, #f4f7f9 0%, #edf2f5 100%) !important;
+  color: var(--registration-ink);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+body.registration-page .navbar-institucional {
+  background: #0b2d4a !important;
+}
+
+body.registration-page .navbar-institucional #brand-publico {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+body.registration-page .navbar-institucional .brand-logo {
+  display: block !important;
+  width: auto;
+  height: 45px;
+  max-width: min(48vw, 230px);
+  object-fit: contain;
+}
+
+body.registration-page.modo-admin-registro .navbar-institucional > .container {
+  justify-content: space-between;
+}
+
+body.registration-page.modo-admin-registro .navbar-institucional #brand-publico {
+  display: inline-flex !important;
+  margin-right: auto;
+}
+
+body.registration-page.modo-admin-registro .navbar-institucional #nav-regresar-admin {
+  margin-left: auto;
+  border-color: rgba(255, 255, 255, .34);
+  border-radius: 999px;
+  padding: .5rem .9rem;
+}
+
+body.registration-page .registration-hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-height: clamp(300px, 34vw, 430px);
+  align-items: center;
+  overflow: hidden;
+  padding: clamp(3rem, 6vw, 5.25rem) 0 !important;
+  background-color: #071d37 !important;
+  border-bottom: 4px solid var(--registration-green);
+}
+
+body.registration-page .registration-hero-image {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  display: block !important;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: right center;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+body.registration-page .registration-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(5, 21, 39, .97) 0%, rgba(5, 25, 43, .88) 34%, rgba(5, 30, 46, .48) 67%, rgba(5, 30, 46, .15) 100%);
+}
+
+body.registration-page .registration-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(135deg, transparent 0 30px, rgba(133, 238, 180, .12) 31px, transparent 32px 62px);
+  mask-image: linear-gradient(90deg, #000 0%, transparent 42%);
+}
+
+body.registration-page .registration-hero > .container {
+  position: relative;
+  z-index: 1;
+}
+
+body.registration-page .registration-hero .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  margin-bottom: .9rem !important;
+  padding: .48rem .8rem;
+  border: 1px solid rgba(148, 230, 181, .35);
+  border-radius: 999px;
+  background: rgba(2, 31, 43, .58);
+  color: #a8edc4 !important;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .7rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+body.registration-page .registration-hero .eyebrow::before {
+  content: "";
+  width: .42rem;
+  height: .42rem;
+  border-radius: 50%;
+  background: #55e49b;
+  box-shadow: 0 0 12px rgba(85, 228, 155, .75);
+}
+
+body.registration-page .registration-hero h1 {
+  max-width: 15ch;
+  color: #fff !important;
+  font-family: "Plus Jakarta Sans", Inter, sans-serif;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -.045em;
+  line-height: 1.08;
+  text-shadow: 0 3px 22px rgba(0, 0, 0, .35);
+}
+
+body.registration-page .registration-hero p.lead {
+  max-width: 54ch;
+  color: #dce9ee !important;
+  font-size: clamp(.98rem, 1.55vw, 1.12rem);
+  line-height: 1.7;
+}
+
+body.registration-page .registration-main {
+  padding-top: clamp(2rem, 4vw, 3.5rem) !important;
+  padding-bottom: 4rem !important;
+}
+
+body.registration-page #form-registro {
+  padding: clamp(1.2rem, 2.8vw, 2.25rem);
+  border: 1px solid rgba(20, 43, 62, .08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .04), 0 24px 56px rgba(11, 35, 64, .07);
+}
+
+body.registration-page #form-registro > h2 {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  margin: 1.65rem 0 1rem !important;
+  padding-bottom: .7rem;
+  border-bottom: 1px solid #e9eef1;
+  color: #30485b !important;
+  font-family: "Plus Jakarta Sans", Inter, sans-serif;
+  font-size: .82rem;
+  font-weight: 800;
+  letter-spacing: .075em !important;
+}
+
+body.registration-page #form-registro > h2:first-child {
+  margin-top: 0 !important;
+}
+
+body.registration-page .field-ficha {
+  margin-bottom: .9rem;
+  padding: 1.05rem 1rem .95rem;
+  border: 1px solid var(--registration-line);
+  border-left-width: 3px;
+  border-radius: 13px;
+  background: #fff;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+body.registration-page .field-ficha:focus-within {
+  transform: translateY(-1px);
+  border-color: rgba(0, 176, 96, .48);
+  box-shadow: 0 0 0 4px rgba(0, 176, 96, .08);
+}
+
+body.registration-page .field-ficha .clasif-badge,
+body.registration-page .registration-info-key .clasif-badge {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: .6rem;
+  padding: .28rem .62rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .075em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+body.registration-page .field-ficha.publico { border-left-color: #51a985; }
+body.registration-page .field-ficha.semiprivado { border-left-color: #7798c2; }
+body.registration-page .field-ficha.privado { border-left-color: #8a82bd; }
+body.registration-page .field-ficha.sensible { border-left-color: #c18181; }
+
+body.registration-page .clasif-badge.publico {
+  border-color: #cfe9db;
+  background: #edf8f1;
+  color: #28764f;
+}
+
+body.registration-page .clasif-badge.semiprivado {
+  border-color: #d7e3f1;
+  background: #eff5fb;
+  color: #486d99;
+}
+
+body.registration-page .clasif-badge.privado {
+  border-color: #e0ddf0;
+  background: #f4f2fa;
+  color: #655b91;
+}
+
+body.registration-page .clasif-badge.sensible {
+  border-color: #f0dada;
+  background: #fbf1f1;
+  color: #965c5c;
+}
+
+body.registration-page .field-ficha .form-label {
+  display: block;
+  margin-bottom: .48rem;
+  color: #263d51;
+  font-size: .88rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+body.registration-page #form-registro .form-control {
+  min-height: 46px;
+  padding: .68rem .85rem;
+  border: 1px solid #dce5ea;
+  border-radius: 10px;
+  background-color: #fbfcfd;
+  color: #182f43;
+  font-size: .92rem;
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+
+body.registration-page #form-registro .form-control:hover {
+  border-color: #b8c9d2;
+  background-color: #fff;
+}
+
+body.registration-page #form-registro .form-control:focus {
+  border-color: var(--registration-green);
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgba(0, 176, 96, .12);
+}
+
+body.registration-page .field-ficha .form-text {
+  margin-top: .55rem;
+  color: #778796;
+  font-size: .76rem;
+  line-height: 1.5;
+}
+
+body.registration-page .aviso-sensible {
+  padding: 1rem 1.1rem;
+  border: 1px solid #eadbd6;
+  border-radius: 12px;
+  background: #fbf6f3;
+  color: #665651;
+  font-size: .85rem;
+  line-height: 1.65;
+}
+
+body.registration-page #form-registro div.p-3[style*="tag-sensible"] {
+  padding: 1.15rem !important;
+  border: 1px solid #eadbd6 !important;
+  border-radius: 14px !important;
+  background: #fcf8f6 !important;
+  color: #5c514f;
+}
+
+body.registration-page #form-registro div.p-3[style*="tag-sensible"] ul {
+  padding-left: 1.15rem;
+  color: #665d5a;
+  line-height: 1.65;
+}
+
+body.registration-page #form-registro .form-check {
+  padding: .85rem .9rem .85rem 2.35rem;
+  border: 1px solid #e7ecef;
+  border-radius: 11px;
+  background: #fafcfc;
+}
+
+body.registration-page #form-registro .form-check-input {
+  margin-left: -1.45rem;
+}
+
+body.registration-page #form-registro .form-check-input:checked {
+  border-color: var(--registration-green);
+  background-color: var(--registration-green);
+}
+
+body.registration-page #form-registro .form-check-label {
+  color: #586b7a;
+  line-height: 1.55;
+}
+
+body.registration-page #form-registro .form-check-label a {
+  color: #087c49;
+  font-weight: 700;
+}
+
+body.registration-page #btn-registrar {
+  display: inline-flex;
+  min-height: 50px;
+  align-items: center;
+  justify-content: center;
+  padding: .8rem 1.5rem !important;
+  border: 1px solid #00a558 !important;
+  border-radius: 11px !important;
+  background: #00b060 !important;
+  color: #fff !important;
+  font-size: .96rem;
+  font-weight: 750;
+  box-shadow: 0 8px 18px rgba(0, 176, 96, .18);
+  transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease;
+}
+
+body.registration-page #btn-registrar:hover,
+body.registration-page #btn-registrar:focus-visible {
+  transform: translateY(-2px);
+  border-color: #008f4e !important;
+  background: #009f55 !important;
+  box-shadow: 0 12px 22px rgba(0, 143, 78, .24);
+}
+
+body.registration-page #btn-registrar:disabled {
+  transform: none;
+  opacity: .72;
+}
+
+body.registration-page .registration-info-column {
+  position: sticky;
+  top: 5.75rem;
+}
+
+body.registration-page .registration-info-card {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(1.4rem, 2.7vw, 2rem);
+  border: 1px solid rgba(255, 255, 255, .82);
+  border-radius: 20px;
+  background:
+    radial-gradient(260px 200px at 100% 0, rgba(0, 176, 96, .1), transparent 75%),
+    rgba(255, 255, 255, .76);
+  box-shadow: 0 16px 42px rgba(11, 35, 64, .1);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+body.registration-page .registration-info-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  background: linear-gradient(180deg, #00b060, #4e92bb);
+}
+
+body.registration-page .registration-info-kicker {
+  margin-bottom: .8rem;
+  color: #25815b;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .67rem;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+body.registration-page .registration-info-card h2 {
+  margin-bottom: 1rem;
+  color: #142b3e;
+  font-family: "Plus Jakarta Sans", Inter, sans-serif;
+  font-size: clamp(1.25rem, 2.2vw, 1.65rem);
+  font-weight: 800;
+  letter-spacing: -.03em;
+  line-height: 1.25;
+}
+
+body.registration-page .registration-info-card p {
+  color: #596e7d !important;
+  font-size: .88rem;
+  line-height: 1.75;
+}
+
+body.registration-page .registration-info-card p strong {
+  color: #253e51;
+  font-weight: 750;
+}
+
+body.registration-page .registration-info-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(20, 43, 62, .1);
+}
+
+body.registration-page .registration-info-key .clasif-badge {
+  margin: 0;
+  font-size: .57rem;
+}
+
+@media (max-width: 991.98px) {
+  body.registration-page .registration-info-column {
+    position: static;
+  }
+
+  body.registration-page .registration-info-card {
+    margin-top: .25rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  body.registration-page .registration-hero {
+    min-height: 290px;
+    background-position: center, 66% center, center;
+  }
+
+  body.registration-page .registration-hero > .container {
+    padding-inline: 1rem;
+  }
+
+  body.registration-page .registration-hero .eyebrow {
+    font-size: .61rem;
+    letter-spacing: .035em;
+  }
+
+  body.registration-page #form-registro {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+
+  body.registration-page .registration-info-card {
+    padding: 1.25rem;
+    border-radius: 16px;
+  }
+
+  body.registration-page.modo-admin-registro .navbar-institucional .brand-logo {
+    height: 38px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.registration-page *,
+  body.registration-page *::before,
+  body.registration-page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  
+}

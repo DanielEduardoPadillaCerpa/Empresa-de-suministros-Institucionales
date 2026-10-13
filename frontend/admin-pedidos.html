@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="admin_orders_page_title">Pedidos — Panel administrativo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/theme-modern.css">
+<link rel="stylesheet" href="css/global-ui.css">
+<link rel="stylesheet" href="css/admin-console.css">
+</head>
+<body class="admin-console-page admin-orders-page" data-gl-nav="off" data-gl-cart="off">
+image_ab9291c8
+<script src="js/global-layout.js"></script>
+<nav class="navbar navbar-expand-lg navbar-institucional py-2">
+  <div class="container">
+    <a class="navbar-brand" href="landing.html" aria-label="Suministros Institucionales - Ir al inicio">
+      <img class="brand-logo" src="http://localhost:8081/img/logo-suministros.png" alt="Suministros Institucionales" width="171" height="46">
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav1">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="nav1">
+      <ul class="navbar-nav ms-auto gap-lg-3 align-items-lg-center">
+        <li class="nav-item"><a class="nav-link" href="admin-dashboard.html" data-i18n="nav_dashboard">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-clientes.html">Clientes</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-productos.html">Productos</a></li>
+        <li class="nav-item"><a class="nav-link active" href="admin-pedidos.html">Pedidos</a></li>
+        <li class="nav-item d-flex align-items-center" id="auth-nav-slot"></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<header class="admin-console-hero admin-orders-hero">
+  <div class="container">
+    <div class="eyebrow mb-2" data-i18n="admin_orders_header">Panel administrativo · Acceso restringido</div>
+    <h1 class="display-serif h2 mb-2" data-i18n="admin_orders_title">Pedidos registrados</h1>
+    <p class="lead mb-0">Gestiona el estado, los artículos y el resumen de cada pedido.</p>
+  </div>
+</header>
+
+<main class="container py-4">
+  <div class="admin-orders-toolbar d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <input type="hidden" id="apiBase" value="http://localhost:8081">
+    <button class="btn btn-dark" type="button" onclick="cargarPedidos()" data-i18n="admin_orders_load">Actualizar pedidos</button>
+  </div>
+
+  <div id="estado" class="small text-muted mb-3" aria-live="polite"></div>
+  <section id="pedidosLista" class="d-grid gap-4" aria-live="polite">
+    <div class="card-elevated p-5 text-center text-muted">Cargando pedidos…</div>
+  </section>
+</main>
+
+<footer class="institucional py-4">
+  <div class="container d-flex flex-wrap justify-content-between small">
+    <span data-i18n="admin_orders_footer_copyright">© 2026 Suministros Institucionales S.A.S.</span>
+    <span data-i18n="admin_orders_footer_internal">Vista de uso interno — no exponer públicamente sin autenticación</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/chatbot.js"></script>
+<script>
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
+}
+
+function exigirSesion() {
+  const sesion = authLeer();
+  if (!sesion?.token) {
+    window.location.href = 'login.html?redirect=admin-pedidos.html';
+    return null;
+  }
+  if (sesion.rol !== 'admin') {
+    window.location.href = 'index.html';
+    return null;
+  }
+  return sesion;
+}
+
+async function cargarPedidos() {
+  const base = document.getElementById('apiBase').value.replace(/\/$/, '');
+  const estado = document.getElementById('estado');
+  const lista = document.getElementById('pedidosLista');
+  estado.textContent = 'Consultando ' + base + '/api/pedidos/todos ...';
+
+  const sesion = exigirSesion();
+  if (!sesion) return;
+
+  try {
+    const resp = await fetch(base + '/api/pedidos/todos', {
+      headers: { Authorization: 'Bearer ' + sesion.token }
+    });
+    if (resp.status === 401) {
+      window.location.href = 'login.html?redirect=admin-pedidos.html';
+      return;
+    }
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const pedidos = await resp.json();
+
+    if (!pedidos.length) {
+      lista.innerHTML = '<div class="card-elevated p-5 text-center text-muted"><div class="fs-1 mb-2">∅</div><p class="mb-0" data-i18n="admin_orders_empty">No hay pedidos registrados.</p></div>';
+    } else lista.innerHTML = pedidos.map(renderPedido).join('');
+    estado.textContent = pedidos.length + ' pedido(s) cargado(s).';
+  } catch (err) {
+    estado.textContent = '';
+    lista.innerHTML = '<div class="card-elevated p-5 text-center text-muted"><p class="mb-0">No fue posible cargar los pedidos.</p><small>Comprueba la conexión e inténtalo de nuevo.</small></div>';
+    mostrarNotificacion('Portal temporalmente fuera de línea. Reconectando con el servidor central...', 'error');
+  }
+}
+
+const ESTADOS_TIMELINE = [
+  ['pendiente', 'Pendiente'],
+  ['confirmado', 'Confirmado'],
+  ['preparado', 'Preparado'],
+  ['enviado', 'Enviado'],
+  ['entregado', 'Entregado']
+];
+const ESTADO_LEGACY = { pendiente: 'pendiente', enviado: 'enviado', entregado: 'entregado', cancelado: 'cancelado' };
+const ETIQUETAS = Object.fromEntries(ESTADOS_TIMELINE);
+const formatearPrecio = valor => '$' + Number(valor || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 });
+
+function renderPedido(p) {
+  const estado = ESTADO_LEGACY[p.estado] || p.estado || 'pendiente';
+  const indice = Math.max(0, ESTADOS_TIMELINE.findIndex(([key]) => key === estado));
+  const subtotalNeto = Number(p.total || 0) / 1.19;
+  const iva = Number(p.total || 0) - subtotalNeto;
+  const timeline = ESTADOS_TIMELINE.map(([key, label], i) =>
+    `<div class="text-center flex-fill ${i <= indice ? 'text-success' : 'text-muted'}" style="min-width:82px">
+      <div class="rounded-circle mx-auto mb-1 ${i <= indice ? 'bg-success' : 'bg-light border'}" style="width:14px;height:14px"></div>
+      <small>${label}</small>
+    </div>`).join('');
+  const items = (p.items || []).map(item => `<li class="d-flex justify-content-between gap-3 py-2 border-bottom">
+    <span><strong>${escapeHtml(item.nombre)}</strong><br><small class="text-muted">Cantidad: ${escapeHtml(item.cantidad)}${item.variacion ? ' · Variación: ' + escapeHtml(item.variacion) : ''}</small></span>
+    <strong class="text-nowrap">${formatearPrecio(Number(item.precio || item.precio_unitario || 0) * Number(item.cantidad || 0))}</strong>
+  </li>`).join('');
+  const opciones = ESTADOS_TIMELINE.map(([key, label]) => `<option value="${key}" ${key === estado ? 'selected' : ''}>${label}</option>`).join('');
+  return `<article class="card-elevated p-4">
+    <div class="d-flex flex-wrap justify-content-between gap-3 mb-3">
+      <div><div class="font-monospace text-uppercase small text-muted">Pedido #${escapeHtml(p.id)}</div>
+      <div class="small text-muted">${new Date(p.fechaPedido).toLocaleString('es-CO')}</div>
+      <div class="small mt-1">${escapeHtml(p.cliente?.unidad || '')}${p.cliente?.nit ? ' · NIT ' + escapeHtml(p.cliente.nit) : ''}</div></div>
+      <label class="small text-muted">Estado<select data-estado-anterior="${escapeHtml(estado)}" class="form-select form-select-sm mt-1" onchange="actualizarEstado(${Number(p.id)}, this.value, this)">${opciones}${p.estado === 'cancelado' ? '<option selected value="cancelado">Cancelado (histórico)</option>' : ''}</select></label>
+    </div>
+    <div class="d-flex align-items-start mb-4">${timeline}</div>
+    <div class="row g-4"><div class="col-lg-7"><h2 class="h6 text-uppercase text-muted">Artículos</h2><ul class="list-unstyled mb-0">${items || '<li class="text-muted">Sin detalle disponible.</li>'}</ul></div>
+      <div class="col-lg-5"><h2 class="h6 text-uppercase text-muted">Resumen financiero</h2><div class="bg-light rounded p-3">
+        <div class="d-flex justify-content-between py-1"><span>Subtotal Neto</span><strong>${formatearPrecio(subtotalNeto)}</strong></div>
+        <div class="d-flex justify-content-between py-1 border-bottom"><span>IVA 19%</span><strong>${formatearPrecio(iva)}</strong></div>
+        <div class="d-flex justify-content-between pt-2 fs-5"><span>Gran Total</span><strong>${formatearPrecio(p.total)}</strong></div>
+      </div></div>
+    </div>
+  </article>`;
+}
+
+async function actualizarEstado(pedidoId, nuevoEstado, selector) {
+  const base = document.getElementById('apiBase').value.replace(/\/$/, '');
+  const sesion = authLeer();
+  if (!sesion?.token) {
+    window.location.href = 'login.html?redirect=admin-pedidos.html';
+    return;
+  }
+  const confirmado = await confirmarAccion('¿Actualizar el pedido #' + pedidoId + ' a "' + (ETIQUETAS[nuevoEstado] || nuevoEstado) + '"?');
+  if (!confirmado) {
+    if (selector) selector.value = selector.dataset.estadoAnterior || 'pendiente';
+    return;
+  }
+  try {
+    const resp = await fetch(base + '/api/pedidos/' + pedidoId, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + sesion.token
+      },
+      body: JSON.stringify({ estado: nuevoEstado })
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    if (selector) selector.dataset.estadoAnterior = nuevoEstado;
+    document.getElementById('estado').textContent = 'Pedido #' + pedidoId + ' actualizado a ' + (ETIQUETAS[nuevoEstado] || nuevoEstado) + '.';
+    mostrarNotificacion('Estado actualizado correctamente.', 'success');
+  } catch (err) {
+    if (selector) selector.value = 'pendiente';
+    document.getElementById('estado').textContent = '';
+    mostrarNotificacion('Portal temporalmente fuera de línea. Reconectando con el servidor central...', 'error');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', cargarPedidos);
+</script>
+</body>
+</html>

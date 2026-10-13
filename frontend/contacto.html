@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Radica solicitudes institucionales, PQRS y requerimientos de soporte.">
+  <title>Contacto institucional — Suministros Institucionales</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/theme-modern.css">
+  <link rel="stylesheet" href="css/global-ui.css">
+  <style>
+    .contacto-hero { color:#fff; background:linear-gradient(120deg,var(--tenant-navy),#122e46); padding:3.5rem 0; }
+    .contacto-panel { background:rgba(255,255,255,.97); border:1px solid rgba(11,45,74,.09); border-radius:1.25rem; box-shadow:0 1.25rem 3.5rem rgba(11,45,74,.10); }
+    .contacto-aside { background:linear-gradient(160deg,var(--tenant-navy),#123d54); color:#fff; border-radius:1rem; }
+    .form-control:focus,.form-select:focus { border-color:var(--tenant-green); box-shadow:0 0 0 .2rem color-mix(in srgb,var(--tenant-green) 18%,transparent); }
+  </style>
+</head>
+<body>
+  <script src="js/global-layout.js"></script>
+  <header class="contacto-hero">
+    <div class="container">
+      <p class="text-uppercase small fw-semibold opacity-75 mb-2">Atención institucional</p>
+      <h1 class="display-5 fw-bold">Cuéntanos qué necesita tu entidad</h1>
+      <p class="lead mb-0 col-lg-8">Radica una PQRS, solicitud de soporte o requerimiento de cotización. La criticidad orienta la priorización, no constituye un compromiso de tiempo de respuesta.</p>
+    </div>
+  </header>
+  <main class="container py-5">
+    <div class="contacto-panel p-3 p-lg-4">
+      <div class="row g-4">
+        <aside class="col-lg-4">
+          <div class="contacto-aside h-100 p-4 p-lg-5">
+            <span class="badge rounded-pill text-bg-light mb-3">Canal institucional</span>
+            <h2 class="h3">Radicación segura</h2>
+            <p class="text-white-50">Los datos identificadores se cifran antes de almacenarse. No incluyas información sensible que no sea necesaria para atender tu solicitud.</p>
+            <hr class="border-light opacity-25">
+            <p class="small mb-2"><strong>PQRS</strong><br>Petición, queja, reclamo o sugerencia.</p>
+            <p class="small mb-2"><strong>Soporte</strong><br>Incidentes de acceso, pedidos o plataforma.</p>
+            <p class="small mb-0"><strong>Cotización</strong><br>Requerimientos de dotación o instrumentación.</p>
+          </div>
+        </aside>
+        <section class="col-lg-8">
+          <form id="formSolicitud" class="row g-3" novalidate>
+            <div class="col-md-6">
+              <label for="tipoSolicitud" class="form-label">Tipo de solicitud</label>
+              <select id="tipoSolicitud" name="tipoSolicitud" class="form-select" required>
+                <option value="">Selecciona</option>
+                <option value="pqrs">PQRS</option>
+                <option value="soporte">Soporte técnico</option>
+                <option value="cotizacion">Cotización institucional</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="tipoEntidad" class="form-label">Tipo de entidad</label>
+              <select id="tipoEntidad" name="tipoEntidad" class="form-select" required>
+                <option value="">Selecciona</option>
+                <option value="publica">Pública</option>
+                <option value="privada">Privada</option>
+              </select>
+            </div>
+            <div class="col-md-8">
+              <label for="entidad" class="form-label">Nombre de la entidad</label>
+              <input id="entidad" name="entidad" class="form-control" maxlength="255" autocomplete="organization" required>
+            </div>
+            <div class="col-md-4">
+              <label for="nit" class="form-label">NIT (sin puntos ni guion)</label>
+              <input id="nit" name="nit" class="form-control" inputmode="numeric" pattern="[0-9.\- ]{9,16}" maxlength="16" autocomplete="off" required>
+              <div class="form-text">Se almacenará cifrado.</div>
+            </div>
+            <div class="col-md-6">
+              <label for="correo" class="form-label">Correo de contacto</label>
+              <input id="correo" name="correo" type="email" class="form-control" maxlength="255" autocomplete="email" required>
+            </div>
+            <div class="col-md-6">
+              <label for="criticidad" class="form-label">Criticidad de la dotación</label>
+              <select id="criticidad" name="criticidad" class="form-select" required>
+                <option value="">Selecciona</option>
+                <option value="baja">Baja — planeación</option>
+                <option value="media">Media — requerimiento próximo</option>
+                <option value="alta">Alta — operación afectada</option>
+                <option value="urgente">Urgente — riesgo operativo reportado</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label for="mensaje" class="form-label">Descripción</label>
+              <textarea id="mensaje" name="mensaje" class="form-control" rows="5" minlength="20" maxlength="2000" required></textarea>
+              <div class="form-text">Entre 20 y 2.000 caracteres. No incluyas números de identificación personal ni datos de salud.</div>
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                <input id="autorizacionDatos" name="autorizacionDatos" class="form-check-input" type="checkbox" value="true" required>
+                <label class="form-check-label small" for="autorizacionDatos">
+                  Autorizo el tratamiento de estos datos para gestionar la solicitud, conforme a la
+                  <a href="leyes.html">política de tratamiento de datos</a>.
+                </label>
+              </div>
+            </div>
+            <div class="visually-hidden" aria-hidden="true">
+              <label for="website">No completar</label>
+              <input id="website" name="website" tabindex="-1" autocomplete="off">
+            </div>
+            <div class="col-12 d-flex flex-wrap align-items-center gap-3">
+              <button class="btn btn-primary rounded-pill px-4" id="btnRadicar" type="submit">Radicar solicitud</button>
+              <span id="estadoSolicitud" class="small" role="status" aria-live="polite"></span>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer class="py-4">
+    <div class="container d-flex flex-wrap justify-content-between gap-2 small">
+      <span>Canal de recepción institucional · Suministros Institucionales</span>
+      <a href="leyes.html">Tratamiento de datos y normatividad</a>
+    </div>
+  </footer>
+  <script src="js/auth.js"></script>
+  <script>
+    const solicitudForm = document.getElementById('formSolicitud');
+    const parametrosContacto = new URLSearchParams(window.location.search);
+    const productoSolicitado = parametrosContacto.get('producto');
+    if (parametrosContacto.get('tipo') === 'cotizacion') {
+      document.getElementById('tipoSolicitud').value = 'cotizacion';
+      if (productoSolicitado) {
+        document.getElementById('mensaje').value = `Solicito cotización para: ${productoSolicitado}. Indicar precio, disponibilidad, ficha técnica y condiciones de entrega.`;
+      }
+    }
+    solicitudForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      const estado = document.getElementById('estadoSolicitud');
+      const boton = document.getElementById('btnRadicar');
+      if (!solicitudForm.reportValidity()) return;
+      const datos = Object.fromEntries(new FormData(solicitudForm).entries());
+      boton.disabled = true;
+      estado.textContent = 'Enviando solicitud…';
+      try {
+        const respuesta = await fetch(API_BASE + '/api/atencion/solicitudes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(datos)
+        });
+        const cuerpo = await respuesta.json();
+        if (!respuesta.ok) throw new Error(cuerpo.error || 'No fue posible radicar la solicitud.');
+        estado.textContent = 'Solicitud recibida. Radicado: ' + cuerpo.radicado;
+        estado.className = 'small text-success';
+        solicitudForm.reset();
+      } catch (error) {
+        estado.textContent = error.message || 'No fue posible radicar la solicitud.';
+        estado.className = 'small text-danger';
+      } finally {
+        boton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

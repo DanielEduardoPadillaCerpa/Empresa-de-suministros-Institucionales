@@ -1,0 +1,114 @@
+{
+  "name": "W9 - Enviar comprobantes de compra",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "receipt-email",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "c901bb87-8578-4e95-8e91-000000000001",
+      "name": "Webhook comprobantes",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "receipt-email",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const b = $input.first().json.body || {};\nconst exactKeys = ['event', 'to', 'subject', 'text', 'html'];\nconst validEmail = value => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(value || ''));\nif (Object.keys(b).sort().join(',') !== exactKeys.slice().sort().join(',')) throw new Error('Campos de comprobante no permitidos');\nif (b.event !== 'receipt.email') throw new Error('Evento no permitido');\nif (!validEmail(b.to)) throw new Error('Correo inválido');\nif (typeof b.subject !== 'string' || !b.subject.trim() || b.subject.length > 200) throw new Error('Asunto inválido');\nif (typeof b.text !== 'string' || !b.text.trim() || b.text.length > 12000) throw new Error('Texto inválido');\nif (typeof b.html !== 'string' || !b.html.trim() || b.html.length > 12000) throw new Error('HTML inválido');\nreturn [{ json: { to: b.to, subject: b.subject, text: b.text, html: b.html } }];"
+      },
+      "id": "c901bb87-8578-4e95-8e91-000000000002",
+      "name": "Validar correo de comprobante",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "fromEmail": "pcerpadaniel@gmail.com",
+        "toEmail": "={{$json.to}}",
+        "subject": "={{$json.subject}}",
+        "emailFormat": "html",
+        "html": "={{$json.html}}",
+        "options": {}
+      },
+      "id": "c901bb87-8578-4e95-8e91-000000000003",
+      "name": "Enviar comprobante por SMTP",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [480, 0],
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "smtp": {
+          "id": "",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"ok\":true}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "c901bb87-8578-4e95-8e91-000000000004",
+      "name": "Confirmar comprobante enviado",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [720, -80]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, code: String($json.error?.code || $json.code || 'SMTP_SEND_FAILED').replace(/[^A-Z0-9_]/gi, '').toUpperCase().slice(0, 40) } }}",
+        "options": {
+          "responseCode": 502
+        }
+      },
+      "id": "c901bb87-8578-4e95-8e91-000000000005",
+      "name": "Responder fallo SMTP",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [720, 100]
+    }
+  ],
+  "connections": {
+    "Webhook comprobantes": {
+      "main": [[{"node": "Validar correo de comprobante", "type": "main", "index": 0}]]
+    },
+    "Validar correo de comprobante": {
+      "main": [[{"node": "Enviar comprobante por SMTP", "type": "main", "index": 0}]]
+    },
+    "Enviar comprobante por SMTP": {
+      "main": [
+        [{"node": "Confirmar comprobante enviado", "type": "main", "index": 0}],
+        [{"node": "Responder fallo SMTP", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "saveExecutionProgress": false
+  },
+  "active": false,
+  "versionId": "c901bb87-8578-4e95-8e91-000000000006",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

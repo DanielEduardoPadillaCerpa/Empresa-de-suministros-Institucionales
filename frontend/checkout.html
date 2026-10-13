@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — Suministros Institucionales</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .precio-total {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.5rem; font-weight: 700;
+    color: var(--navy-900, #0b2340);
+  }
+  #overlay-procesando {
+    position: fixed; inset: 0;
+    background: rgba(11,35,64,0.90);
+    color: #fff; display: none;
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 1rem;
+    z-index: 2000; text-align: center; padding: 2rem;
+  }
+  .overlay-titulo { font-size: 1.15rem; font-weight: 600; }
+  .overlay-sub    { font-size: .88rem;  opacity: .75; }
+  .resultado-aprobado {
+    background: #d1fae5; border: 1px solid #6ee7b7;
+    color: #065f46; border-radius: 10px; padding: 2rem 1.5rem;
+  }
+  .resultado-rechazado {
+    background: #fee2e2; border: 1px solid #fca5a5;
+    color: #991b1b; border-radius: 10px; padding: 1.2rem 1.5rem;
+  }
+  .resultado-pendiente {
+    background: #fef3c7; border: 1px solid #fcd34d;
+    color: #92400e; border-radius: 10px; padding: 2rem 1.5rem;
+  }
+  .aviso-sensible {
+    background: rgba(139,46,46,0.06);
+    border: 1px solid var(--tag-sensible, #8b2e2e);
+    border-radius: 6px; padding: .75rem 1rem;
+    font-size: .85rem; color: #5a1e1e;
+  }
+  .aviso-sensible a { color: #8b2e2e; }
+  .badge-ssl {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .72rem; padding: .25rem .6rem;
+    border-radius: 20px; background: #d1fae5; color: #065f46;
+  }
+  .badge-ssl.azul { background: #dbeafe; color: #1e40af; }
+  .badge-ssl.gris { background: #e5e7eb; color: #374151; }
+
+  /* ── Tarjetas blancas del formulario ── */
+  .tarjeta-form {
+    border: 1px solid rgba(11,35,64,.12); border-radius: 12px;
+    padding: 1.4rem 1.5rem; background: #fff; margin-bottom: 1.1rem;
+  }
+  .tarjeta-form-titulo {
+    font-weight: 700; font-size: 1rem; color: var(--navy-900, #0b2340);
+    margin-bottom: 1.1rem;
+  }
+
+  /* ── Switch Persona natural / Empresa (dentro de la primera tarjeta) ── */
+  .switch-tipo-comprador {
+    display: inline-flex; background: #eef0f2; border-radius: 999px;
+    padding: 4px; gap: 4px; margin-bottom: 1.3rem;
+  }
+  .switch-tab {
+    border: none; background: transparent; padding: .5rem 1.1rem;
+    border-radius: 999px; font-size: .84rem; font-weight: 600;
+    color: #55606b; cursor: pointer; transition: background .15s, color .15s;
+  }
+  .switch-tab.activo {
+    background: #fff; color: var(--navy-900, #0b2340);
+    box-shadow: 0 1px 4px rgba(0,0,0,.15);
+  }
+
+  /* ── Tus artículos: filas ── */
+  .articulo-fila {
+    display: flex; align-items: center; gap: .9rem;
+    padding: .8rem 0; border-bottom: 1px solid rgba(11,35,64,.08);
+  }
+  .articulo-fila:last-child { border-bottom: none; padding-bottom: 0; }
+  .articulo-fila:first-child { padding-top: 0; }
+  .articulo-thumb {
+    width: 56px; height: 56px; border-radius: 8px; object-fit: cover;
+    background: #f1efe9; flex: 0 0 auto;
+  }
+
+  /* ── Resumen de compra ── */
+  .resumen-sticky-wrap { position: sticky; top: 1.5rem; }
+  .badge-trust {
+    font-size: .68rem; background: #d1fae5; color: #065f46;
+    border-radius: 20px; padding: .3rem .65rem; display: inline-flex; align-items: center; gap: .3rem;
+  }
+  .badge-trust.azul { background: #dbeafe; color: #1e40af; }
+  .btn-pagar-verde {
+    background: #4fbfa8; border: none; color: #fff; font-weight: 700; letter-spacing: .02em;
+  }
+  .btn-pagar-verde:hover { background: #3fa593; color: #fff; }
+
+  .formas-pago-titulo {
+    font-size: .78rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: #55606b; margin: 1.2rem 0 .7rem;
+  }
+  .metodos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+  .metodo-fila {
+    grid-column: span 1;
+    display: flex; align-items: center; gap: .65rem;
+    border: 1.5px solid rgba(11,35,64,.15); border-radius: 8px;
+    padding: .65rem .9rem; cursor: pointer; background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .metodo-fila.full { grid-column: 1 / -1; }
+  .metodo-fila:hover { border-color: var(--brass-600, #b08d57); }
+  .metodo-fila.seleccionada { border-color: var(--navy-900, #0b2340); box-shadow: 0 0 0 1px var(--navy-900, #0b2340) inset; }
+  .radio-visual {
+    width: 18px; height: 18px; border-radius: 50%; border: 2px solid #99a3ad;
+    flex: 0 0 auto; position: relative;
+  }
+  .metodo-fila.seleccionada .radio-visual { border-color: var(--navy-900, #0b2340); }
+  .metodo-fila.seleccionada .radio-visual::after {
+    content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--navy-900, #0b2340);
+  }
+  .logo-pago { font-weight: 700; font-size: .88rem; color: var(--navy-900, #0b2340); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .seccion-metodo-detalle {
+    background: var(--paper-50, #fafaf7); border: 1px solid rgba(11,35,64,.1);
+    border-radius: 8px; padding: 1rem; margin-top: .75rem;
+  }
+  .checkout-progreso { display:flex; justify-content:center; gap:.75rem; margin-bottom:1.5rem; }
+  .checkout-progreso span { padding:.45rem .8rem; border-radius:999px; background:#e5e7eb; color:#475569; font-size:.8rem; font-weight:700; }
+  .checkout-progreso span.activo { background:#0f172a; color:#fff; }
+  .checkout-mock-aviso { border:1px solid #fcd34d; background:#fffbeb; color:#92400e; border-radius:8px; padding:.75rem 1rem; font-size:.85rem; }
+  #resultado-pago .recibo-wrap { padding:1rem; }
+    /* ===== Recibo de pago ===== */
+  .recibo-wrap { background:#eaf0f8; border-radius:20px; padding:2rem 1rem; }
+  .recibo { max-width:420px; margin:0 auto; font-family:var(--font-body); color:#0f172a; }
+  .recibo-card { background:#fff; border-radius:22px; box-shadow:0 12px 30px rgba(15,23,42,.12); overflow:hidden; }
+  .recibo-top { padding:1.6rem 1.5rem 1rem; }
+  .recibo-marca { text-align:center; line-height:1.05; margin-bottom:1.2rem; }
+  .recibo-marca b { display:block; font-family:var(--font-display); font-size:1.8rem; font-weight:800; color:#0f172a; }
+  .recibo-marca b.azul { color:#0d4f9c; }
+  .recibo-marca small { display:block; margin-top:.3rem; font-size:.62rem; font-weight:700; letter-spacing:.02em; }
+  .recibo-estado { display:flex; align-items:center; justify-content:center; gap:.6rem; margin-bottom:1rem; }
+  .recibo-estado h2 { margin:0; font-size:1.35rem; font-weight:800; }
+  .recibo-icono { width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:1.1rem; }
+  .recibo-estado.ok   .recibo-icono { background:#43a35a; }
+  .recibo-estado.pend .recibo-icono { background:#d97706; }
+  .recibo-estado.err  .recibo-icono { background:#b91c1c; }
+  .recibo-fila { display:flex; justify-content:space-between; gap:1rem; padding:.28rem 0; font-size:.95rem; }
+  .recibo-fila span:first-child { color:#475569; }
+  .recibo-fila span:last-child { font-weight:800; text-align:right; word-break:break-word; }
+  .recibo-fila .v-ok   { color:#43a35a; }
+  .recibo-fila .v-pend { color:#d97706; }
+  .recibo-fila .v-err  { color:#b91c1c; }
+  .recibo-items { margin-top:.7rem; padding-top:.6rem; border-top:1px solid #e2e8f0; font-size:.85rem; }
+  .recibo-items .linea { display:flex; justify-content:space-between; gap:.8rem; padding:.15rem 0; }
+  .recibo-items .linea span:last-child { white-space:nowrap; font-weight:700; }
+  .recibo-nota { margin:.8rem 0 0; font-size:.75rem; color:#64748b; text-align:center; }
+  .recibo-corte { position:relative; height:26px; margin-top:.8rem; }
+  .recibo-corte::before { content:''; position:absolute; left:22px; right:22px; top:12px; border-top:2px dashed #0f172a; }
+  .recibo-corte i { position:absolute; top:0; width:26px; height:26px; border-radius:50%; background:#eaf0f8; }
+  .recibo-corte i:first-child { left:-13px; }
+  .recibo-corte i:last-child  { right:-13px; }
+  .recibo-total { display:flex; justify-content:space-between; align-items:center; padding:.6rem 1.5rem 1.5rem; }
+  .recibo-total span:first-child { font-size:1.5rem; font-weight:800; }
+  .recibo-total span:last-child  { font-size:1.9rem; font-weight:800; color:#0d4f9c; }
+  .recibo-acciones { max-width:420px; margin:1.4rem auto 0; display:grid; gap:.8rem; text-align:center; }
+  .btn-recibo { display:block; border-radius:999px; padding:.9rem 1rem; font-size:1.05rem; text-decoration:none; cursor:pointer; border:2px solid #0d4f9c; background:#0d4f9c; color:#fff; }
+  .btn-recibo.sec { background:transparent; color:#0d4f9c; }
+  .btn-recibo:hover { opacity:.92; }
+  .recibo-compartir { display:flex; flex-direction:column; align-items:center; gap:.5rem; font-size:.9rem; }
+  .recibo-compartir div { display:flex; gap:.7rem; }
+  .recibo-icono-btn { width:48px; height:48px; border-radius:14px; background:#0d4f9c; color:#fff; border:0; display:inline-flex; align-items:center; justify-content:center; font-size:1.3rem; text-decoration:none; cursor:pointer; }
+  .recibo-card, .recibo-icono, .recibo-wrap { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  @media print {
+    body * { visibility:hidden !important; }
+    #recibo-imprimible, #recibo-imprimible * { visibility:visible !important; }
+    #recibo-imprimible { position:absolute; left:0; top:0; width:100%; background:#fff !important; }
+    .recibo-card { box-shadow:none; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/theme-modern.css">
+<link rel="stylesheet" href="css/global-ui.css">
+<style>
+  /* =========================================================
+     CHECKOUT · estilos finales (UN solo bloque, después de theme-modern.css)
+     ========================================================= */
+  :root {
+    --checkout-green: #00b060;
+    --checkout-ink: #142b3e;
+    --checkout-muted: #6b7b87;
+  }
+
+  body:has(#checkout-contenido) {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #e7f4f0 0, #f3f7f8 360px, #f4f6f8 100%);
+    color: var(--checkout-ink);
+    font-family: Inter, system-ui, sans-serif;
+  }
+
+  /* ---------- HERO · imagen de la pasarela (la URL se escribe UNA sola vez) ---------- */
+  body:has(#checkout-contenido) > header.checkout-hero {
+    --checkout-hero-img: url('http://localhost:8081/img/image_d3382bc4.jpg');
+    position: relative;
+    display: flex;
+    min-height: clamp(310px, 38vw, 470px);
+    align-items: center;
+    overflow: hidden;
+    padding: clamp(3.5rem, 7vw, 6rem) 0 !important;
+    text-align: left !important;
+    /* !important: theme-modern.css define un fondo propio para .hero y lo pisaría */
+    background-color: #071d35 !important;
+    background-image:
+      linear-gradient(90deg, rgba(4, 17, 35, .94) 0%, rgba(4, 25, 43, .80) 38%, rgba(4, 31, 44, .30) 70%, rgba(4, 31, 44, .08) 100%),
+      linear-gradient(180deg, rgba(5, 19, 35, .18) 0%, rgba(5, 37, 44, .08) 65%, rgba(5, 37, 44, .28) 100%),
+      var(--checkout-hero-img) !important;
+    background-position: center, center, center 6% !important;
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    border-bottom: 1px solid rgba(255, 255, 255, .22);
+  }
+
+  /* quita el resplandor verde que el tema agrega a .hero */
+  body:has(#checkout-contenido) > header.checkout-hero::before {
+    display: none;
+  }
+
+  body:has(#checkout-contenido) > header.checkout-hero .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 1240px;
+    padding-inline: 1.5rem;
+    text-align: left !important;
+  }
+
+  .checkout-hero .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    margin-bottom: .85rem !important;
+    padding: .48rem .8rem;
+    border: 1px solid rgba(160, 255, 207, .4);
+    border-radius: 999px;
+    background: rgba(3, 35, 40, .45);
+    color: #a8f4ca !important;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
+  }
+
+  .checkout-hero .eyebrow::before {
+    content: "";
+    width: .45rem;
+    height: .45rem;
+    border-radius: 50%;
+    background: #42e69a;
+    box-shadow: 0 0 12px rgba(66, 230, 154, .85);
+  }
+
+  .checkout-hero h1 {
+    max-width: 16ch;
+    margin: 0;
+    color: #fff;
+    font-family: Inter, system-ui, sans-serif;
+    font-size: clamp(2.15rem, 5vw, 4rem);
+    font-weight: 700;
+    letter-spacing: -.045em;
+    line-height: 1.08;
+    text-shadow: 0 3px 24px rgba(0, 0, 0, .35);
+  }
+
+  .checkout-hero .checkout-hero-copy {
+    max-width: 48ch;
+    margin: 1rem 0 0;
+    color: rgba(239, 248, 250, .88);
+    font-size: clamp(.95rem, 1.4vw, 1.08rem);
+    line-height: 1.65;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, .3);
+  }
+
+  /* ---------- Contenido ---------- */
+  body:has(#checkout-contenido) > main.container {
+    padding: clamp(1.75rem, 4vw, 3.25rem) 12px 3rem !important;
+    background: transparent !important;
+  }
+
+  #checkout-contenido {
+    align-items: flex-start;
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 1.5rem;
+  }
+
+  #checkout-paso-carrito.tarjeta-form {
+    max-width: 1040px;
+    margin: 0 auto;
+  }
+
+  .tarjeta-form {
+    margin-bottom: 1.1rem;
+    padding: 1.4rem 1.5rem;
+    border: 1px solid rgba(11, 35, 64, .12) !important;
+    border-radius: 12px !important;
+    background: #fff;
+    box-shadow: none;
+  }
+
+  .tarjeta-form-titulo {
+    margin-bottom: 1.15rem;
+    color: var(--checkout-ink);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -.015em;
+  }
+
+  #checkout-carrito-titulo.tarjeta-form-titulo {
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e6edef;
+    font-size: 1.2rem;
+  }
+
+  /* ---------- Artículos ---------- */
+  .articulo-fila .fw-semibold.small {
+    color: #0f2233;
+    font-size: .98rem !important;
+    font-weight: 600 !important;
+    line-height: 1.35;
+  }
+
+  .articulo-fila .text-muted.small {
+    margin-top: .2rem;
+    color: #5c6e7b !important;
+    font-size: .84rem !important;
+  }
+
+  .articulo-fila > div:last-child {
+    min-width: 96px;
+    margin-left: auto;
+    color: #0f2233;
+    font-weight: 700 !important;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  #checkout-paso-carrito > .d-flex {
+    margin-top: 1.25rem !important;
+    padding-top: 1.25rem;
+    border-top: 1px solid #e6edef;
+  }
+
+  #checkout-cart-total {
+    color: #0f2233;
+    font-size: 1.12rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+  }
+
+  /* ---------- Formularios ---------- */
+  .tarjeta-form .form-label {
+    margin-bottom: .45rem;
+    color: #354b5b;
+    font-size: .82rem !important;
+    font-weight: 600;
+  }
+
+  .tarjeta-form .form-control,
+  .tarjeta-form .form-select {
+    min-height: 48px;
+    padding: .72rem .9rem;
+    border: 1px solid #dce4e7;
+    border-radius: 10px;
+    background-color: #fff;
+    color: var(--checkout-ink);
+    font-size: .94rem;
+    box-shadow: none;
+    transition: border-color .18s ease, box-shadow .18s ease;
+  }
+
+  .tarjeta-form .form-control::placeholder {
+    color: #98a5ad;
+  }
+
+  .tarjeta-form .form-control:focus,
+  .tarjeta-form .form-select:focus {
+    border-color: var(--checkout-green);
+    box-shadow: 0 0 0 4px rgba(0, 176, 96, .12);
+  }
+
+  .switch-tipo-comprador {
+    padding: 5px;
+    border: 1px solid #e5ebed;
+    border-radius: 12px;
+    background: #f4f7f7;
+  }
+
+  .switch-tab {
+    padding: .65rem 1rem;
+    border-radius: 9px;
+  }
+
+  .switch-tab.activo {
+    color: #007d43;
+    box-shadow: 0 2px 8px rgba(18, 38, 54, .1);
+  }
+
+  /* ---------- Resumen de compra ---------- */
+  .resumen-sticky-wrap .d-flex.justify-content-between.small {
+    padding: 0;
+    color: var(--checkout-muted);
+    font-size: .8rem !important;
+  }
+
+  #rs-subtotal,
+  #rs-iva {
+    color: #304656;
+    font-weight: 600;
+  }
+
+  .resumen-sticky-wrap hr {
+    margin: .85rem 0 !important;
+    border-color: #e4ebed;
+    opacity: 1;
+  }
+
+  .resumen-sticky-wrap #rs-total-label {
+    color: #405564;
+    font-size: .88rem;
+    line-height: 1.5;
+  }
+
+  .badge-trust {
+    background: #effaf3;
+    color: #087345;
+    line-height: 1.35;
+  }
+
+  .badge-trust.azul {
+    background: #f1f7fa;
+    color: #315e77;
+  }
+
+  .checkout-mock-aviso {
+    line-height: 1.55;
+  }
+
+  .formas-pago-titulo {
+    margin: 1.15rem 0 .65rem;
+    color: #455968;
+    font-size: .72rem;
+    letter-spacing: .09em;
+  }
+
+  .metodos-grid {
+    gap: .55rem;
+  }
+
+  .seccion-metodo-detalle {
+    border-color: #e1e9e9;
+    border-radius: 11px;
+    background: #f7faf9;
+  }
+
+  /* ---------- Botones de pago ---------- */
+  body .btn-pagar-verde {
+    padding: .75rem 1rem !important;
+    border: 0 !important;
+    border-radius: .375rem !important;
+    background: #4fbfa8 !important;
+    color: #fff !important;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    box-shadow: none;
+  }
+
+  body .btn-pagar-verde:hover,
+  body .btn-pagar-verde:focus-visible {
+    background: #3fa593 !important;
+    color: #fff !important;
+    filter: none;
+    transform: none;
+    box-shadow: none;
+  }
+
+  body .btn-pagar-verde:focus-visible,
+  .metodo-fila:focus-within {
+    outline: 3px solid rgba(0, 176, 96, .28);
+    outline-offset: 2px;
+  }
+
+  #checkout-volver-carrito {
+    color: #477263;
+    font-size: .88rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  #checkout-volver-carrito:hover {
+    color: #007d43;
+    text-decoration: underline;
+  }
+
+  #checkout-direccion-guardada {
+    border-radius: 11px !important;
+  }
+
+  #checkout-contenido .text-center.text-muted a {
+    color: #087c49;
+    font-weight: 600;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 991.98px) {
+    .resumen-sticky-wrap {
+      position: static;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    body:has(#checkout-contenido) > header.checkout-hero {
+      min-height: 330px;
+      padding: 3.25rem 0 !important;
+      background-image:
+        linear-gradient(180deg, rgba(4, 17, 35, .90) 0%, rgba(4, 25, 43, .78) 100%),
+        var(--checkout-hero-img) !important;
+      background-position: center, 60% 8% !important;
+    }
+
+    body:has(#checkout-contenido) > header.checkout-hero .container {
+      padding-inline: 1.1rem;
+    }
+
+    body:has(#checkout-contenido) > main.container {
+      padding: 1.25rem 12px 3rem !important;
+    }
+
+    .tarjeta-form {
+      padding: 1.15rem;
+    }
+
+    .articulo-fila > div:last-child {
+      min-width: 88px;
+    }
+
+    .resumen-sticky-wrap .d-flex.gap-2.mb-2 {
+      flex-direction: column;
+    }
+
+    .metodos-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .metodo-fila,
+    .metodo-fila.full {
+      grid-column: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tarjeta-form .form-control,
+    .tarjeta-form .form-select {
+      transition: none;
+    }
+  }
+</style>
+</head>
+<body data-gl-cart="off" data-gl-chat="off">
+
+<!-- ════════════════════ NAV ════════════════════ -->
+<script src="js/global-layout.js"></script>
+
+<!-- ════════════════════ HERO ════════════════════ -->
+<header class="hero checkout-hero text-start">
+  <div class="container py-1 text-start">
+    <div class="eyebrow mb-1">Paso final · Compra segura</div>
+    <h1 class="display-serif h3 mb-1">Finalizar pedido</h1>
+    <p class="checkout-hero-copy">Revisa tu compra y completa tus datos para finalizar el pedido de forma segura.</p>
+  </div>
+</header>
+
+<!-- ════════════════════ MAIN ════════════════════ -->
+<main class="container py-5">
+  <!-- Carrito vacío -->
+  <div id="checkout-vacio" class="text-center py-5" style="display:none;">
+    <div style="font-size:3.5rem;">🛒</div>
+    <h2 class="h5 mt-3">Tu carrito está vacío</h2>
+    <p class="text-muted">Agrega productos antes de pagar.</p>
+    <a href="index.html" class="btn btn-dark mt-2">Ir al catálogo</a>
+  </div>
+
+  <div class="checkout-progreso" aria-label="Progreso de compra">
+    <span id="checkout-paso-indicador-1" class="activo">1 · Carrito</span>
+    <span id="checkout-paso-indicador-2">2 · Datos y pago</span>
+    <span id="checkout-paso-indicador-3">3 · Comprobante</span>
+  </div>
+
+  <section id="checkout-paso-carrito" class="tarjeta-form" style="display:none;" aria-labelledby="checkout-carrito-titulo">
+    <h2 id="checkout-carrito-titulo" class="tarjeta-form-titulo">Revisa tu carrito</h2>
+    <div id="checkout-cart-items"></div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
+      <a href="index.html" class="btn btn-outline-secondary">← Seguir comprando</a>
+      <div class="d-flex align-items-center gap-3">
+        <strong id="checkout-cart-total">Total estimado: $0</strong>
+        <button id="checkout-continuar" type="button" class="btn btn-pagar-verde px-4 py-2">Continuar con mis datos</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal fade" id="modalResultadoPago" tabindex="-1" aria-labelledby="modalResultadoPagoTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0">
+        <div class="modal-header">
+          <h2 class="modal-title fs-5" id="modalResultadoPagoTitulo">Comprobante de la compra</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div id="resultado-pago"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario principal -->
+  <div id="checkout-contenido" class="row g-4" style="display:none;">
+
+    <!-- ══════════════ COL IZQUIERDA ══════════════ -->
+    <div class="col-lg-6">
+
+      <!-- Tarjeta 1: Identificación (con tabs de tipo de comprador) -->
+      <div class="tarjeta-form">
+        <button type="button" class="btn btn-link p-0 mb-3" id="checkout-volver-carrito">← Volver al carrito</button>
+        <div class="switch-tipo-comprador">
+          <button type="button" class="switch-tab activo" id="tab-natural" onclick="seleccionarTipoComprador('natural')">⚡ Persona Natural</button>
+          <button type="button" class="switch-tab" id="tab-empresa" onclick="seleccionarTipoComprador('empresa')">🏢 Empresa</button>
+        </div>
+
+        <div id="checkout-error" class="alert alert-danger small mb-3" style="display:none;" role="alert"></div>
+        <div id="checkout-perfil-estado" class="alert alert-info small mb-3" style="display:none;" role="status" aria-live="polite"></div>
+
+        <!-- Campos Persona Natural -->
+        <div id="campos-identificacion-natural">
+          <div class="mb-2">
+          <label class="form-label small" for="rutNitNat">Cédula de ciudadanía</label>
+            <input type="text" id="rutNitNat" class="form-control" placeholder="Número de identificación" autocomplete="off">
+          </div>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label small" for="nombreCompletoNat">Nombre Completo</label>
+              <input type="text" id="nombreCompletoNat" class="form-control" placeholder="Nombre y apellido" autocomplete="name">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small" for="telefonoContactoNat">Teléfono de Contacto</label>
+              <input type="text" id="telefonoContactoNat" class="form-control" placeholder="(300) 000 0000" autocomplete="tel">
+            </div>
+          </div>
+        </div>
+
+        <!-- Campos Empresa -->
+        <div id="campos-identificacion-empresa" style="display:none;">
+          <div class="row g-2 mb-2">
+            <div class="col-md-6">
+              <label class="form-label small" for="empresaRazonSocial">Razón Social</label>
+              <input type="text" id="empresaRazonSocial" class="form-control" placeholder="Empresa de Suministros S.A.S.">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small" for="empresaNit">NIT</label>
+              <input type="text" id="empresaNit" class="form-control" placeholder="900.123.456-7">
+            </div>
+          </div>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label small" for="empresaComprador">Comprador Autorizado</label>
+              <input type="text" id="empresaComprador" class="form-control" placeholder="Nombre y apellido" autocomplete="name">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small" for="empresaTelefono">Teléfono de Contacto</label>
+              <input type="text" id="empresaTelefono" class="form-control" placeholder="(601) 000 0000" autocomplete="tel">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta 2: Dirección de envío y contacto -->
+      <div class="tarjeta-form">
+        <div class="tarjeta-form-titulo">Dirección de Envío y Contacto</div>
+        <div class="mb-3">
+          <label class="form-label small" for="checkoutCorreo">Correo de contacto</label>
+          <input type="email" id="checkoutCorreo" class="form-control" autocomplete="email">
+        </div>
+        <div id="checkout-direccion-guardada" class="alert alert-light border small" style="display:none;">
+          <div><strong>Dirección registrada en tu perfil</strong></div>
+          <div id="checkout-direccion-guardada-texto" class="my-2"></div>
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="checkout-usar-direccion-guardada">Usar esta dirección</button>
+        </div>
+
+        <div id="direccion-natural">
+          <div class="row g-2 mb-2">
+            <div class="col-md-4">
+              <label class="form-label small">País</label>
+              <select id="paisNat" class="form-select">
+                <option value="Colombia" selected>Colombia</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small" for="departamentoNat">Departamento/Estado</label>
+              <select id="departamentoNat" class="form-select" autocomplete="address-level1">
+                <option value="">— Selecciona —</option>
+                <option>Bogotá D.C.</option>
+                <option>Antioquia</option>
+                <option>Valle del Cauca</option>
+                <option>Santander</option>
+                <option>Atlántico</option>
+                <option>Cundinamarca</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small" for="ciudadNat">Ciudad</label>
+              <input type="text" id="ciudadNat" class="form-control" placeholder="Bogotá" autocomplete="address-level2">
+            </div>
+          </div>
+          <div class="row g-2">
+            <div class="col-md-8">
+              <label class="form-label small" for="direccionExactaNat">Dirección Exacta (Calle, Carrera, N°)</label>
+              <input type="text" id="direccionExactaNat" class="form-control" placeholder="Cra 7 # 32-16" autocomplete="street-address">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small">Apto/Interior (Opcional)</label>
+              <input type="text" id="aptoNat" class="form-control" placeholder="Opcional">
+            </div>
+          </div>
+        </div>
+
+        <div id="direccion-empresa" style="display:none;">
+          <div class="row g-2 mb-2">
+            <div class="col-md-4">
+              <label class="form-label small">País</label>
+              <select id="paisEmp" class="form-select">
+                <option value="Colombia" selected>Colombia</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small" for="departamentoEmp">Departamento/Estado</label>
+              <select id="departamentoEmp" class="form-select" autocomplete="address-level1">
+                <option value="">— Selecciona —</option>
+                <option>Bogotá D.C.</option>
+                <option>Antioquia</option>
+                <option>Valle del Cauca</option>
+                <option>Santander</option>
+                <option>Atlántico</option>
+                <option>Cundinamarca</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small" for="ciudadEmp">Ciudad</label>
+              <input type="text" id="ciudadEmp" class="form-control" placeholder="Bogotá" autocomplete="address-level2">
+            </div>
+          </div>
+          <div class="row g-2">
+            <div class="col-md-8">
+              <label class="form-label small" for="direccionExactaEmp">Dirección Exacta de la Instalación</label>
+              <input type="text" id="direccionExactaEmp" class="form-control" placeholder="Cra 7 # 32-16" autocomplete="street-address">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small">Apto/Interior (Opcional)</label>
+              <input type="text" id="aptoEmp" class="form-control" placeholder="Opcional">
+            </div>
+          </div>
+        </div>
+
+        <div id="aviso-restringido" class="aviso-sensible mt-3" style="display:none;">
+          ⚠️ Tu pedido incluye <strong>equipo táctico restringido</strong>. Para procesar la entrega
+          necesitas tener registrada la autorización de antecedentes en tu
+          <a href="registro.html">ficha de cliente</a>.
+        </div>
+      </div>
+
+      <!-- Tarjeta: Tus artículos -->
+      <div class="tarjeta-form mb-0">
+        <div class="tarjeta-form-titulo">Tus artículos</div>
+        <div id="articulos-lista"></div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════ COL DERECHA: RESUMEN ══════════════ -->
+    <div class="col-lg-6">
+      <div class="tarjeta-form resumen-sticky-wrap">
+        <div class="tarjeta-form-titulo">Resumen de Compra</div>
+
+        <div class="d-flex justify-content-between small mb-1">
+          <span class="text-muted">Subtotal</span>
+          <span id="rs-subtotal">$0</span>
+        </div>
+        <div class="d-flex justify-content-between small mb-1">
+          <span class="text-muted">Envío</span>
+          <span class="fw-semibold">$0 (Gratis)</span>
+        </div>
+        <div id="rs-iva-row" class="d-flex justify-content-between small mb-2" style="display:none;">
+          <span class="text-muted">IVA discriminado (19%)</span>
+          <span id="rs-iva">$0</span>
+        </div>
+
+        <hr class="my-2">
+
+        <div class="d-flex justify-content-between align-items-end mb-3">
+          <span class="fw-bold" id="rs-total-label">Total a Pagar:<br><small class="text-muted fw-normal">IVA incluido</small></span>
+          <span id="rs-total" class="precio-total">$0</span>
+        </div>
+
+        <div class="d-flex gap-2 mb-2">
+          <span class="badge-trust">🔒 Sin datos de tarjeta</span>
+          <span class="badge-trust azul">🛡️ Inventario validado en servidor</span>
+        </div>
+
+        <div class="form-check my-3">
+          <input class="form-check-input" type="checkbox" id="enviar-comprobante">
+          <label class="form-check-label small" for="enviar-comprobante">Enviarme el comprobante por correo</label>
+          <div class="form-text">Desmarcado por defecto. El comprobante estará disponible en pantalla.</div>
+        </div>
+
+        <div class="checkout-mock-aviso mb-3">
+          Modo de pruebas: el resultado es simulado por el servidor. No ingreses datos de tarjeta; la pasarela real se integrará en una fase posterior.
+        </div>
+
+        <!-- Formas de pago: Persona Natural -->
+        <div id="pago-natural">
+          <div class="formas-pago-titulo">Selecciona un método para la simulación</div>
+          <div class="metodos-grid">
+            <label class="metodo-fila" data-grupo="natural" data-metodo="NEQUI">
+              <span class="radio-visual"></span><span class="logo-pago">NEQUI</span>
+            </label>
+            <label class="metodo-fila" data-grupo="natural" data-metodo="DAVIPLATA">
+              <span class="radio-visual"></span><span class="logo-pago">DAVIPLATA</span>
+            </label>
+            <label class="metodo-fila full" data-grupo="natural" data-metodo="PSE">
+              <span class="radio-visual"></span><span class="logo-pago">PSE</span>
+            </label>
+          </div>
+          <button id="btn-pagar-natural" type="button" class="btn btn-pagar-verde w-100 py-3 mt-3">CREAR PEDIDO Y SIMULAR PAGO</button>
+        </div>
+
+        <!-- Formas de pago: Empresa -->
+        <div id="pago-empresa" style="display:none;">
+          <div class="formas-pago-titulo">Selecciona un método para la simulación</div>
+          <div class="metodos-grid">
+            <label class="metodo-fila full" data-grupo="empresa" data-metodo="ACH">
+              <span class="radio-visual"></span><span class="logo-pago">Transferencia bancaria</span>
+            </label>
+            <label class="metodo-fila full" data-grupo="empresa" data-metodo="PO">
+              <span class="radio-visual"></span><span class="logo-pago">Orden de compra autorizada</span>
+            </label>
+          </div>
+
+          <button id="btn-pagar-empresa" type="button" class="btn btn-pagar-verde w-100 py-3 mt-3">CREAR PEDIDO Y SIMULAR PAGO</button>
+        </div>
+
+        <p class="text-center text-muted small mt-3 mb-0">
+          Al confirmar, aceptas nuestros <a href="#">términos</a> y la
+          <a href="registro.html">política de datos</a>.
+        </p>
+      </div>
+    </div>
+
+  </div><!-- /checkout-contenido -->
+</main>
+
+<!-- ════════════════════ OVERLAY ════════════════════ -->
+<div id="overlay-procesando">
+  <div class="spinner-border mb-2" style="width:2.8rem;height:2.8rem;" role="status"></div>
+  <div class="overlay-titulo" id="overlay-titulo">Procesando pago...</div>
+  <div class="overlay-sub"   id="overlay-sub">Por favor no cierres esta ventana</div>
+</div>
+
+<footer class="institucional py-4">
+  <div class="container d-flex flex-wrap justify-content-between small">
+    <span>© 2026 Suministros Institucionales S.A.S.</span>
+    <span>Compra segura · Cifrado SSL · Ley 1581 de 2012</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/checkout-autofill.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   CHECKOUT — lógica principal
+═══════════════════════════════════════════════════════ */
+
+function fmt(valor) {
+  return '$' + (Number(valor) || 0).toLocaleString('es-CO');
+}
+function precioPesosACentavos(valor) {
+  const coincidencia = /^(\d+)(?:\.(\d{1,2}))?$/.exec(String(valor));
+  if (!coincidencia) throw new Error('Uno de los precios del carrito no es válido.');
+  return BigInt(coincidencia[1]) * 100n + BigInt((coincidencia[2] || '').padEnd(2, '0') || '0');
+}
+function formatoCentavos(centavos) {
+  const valor = BigInt(centavos);
+  const pesos = valor / 100n;
+  const fraccion = String(valor % 100n).padStart(2, '0');
+  return '$' + Number(pesos).toLocaleString('es-CO') + (fraccion === '00' ? '' : ',' + fraccion);
+}
+function totalCarritoCentavos() {
+  return items.reduce((total, item) =>
+    total + precioPesosACentavos(item.precio) * BigInt(item.cantidad), 0n);
+}
+function mostrarError(msg) {
+  const el = document.getElementById('checkout-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function ocultarError() {
+  document.getElementById('checkout-error').style.display = 'none';
+}
+function mostrarOverlay(titulo, sub) {
+  document.getElementById('overlay-titulo').textContent = titulo;
+  document.getElementById('overlay-sub').textContent    = sub || 'Por favor no cierres esta ventana';
+  document.getElementById('overlay-procesando').style.display = 'flex';
+}
+function ocultarOverlay() {
+  document.getElementById('overlay-procesando').style.display = 'none';
+}
+function actualizarPasoActivo(paso) {
+  [1, 2, 3].forEach(numero => {
+    document.getElementById(`checkout-paso-indicador-${numero}`)
+      .classList.toggle('activo', numero === paso);
+  });
+}
+
+if (!authEstaLogueado()) {
+  window.location.href = 'login.html?redirect=checkout.html';
+}
+
+let items = carritoLeer();
+let tipoComprador = 'natural';
+let metodoNatural = null;
+let metodoEmpresa = null;
+let solicitudEnCurso = false;
+let pedidoPendienteActivo = false;
+let contextoPedidoActual = null;
+let direccionSeleccionadaPerfil = '';
+const CHECKOUT_KEY_STORAGE = 'si_checkout_idempotency_key';
+const CHECKOUT_PEDIDO_STORAGE = 'si_checkout_pedido_id';
+
+function seleccionarTipoComprador(tipo) {
+  tipoComprador = tipo;
+  document.getElementById('tab-natural').classList.toggle('activo', tipo === 'natural');
+  document.getElementById('tab-empresa').classList.toggle('activo', tipo === 'empresa');
+
+  document.getElementById('campos-identificacion-natural').style.display = tipo === 'natural' ? 'block' : 'none';
+  document.getElementById('campos-identificacion-empresa').style.display = tipo === 'empresa' ? 'block' : 'none';
+  document.getElementById('direccion-natural').style.display = tipo === 'natural' ? 'block' : 'none';
+  document.getElementById('direccion-empresa').style.display = tipo === 'empresa' ? 'block' : 'none';
+  document.getElementById('pago-natural').style.display = tipo === 'natural' ? 'block' : 'none';
+  document.getElementById('pago-empresa').style.display = tipo === 'empresa' ? 'block' : 'none';
+
+  ocultarError();
+  actualizarResumen();
+}
+
+// ── Inicializar página ────────────────────────────────
+(function init() {
+  if (!items.length) {
+    document.getElementById('checkout-vacio').style.display = 'block';
+    return;
+  }
+  document.getElementById('checkout-paso-carrito').style.display = 'block';
+
+  if (items.some(i => i.restringido)) {
+    document.getElementById('aviso-restringido').style.display = 'block';
+  }
+
+  actualizarResumen();
+  renderCarritoCheckout();
+
+  const sesion = authLeer();
+  CheckoutAutofill.inicializar({
+    apiBase: API_BASE,
+    token: sesion?.token,
+    estado: document.getElementById('checkout-perfil-estado'),
+    seleccionarTipoComprador,
+    seleccionarDireccionGuardada(direccion) {
+      direccionSeleccionadaPerfil = direccion;
+      document.getElementById('checkout-perfil-estado').textContent =
+        'Usaremos la dirección registrada tal como aparece arriba. Puedes cambiarla ingresando los datos de ubicación y otra dirección.';
+    }
+  });
+})();
+
+function renderCarritoCheckout() {
+  const contenedor = document.getElementById('checkout-cart-items');
+  const total = document.getElementById('checkout-cart-total');
+  contenedor.replaceChildren();
+  if (total) total.textContent = `Total estimado: ${formatoCentavos(totalCarritoCentavos())} COP`;
+  items.forEach(item => {
+    const fila = document.createElement('div');
+    fila.className = 'articulo-fila';
+    const imagen = document.createElement('img');
+    imagen.className = 'articulo-thumb';
+    imagen.src = item.imagen || '';
+    imagen.alt = item.nombre || 'Producto';
+    imagen.onerror = () => { imagen.style.visibility = 'hidden'; };
+
+    const info = document.createElement('div');
+    info.className = 'flex-grow-1';
+    const nombre = document.createElement('div');
+    nombre.className = 'fw-semibold small';
+    nombre.textContent = item.nombre || 'Producto';
+    const detalle = document.createElement('div');
+    detalle.className = 'text-muted small';
+    detalle.textContent = `Cantidad: ${item.cantidad} · ${fmt(item.precio)}`;
+    info.append(nombre, detalle);
+
+    const importe = document.createElement('div');
+    importe.className = 'fw-semibold';
+    importe.textContent = fmt(item.precio * item.cantidad);
+    fila.append(imagen, info, importe);
+    contenedor.appendChild(fila);
+  });
+}
+
+document.getElementById('checkout-continuar').addEventListener('click', () => {
+  document.getElementById('checkout-paso-carrito').style.display = 'none';
+  document.getElementById('checkout-contenido').style.display = '';
+  actualizarPasoActivo(2);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+document.getElementById('checkout-volver-carrito').addEventListener('click', () => {
+  document.getElementById('checkout-contenido').style.display = 'none';
+  document.getElementById('checkout-paso-carrito').style.display = 'block';
+  actualizarPasoActivo(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+function renderArticulos() {
+  const contenedor = document.getElementById('articulos-lista');
+  contenedor.replaceChildren();
+  items.forEach(item => {
+    const fila = document.createElement('div');
+    fila.className = 'articulo-fila';
+    const info = document.createElement('div');
+    info.className = 'flex-grow-1';
+    const nombre = document.createElement('div');
+    nombre.className = 'fw-semibold small';
+    nombre.textContent = item.nombre || 'Producto';
+    const detalle = document.createElement('div');
+    detalle.className = 'text-muted small';
+    detalle.textContent = `Cantidad: ${item.cantidad} · ${fmt(item.precio)}`;
+    info.append(nombre, detalle);
+    const subtotal = document.createElement('div');
+    subtotal.className = 'fw-semibold';
+    subtotal.textContent = formatoCentavos(precioPesosACentavos(item.precio) * BigInt(item.cantidad));
+    fila.append(info, subtotal);
+    contenedor.appendChild(fila);
+  });
+}
+
+function actualizarResumen() {
+  const totalCentavos = totalCarritoCentavos();
+  renderArticulos();
+  renderCarritoCheckout();
+
+  const subtotalNetoCentavos = (totalCentavos * 100n + 59n) / 119n;
+  const ivaCentavos = totalCentavos - subtotalNetoCentavos;
+  document.getElementById('rs-subtotal').textContent = formatoCentavos(subtotalNetoCentavos);
+  document.getElementById('rs-iva').textContent = formatoCentavos(ivaCentavos);
+  document.getElementById('rs-iva-row').style.display = 'flex';
+  document.getElementById('rs-total-label').textContent = 'Total a pagar:';
+  document.getElementById('rs-total').textContent = formatoCentavos(totalCentavos);
+}
+
+// ── Selección de método de pago (ambos grupos) ────────
+document.querySelectorAll('.metodo-fila[data-grupo="natural"]').forEach(fila => {
+  fila.addEventListener('click', () => {
+    metodoNatural = fila.dataset.metodo;
+    document.querySelectorAll('.metodo-fila[data-grupo="natural"]').forEach(f => f.classList.remove('seleccionada'));
+    fila.classList.add('seleccionada');
+  });
+});
+
+document.querySelectorAll('.metodo-fila[data-grupo="empresa"]').forEach(fila => {
+  fila.addEventListener('click', () => {
+    metodoEmpresa = fila.dataset.metodo;
+    document.querySelectorAll('.metodo-fila[data-grupo="empresa"]').forEach(f => f.classList.remove('seleccionada'));
+    fila.classList.add('seleccionada');
+  });
+});
+
+// ── Dirección según tipo de comprador ─────────────────
+function obtenerDireccion() {
+  if (direccionSeleccionadaPerfil) return direccionSeleccionadaPerfil;
+  if (tipoComprador === 'natural') {
+    const direccionExacta = document.getElementById('direccionExactaNat').value.trim();
+    const ciudad = document.getElementById('ciudadNat').value.trim();
+    const departamento = document.getElementById('departamentoNat').value;
+    const pais = document.getElementById('paisNat').value;
+    const apto = document.getElementById('aptoNat').value.trim();
+    if (!direccionExacta) { mostrarError('La dirección exacta es obligatoria.'); return null; }
+    if (!ciudad)          { mostrarError('La ciudad es obligatoria.'); return null; }
+    if (!departamento)    { mostrarError('Selecciona el departamento/estado.'); return null; }
+    return `${direccionExacta}${apto ? ', ' + apto : ''}, ${ciudad}, ${departamento}, ${pais}`;
+  }
+  const direccionExacta = document.getElementById('direccionExactaEmp').value.trim();
+  const ciudad = document.getElementById('ciudadEmp').value.trim();
+  const departamento = document.getElementById('departamentoEmp').value;
+  const pais = document.getElementById('paisEmp').value;
+  const apto = document.getElementById('aptoEmp').value.trim();
+  if (!direccionExacta) { mostrarError('La dirección exacta de la instalación es obligatoria.'); return null; }
+  if (!ciudad)          { mostrarError('La ciudad es obligatoria.'); return null; }
+  if (!departamento)    { mostrarError('Selecciona el departamento/estado.'); return null; }
+  return `${direccionExacta}${apto ? ', ' + apto : ''}, ${ciudad}, ${departamento}, ${pais}`;
+}
+
+[
+  'direccionExactaNat', 'ciudadNat', 'departamentoNat', 'aptoNat',
+  'direccionExactaEmp', 'ciudadEmp', 'departamentoEmp', 'aptoEmp'
+].forEach(id => {
+  const campo = document.getElementById(id);
+  const elegirDireccionEditada = () => {
+    direccionSeleccionadaPerfil = '';
+    const boton = document.getElementById('checkout-usar-direccion-guardada');
+    if (boton) boton.textContent = 'Usar esta dirección';
+  };
+  campo.addEventListener('input', elegirDireccionEditada);
+  campo.addEventListener('change', elegirDireccionEditada);
+});
+
+function validarDatosComprador() {
+  if (tipoComprador === 'natural') {
+    const rutNit = document.getElementById('rutNitNat').value.trim();
+    const nombre = document.getElementById('nombreCompletoNat').value.trim();
+    if (!rutNit) { mostrarError('Ingresa tu cédula de ciudadanía.'); return false; }
+    if (!nombre) { mostrarError('Ingresa tu nombre completo.'); return false; }
+  } else {
+    const razonSocial = document.getElementById('empresaRazonSocial').value.trim();
+    const nit = document.getElementById('empresaNit').value.trim();
+    if (!razonSocial) { mostrarError('Ingresa la razón social de la empresa.'); return false; }
+    if (!nit)         { mostrarError('Ingresa el NIT de la empresa.'); return false; }
+  }
+  return true;
+}
+
+function validarMetodoNatural() {
+  if (!metodoNatural) { mostrarError('Selecciona una forma de pago.'); return false; }
+  return true;
+}
+
+function validarMetodoEmpresa() {
+  if (!metodoEmpresa) { mostrarError('Selecciona una forma de pago.'); return false; }
+  return true;
+}
+
+function obtenerDatosComprador() {
+  return tipoComprador === 'natural' ? {
+    tipo: 'persona_natural',
+    identificacion: document.getElementById('rutNitNat').value.trim(),
+    nombre: document.getElementById('nombreCompletoNat').value.trim(),
+    telefono: document.getElementById('telefonoContactoNat').value.trim(),
+    correo: document.getElementById('checkoutCorreo').value.trim()
+  } : {
+    tipo: 'empresa',
+    razonSocial: document.getElementById('empresaRazonSocial').value.trim(),
+    nit: document.getElementById('empresaNit').value.trim(),
+    nombreComprador: document.getElementById('empresaComprador').value.trim(),
+    telefono: document.getElementById('empresaTelefono').value.trim(),
+    correo: document.getElementById('checkoutCorreo').value.trim()
+  };
+}
+
+function prepararLineaPedido(item) {
+  const partesId = String(item.id).split('-');
+  return {
+    id: Number(item.productoId || partesId[0]),
+    cantidad: item.cantidad,
+    variacion: item.variacion || partesId.slice(1).join('-') || undefined
+  };
+}
+
+async function crearIntentoCheckout(metodo, direccion, sesion, idempotencyKey) {
+  const resp = await fetch(API_BASE + '/api/checkout', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + sesion.token,
+      'Idempotency-Key': idempotencyKey
+    },
+    body: JSON.stringify({
+      items: items.map(prepararLineaPedido),
+      enviarComprobante: document.getElementById('enviar-comprobante').checked,
+      metodo,
+      datosComprador: obtenerDatosComprador(),
+      direccionEntrega: direccion
+    })
+  });
+  const resultado = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    sessionStorage.removeItem(CHECKOUT_KEY_STORAGE);
+    throw new Error(resultado.error || 'No fue posible iniciar el checkout.');
+  }
+  return resultado;
+}
+
+async function simularResultadoEnServidor(pedidoId, sesion) {
+  const resp = await fetch(API_BASE + '/api/pagos/dev/simular-webhook', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + sesion.token
+    },
+    body: JSON.stringify({ pedido_id: pedidoId })
+  });
+  const resultado = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    throw new Error(resultado.error || 'No fue posible procesar la simulación de pago.');
+  }
+  return resultado;
+}
+
+async function consultarEstadoPago(pedidoId, sesion) {
+  const resp = await fetch(`${API_BASE}/api/pagos/${encodeURIComponent(pedidoId)}/estado`, {
+    headers: { Authorization: 'Bearer ' + sesion.token }
+  });
+  const resultado = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(resultado.error || 'No fue posible consultar el estado del pago.');
+  return resultado;
+}
+
+async function esperarEstadoFinal(pedidoId, sesion, intentos = 5) {
+  let estado;
+  for (let intento = 0; intento < intentos; intento += 1) {
+    if (intento > 0) await new Promise(resolve => setTimeout(resolve, 2000));
+    estado = await consultarEstadoPago(pedidoId, sesion);
+    if (['aprobado', 'rechazado', 'expirado', 'reembolsado'].includes(estado.estado_pago)) break;
+  }
+  return estado;
+}
+// ===== Recibo de pago =====
+const RECIBO_ESTADOS = {
+  aprobado:  { clase: 'ok',   icono: '✓', titulo: 'Transacción Aprobada',  etiqueta: 'Aprobada' },
+  pendiente: { clase: 'pend', icono: '…', titulo: 'Transacción Pendiente', etiqueta: 'Pendiente' },
+  rechazado: { clase: 'err',  icono: '✕', titulo: 'Transacción Rechazada', etiqueta: 'Rechazada' },
+  expirado: { clase: 'err', icono: '✕', titulo: 'Intento expirado', etiqueta: 'Expirado' }
+};
+
+function reciboEsc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function reciboMoneda(v) {
+  return '$' + Number(v || 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+function reciboMonedaCentavos(v) {
+  return reciboMoneda(Number(BigInt(v || 0)) / 100);
+}
+function reciboFecha(iso) {
+  let d = iso ? new Date(iso) : new Date();
+  if (isNaN(d)) d = new Date();
+  return d.toLocaleString('sv-SE', { timeZone: 'America/Bogota' }); // 2026-09-30 20:32:00
+}
+
+function reciboTextoPlano(r, est) {
+  const lineas = r.items.map(i => `- ${i.cantidad} x ${i.nombre}${i.variacion ? ' (' + i.variacion + ')' : ''}: ${reciboMoneda(i.precio * i.cantidad)}`);
+  return [
+    'Suministros Institucionales - ' + est.titulo,
+    'Estado: ' + est.etiqueta,
+    'Fecha y hora: ' + reciboFecha(r.fecha),
+    'Medio de pago: ' + r.metodo,
+    'Referencia: ' + (r.referencia || '-'),
+    r.pedidoId ? 'Pedido: #' + r.pedidoId : null,
+    'Cliente / Entidad: ' + r.cliente,
+    'Entrega: ' + r.direccion,
+    '',
+    ...lineas,
+    '',
+    'Total: ' + reciboMoneda(r.total),
+    '(Entorno de pruebas: no se realizó ningún cobro real)'
+  ].filter(l => l !== null).join('\n');
+}
+
+function construirRecibo(r) {
+  const est = RECIBO_ESTADOS[r.estado] || RECIBO_ESTADOS.pendiente;
+  const colorValor = { ok: 'v-ok', pend: 'v-pend', err: 'v-err' }[est.clase];
+  const lineasHtml = r.items.map(i => `
+        <div class="linea">
+          <span>${reciboEsc(i.cantidad)} × ${reciboEsc(i.nombre)}${i.variacion ? ' (' + reciboEsc(i.variacion) + ')' : ''}</span>
+          <span>${formatoCentavos(i.precio_centavos !== undefined
+            ? BigInt(i.precio_centavos) * BigInt(i.cantidad)
+            : precioPesosACentavos(i.precio) * BigInt(i.cantidad))}</span>
+        </div>`).join('');
+
+  const notas = {
+    aprobado:  'Tu pedido fue registrado correctamente.',
+    pendiente: 'El proveedor mock todavía no confirmó el resultado. Consulta nuevamente el estado del pedido.',
+    rechazado: 'Verifica los datos o intenta con otro método de pago.'
+  }[r.estado] || (r.estado === 'expirado' ? 'El intento venció. Puedes iniciar una nueva compra.' : '');
+
+  const botonPrincipal = ['rechazado', 'expirado'].includes(r.estado)
+    ? '<button type="button" class="btn-recibo" onclick="cerrarRecibo()">Intentar de nuevo</button>'
+    : (r.estado === 'pendiente'
+      ? '<button type="button" class="btn-recibo" onclick="consultarPedidoPendiente()">Consultar estado</button>'
+      : `<button type="button" class="btn-recibo" onclick="descargarComprobante(${Number(r.pedidoId)})">Descargar PDF</button>`);
+  const botonSecundario = '<a class="btn-recibo sec" href="index.html">Regresar al comercio</a>';
+  const enlacePedidos = ['rechazado', 'expirado'].includes(r.estado) ? '' :
+    '<a class="btn-recibo sec" href="historial.html">Ver mis pedidos</a>';
+
+  return `
+    <div class="recibo-contenedor">
+      <div class="recibo-wrap" id="recibo-imprimible">
+        <div class="recibo">
+          <div class="recibo-card">
+            <div class="recibo-top">
+              <div class="recibo-marca">
+                <b>Suministros</b><b class="azul">Institucionales</b>
+                <small>COMPROBANTE DE PRUEBA · NO ES FACTURA DIAN</small>
+              </div>
+              <div class="recibo-estado ${est.clase}">
+                <span class="recibo-icono">${est.icono}</span>
+                <h2>${est.titulo}</h2>
+              </div>
+              <div class="recibo-fila"><span>Estado:</span><span class="${colorValor}">${est.etiqueta}</span></div>
+              <div class="recibo-fila"><span>Fecha y hora:</span><span>${reciboFecha(r.fecha)}</span></div>
+              <div class="recibo-fila"><span>Medio de pago:</span><span>${reciboEsc(r.metodo)}</span></div>
+              <div class="recibo-fila"><span>Referencia:</span><span>${reciboEsc(r.referencia || '—')}</span></div>
+              ${r.pedidoId ? `<div class="recibo-fila"><span>Pedido:</span><span>#${reciboEsc(r.pedidoId)}</span></div>` : ''}
+              <div class="recibo-fila"><span>Cliente / Entidad:</span><span>${reciboEsc(r.cliente)}</span></div>
+              <div class="recibo-fila"><span>Entrega en:</span><span>${reciboEsc(r.direccion)}</span></div>
+              <div class="recibo-items">${lineasHtml}</div>
+              <p class="recibo-nota">${reciboEsc(notas)}<br>Comprobante informativo: no es factura electrónica DIAN.</p>
+            </div>
+            <div class="recibo-corte"><i></i><i></i></div>
+            <div class="recibo-total"><span>Total:</span><span>${reciboMonedaCentavos(r.totalCentavos)}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="recibo-acciones">
+        ${botonPrincipal}
+        ${enlacePedidos}
+        ${botonSecundario}
+        <div class="recibo-compartir">
+          <div>
+            <button type="button" class="recibo-icono-btn" title="Imprimir" onclick="window.print()">🖨</button>
+          </div>
+          ${r.enviarComprobante ? `<button type="button" class="btn btn-link btn-sm" onclick="reenviarComprobante(${Number(r.pedidoId)})">Reenviar comprobante por correo</button><small>El envío del comprobante se gestiona mediante el servicio de correo configurado.</small>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function mostrarRecibo(r) {
+  const el = document.getElementById('resultado-pago');
+  el.innerHTML = construirRecibo(r);
+  actualizarPasoActivo(3);
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalResultadoPago')).show();
+}
+
+async function descargarComprobante(pedidoId) {
+  const sesion = authLeer();
+  if (!sesion?.token) return mostrarNotificacion('Inicia sesión para descargar el comprobante.', 'error');
+  try {
+    const response = await fetch(`${API_BASE}/api/comprobantes/${encodeURIComponent(pedidoId)}?format=pdf`, {
+      headers: { Authorization: 'Bearer ' + sesion.token }
+    });
+    if (!response.ok) {
+      const resultado = await response.json().catch(() => ({}));
+      throw new Error(resultado.error || 'No fue posible descargar el comprobante.');
+    }
+    const url = URL.createObjectURL(await response.blob());
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = `comprobante-${pedidoId}.pdf`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) {
+    mostrarNotificacion(error.message || 'No fue posible descargar el comprobante.', 'error');
+  }
+}
+
+async function reenviarComprobante(pedidoId) {
+  const sesion = authLeer();
+  if (!sesion?.token) return mostrarNotificacion('Inicia sesión para reenviar el comprobante.', 'error');
+  try {
+    const response = await fetch(`${API_BASE}/api/comprobantes/${encodeURIComponent(pedidoId)}/reenviar`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + sesion.token }
+    });
+    const resultado = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(resultado.error || 'No fue posible solicitar el reenvío.');
+    mostrarNotificacion(resultado.mensaje || 'El comprobante quedó en cola para reenvío.', 'success');
+  } catch (error) {
+    mostrarNotificacion(error.message || 'No fue posible solicitar el reenvío.', 'error');
+  }
+}
+
+document.getElementById('modalResultadoPago').addEventListener('hide.bs.modal', event => {
+  if (pedidoPendienteActivo) event.preventDefault();
+});
+
+function cerrarRecibo() {
+  pedidoPendienteActivo = false;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalResultadoPago')).hide();
+  sessionStorage.removeItem(CHECKOUT_KEY_STORAGE);
+  sessionStorage.removeItem(CHECKOUT_PEDIDO_STORAGE);
+  document.getElementById('checkout-paso-carrito').style.display = items.length ? 'block' : 'none';
+  document.getElementById('checkout-contenido').style.display = 'none';
+  document.getElementById('checkout-vacio').style.display = items.length ? 'none' : 'block';
+  actualizarPasoActivo(1);
+}
+
+function obtenerClaveIdempotencia() {
+  let clave = sessionStorage.getItem(CHECKOUT_KEY_STORAGE);
+  if (!clave) {
+    clave = crypto.randomUUID().replace(/-/g, '');
+    sessionStorage.setItem(CHECKOUT_KEY_STORAGE, clave);
+  }
+  return clave;
+}
+
+async function cargarComprobanteFrontend(pedidoId, sesion) {
+  const response = await fetch(`${API_BASE}/api/comprobantes/${encodeURIComponent(pedidoId)}`, {
+    headers: { Authorization: 'Bearer ' + sesion.token }
+  });
+  const resultado = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(resultado.error || 'No fue posible recuperar el comprobante.');
+  return resultado;
+}
+
+function construirDatosRecibo(estado, pedidoId, datosEstado, lineas, comprador, direccion, metodo, comprobante) {
+  const datosComprador = comprobante?.comprador || comprador;
+  return {
+    estado,
+    metodo: comprobante?.metodo || metodo,
+    referencia: comprobante?.numero || `MOCK-${pedidoId}`,
+    fecha: comprobante?.fecha || datosEstado.fecha || new Date().toISOString(),
+    cliente: datosComprador.razonSocial || datosComprador.nombre || datosComprador.nombreComprador || '—',
+    direccion: comprobante?.direccion_entrega || direccion,
+    pedidoId,
+    items: comprobante?.items || lineas,
+    totalCentavos: comprobante?.total_centavos || datosEstado.monto_centavos || String(totalCarritoCentavos()),
+    enviarComprobante: comprobante ? comprobante.enviar_correo : document.getElementById('enviar-comprobante').checked
+  };
+}
+
+async function mostrarEstadoPedido(pedidoId, sesion, contexto) {
+  const datosEstado = await esperarEstadoFinal(pedidoId, sesion);
+  const estadoPago = datosEstado.estado_pago;
+  const estado = estadoPago === 'aprobado' ? 'aprobado'
+    : estadoPago === 'rechazado' ? 'rechazado'
+      : estadoPago === 'expirado' ? 'expirado' : 'pendiente';
+  let comprobante = null;
+
+  if (estado === 'aprobado') {
+    try {
+    comprobante = await cargarComprobanteFrontend(pedidoId, sesion);
+    } catch (error) {
+    mostrarNotificacion(error.message || 'El pago fue aprobado, pero no se pudo cargar el comprobante.', 'error');
+    }
+  }
+
+  if (estado === 'aprobado') {
+    carritoVaciar();
+    items = [];
+    document.getElementById('checkout-contenido').style.display = 'none';
+    document.getElementById('checkout-paso-carrito').style.display = 'none';
+    document.getElementById('checkout-vacio').style.display = 'block';
+    sessionStorage.removeItem(CHECKOUT_KEY_STORAGE);
+    sessionStorage.removeItem(CHECKOUT_PEDIDO_STORAGE);
+  } else if (estado === 'rechazado' || estado === 'expirado') {
+    sessionStorage.removeItem(CHECKOUT_KEY_STORAGE);
+    sessionStorage.removeItem(CHECKOUT_PEDIDO_STORAGE);
+    document.getElementById('btn-pagar-natural').disabled = false;
+    document.getElementById('btn-pagar-empresa').disabled = false;
+  } else {
+    pedidoPendienteActivo = true;
+    document.getElementById('btn-pagar-natural').disabled = true;
+    document.getElementById('btn-pagar-empresa').disabled = true;
+  }
+
+  if (estado !== 'pendiente') pedidoPendienteActivo = false;
+  mostrarRecibo(construirDatosRecibo(
+    estado,
+    pedidoId,
+    datosEstado,
+    contexto.lineas,
+    contexto.comprador,
+    contexto.direccion,
+    contexto.metodo,
+    comprobante
+  ));
+  return estado;
+}
+
+async function consultarPedidoPendiente() {
+  const pedidoId = sessionStorage.getItem(CHECKOUT_PEDIDO_STORAGE);
+  const sesion = authLeer();
+  if (!pedidoId || !sesion?.token) return;
+  const contenido = document.getElementById('resultado-pago');
+  contenido.setAttribute('aria-busy', 'true');
+  try {
+    const estado = await consultarEstadoPago(pedidoId, sesion);
+    if (estado.estado_pago !== 'pendiente' && estado.estado_pago !== 'creado') {
+      await mostrarEstadoPedido(pedidoId, sesion, contextoPedidoActual);
+    } else {
+      mostrarNotificacion('El pago continúa pendiente de confirmación del proveedor.', 'info');
+    }
+  } catch (err) {
+    mostrarNotificacion(err.message || 'No fue posible consultar el estado del pedido.', 'error');
+  } finally {
+    contenido.removeAttribute('aria-busy');
+  }
+}
+
+async function procesarPago() {
+  ocultarError();
+  if (solicitudEnCurso || !items.length) return;
+
+  const direccion = obtenerDireccion();
+  if (!direccion) return;
+  if (!validarDatosComprador()) return;
+
+  const metodo = tipoComprador === 'natural' ? metodoNatural : metodoEmpresa;
+  const metodoValido = tipoComprador === 'natural' ? validarMetodoNatural() : validarMetodoEmpresa();
+  if (!metodoValido) return;
+
+  const sesionValida = await authAsegurarTokenValido();
+  if (!sesionValida) {
+    window.location.href = 'login.html?redirect=checkout.html';
+    return;
+  }
+  const sesion = authLeer();
+
+  const btnNat = document.getElementById('btn-pagar-natural');
+  const btnEmp = document.getElementById('btn-pagar-empresa');
+  solicitudEnCurso = true;
+  btnNat.disabled = true;
+  btnEmp.disabled = true;
+
+  try {
+    const datosCompra = obtenerDatosComprador();
+    const lineasRecibo = items.map(i => ({
+      nombre: i.nombre, cantidad: i.cantidad, precio: i.precio, variacion: i.variacion || ''
+    }));
+    const contextoRecibo = { lineas: lineasRecibo, comprador: datosCompra, direccion, metodo };
+    contextoPedidoActual = contextoRecibo;
+    const clave = obtenerClaveIdempotencia();
+
+    mostrarOverlay('Creando el pedido de prueba…', 'Los precios y el inventario se verifican en el servidor.');
+    const intento = await crearIntentoCheckout(metodo, direccion, sesion, clave);
+    sessionStorage.setItem(CHECKOUT_PEDIDO_STORAGE, String(intento.pedido_id));
+    ocultarOverlay();
+
+    if (intento.estado === 'creado' || intento.estado === 'pendiente') {
+      mostrarOverlay('Simulando el resultado en el servidor…', 'El navegador no determina si el pago es aprobado.');
+      try {
+        await simularResultadoEnServidor(intento.pedido_id, sesion);
+      } finally {
+        ocultarOverlay();
+      }
+    }
+
+    mostrarOverlay('Verificando el estado del pago…', 'Consultando al servidor cada dos segundos.');
+    await mostrarEstadoPedido(intento.pedido_id, sesion, contextoRecibo);
+
+  } catch (err) {
+    ocultarOverlay();
+    const pedidoId = sessionStorage.getItem(CHECKOUT_PEDIDO_STORAGE);
+    if (pedidoId && contextoPedidoActual) {
+      try {
+        mostrarOverlay('Consultando el estado real del pedido…', 'El navegador no puede declarar el pago aprobado.');
+        await mostrarEstadoPedido(pedidoId, sesion, contextoPedidoActual);
+        return;
+      } catch (estadoError) {
+        err = estadoError;
+      } finally {
+        ocultarOverlay();
+      }
+    }
+    mostrarError(err.message || 'No se pudo confirmar el resultado. El servidor conserva el estado real del pedido.');
+    if (!pedidoId) {
+      btnNat.disabled = false;
+      btnEmp.disabled = false;
+    } else {
+      btnNat.disabled = false;
+      btnEmp.disabled = false;
+    }
+  } finally {
+    ocultarOverlay();
+    solicitudEnCurso = false;
+  }
+}
+document.getElementById('btn-pagar-natural').addEventListener('click', procesarPago);
+document.getElementById('btn-pagar-empresa').addEventListener('click', procesarPago);
+</script>
+</body>
+</html>

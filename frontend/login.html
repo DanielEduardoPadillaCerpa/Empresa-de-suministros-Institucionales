@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="login_page_title">Iniciar sesión — Suministros Institucionales</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .login-card { max-width: 430px; width: 100%; }
+  .mfa-brand-mark {
+    display: inline-grid; place-items: center; width: 48px; height: 48px;
+    margin-bottom: 1.25rem; border-radius: 12px;
+    background: #0f172a; color: #fff; font-weight: 700; letter-spacing: .04em;
+  }
+  .mfa-code { letter-spacing: .35em; font-family: 'IBM Plex Mono', monospace; }
+  .mfa-actions { display: flex; align-items: center; justify-content: space-between; margin-top: .75rem; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/theme-modern.css">
+<link rel="stylesheet" href="css/global-ui.css">
+</head>
+<body class="login-page">
+
+<script src="js/global-layout.js"></script>
+
+<main class="container py-5 d-flex justify-content-center">
+  <div class="login-card">
+    <div class="text-center mb-4">
+      <div class="eyebrow mb-2" data-i18n="login_eyebrow" style="color:var(--gl-green) !important;">Acceso de cliente</div>
+      <h1 class="display-serif h3" data-i18n="login_title">Iniciar sesión</h1>
+      <p class="text-muted small" data-i18n="login_lead">Necesitas una cuenta para completar tu compra.</p>
+    </div>
+
+    <form id="form-login" novalidate>
+      <div class="mb-3">
+        <label class="form-label" data-i18n="login_email">Correo electrónico</label>
+        <input type="email" id="loginCorreo" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" data-i18n="login_password">Contraseña</label>
+        <input type="password" id="loginPassword" class="form-control" required>
+      </div>
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" id="captchaHumano" required>
+        <label class="form-check-label" for="captchaHumano" data-i18n="login_human_check">Soy humano (captcha)</label>
+      </div>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="aceptaTerminos" required>
+        <label class="form-check-label" for="aceptaTerminos" data-i18n="login_terms_check">Acepto los términos y condiciones</label>
+      </div>
+      <div id="login-mensaje" class="mb-3" style="display:none;"></div>
+      <button type="submit" id="btn-login" class="btn btn-dark w-100" data-i18n="login_submit">Iniciar sesión</button>
+    </form>
+
+    <section id="mfa-panel" class="card shadow-sm border-0 d-none" aria-labelledby="mfa-title">
+      <div class="card-body p-4">
+        <div class="text-center">
+          <div class="mfa-brand-mark" aria-hidden="true">SI</div>
+          <h1 id="mfa-title" class="h3 mb-2">Multi-factor Authentication</h1>
+          <p class="text-muted mb-1">Enter an MFA code to complete sign-in.</p>
+          <p class="small text-muted mb-4">Enviamos un código a <strong id="mfa-correo"></strong>. El código vence en cinco minutos.</p>
+        </div>
+        <form id="form-mfa" novalidate>
+          <label for="mfa-code" class="form-label">MFA Code:</label>
+          <input id="mfa-code" class="form-control form-control-lg mfa-code" type="text"
+                 inputmode="numeric" pattern="[0-9]{6}" maxlength="6" minlength="6"
+                 autocomplete="one-time-code" aria-describedby="mfa-mensaje"
+                 required autofocus>
+          <div id="mfa-mensaje" class="small mt-2" role="status" aria-live="polite"></div>
+          <div class="mt-4 d-grid">
+            <button id="btn-mfa-submit" type="submit" class="btn btn-primary btn-lg">Submit</button>
+          </div>
+          <div class="mfa-actions">
+            <button id="btn-mfa-reenviar" type="button" class="btn btn-link px-0" disabled>
+              Reenviar código <span id="mfa-reenvio-temporizador">(60 s)</span>
+            </button>
+            <button id="btn-mfa-cancelar" type="button" class="btn btn-link px-0 text-secondary">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <p class="text-center small text-muted mt-3">
+      <span id="login-register-prompt"><span data-i18n="login_no_account">¿No tienes cuenta?</span> <a href="registro.html" data-i18n="login_register_link">Regístrate aquí</a></span>
+    </p>
+    <p class="text-center small">
+    <label class="text-muted d-none" data-i18n="login_backend_url">URL del backend:</label>
+    <input type="hidden" id="apiBase" value="http://localhost:8081">
+    </p>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/imagenes.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/navbar.js"></script>
+<script src="js/chatbot.js"></script>
+
+<script>
+const form = document.getElementById('form-login');
+const btn = document.getElementById('btn-login');
+const mensaje = document.getElementById('login-mensaje');
+const formMfa = document.getElementById('form-mfa');
+const panelMfa = document.getElementById('mfa-panel');
+const inputMfa = document.getElementById('mfa-code');
+const mensajeMfa = document.getElementById('mfa-mensaje');
+const btnMfaSubmit = document.getElementById('btn-mfa-submit');
+const btnMfaReenviar = document.getElementById('btn-mfa-reenviar');
+const btnMfaCancelar = document.getElementById('btn-mfa-cancelar');
+let retoMfa = null;
+let temporizadorMfa = null;
+let temporizadorReenvio = null;
+
+function mostrarMensaje(texto, tipo) {
+  mensaje.textContent = texto;
+  mensaje.className = 'mb-3 alert alert-' + tipo;
+  mensaje.style.display = 'block';
+}
+
+function apiBaseUrl() {
+  return document.getElementById('apiBase').value.replace(/\/$/, '');
+}
+
+function destinoTrasLogin(rol, estadoVerificacion) {
+  const parametros = new URLSearchParams(window.location.search);
+  // Una cuenta de comprador sin aprobar no puede usar el catálogo con precios:
+  // se le lleva a revisar su verificación institucional.
+  if (rol !== 'admin' && estadoVerificacion && estadoVerificacion !== 'aprobado') return 'mi-verificacion.html';
+  const destinoPorRol = rol === 'admin' ? 'admin-dashboard.html' : 'index.html';
+  const solicitado = parametros.get('redirect');
+  if (!solicitado) return destinoPorRol;
+
+  const url = new URL(solicitado, window.location.href);
+  const carpetaAplicacion = new URL('.', window.location.href).pathname;
+  if (url.origin !== window.location.origin || !url.pathname.startsWith(carpetaAplicacion)) {
+    return destinoPorRol;
+  }
+  return url.href;
+}
+
+function mostrarEstadoMfa(texto, tipo = 'danger') {
+  mensajeMfa.textContent = texto;
+  mensajeMfa.className = texto ? `small mt-2 text-${tipo}` : 'small mt-2';
+}
+
+function guardarRetoMfa(reto) {
+  retoMfa = reto;
+  sessionStorage.setItem('mfa_pendiente', JSON.stringify(reto));
+  form.classList.add('d-none');
+  document.getElementById('login-register-prompt').classList.add('d-none');
+  panelMfa.classList.remove('d-none');
+  document.getElementById('mfa-correo').textContent = reto.correoEnmascarado || 'tu correo registrado';
+  inputMfa.value = '';
+  mostrarEstadoMfa('');
+  iniciarTemporizadoresMfa();
+  inputMfa.focus();
+}
+
+function iniciarTemporizadoresMfa() {
+  clearInterval(temporizadorMfa);
+  clearInterval(temporizadorReenvio);
+  const venceEn = Number(retoMfa?.expiraEn) || Date.now();
+  const reenviarEn = Number(retoMfa?.reenviarEn) || (Date.now() + 60000);
+  const etiquetaReenvio = document.getElementById('mfa-reenvio-temporizador');
+
+  function actualizar() {
+    const segundosRestantes = Math.max(0, Math.ceil((venceEn - Date.now()) / 1000));
+    const segundosReenvio = Math.max(0, Math.ceil((reenviarEn - Date.now()) / 1000));
+    etiquetaReenvio.textContent = segundosReenvio ? `(${segundosReenvio} s)` : '';
+    btnMfaReenviar.disabled = segundosReenvio > 0 || segundosRestantes === 0;
+    btnMfaSubmit.disabled = segundosRestantes === 0;
+    if (!segundosRestantes) {
+      mostrarEstadoMfa('El código venció. Cancela y vuelve a iniciar sesión para solicitar otro.', 'danger');
+      clearInterval(temporizadorMfa);
+      clearInterval(temporizadorReenvio);
+    }
+  }
+  actualizar();
+  temporizadorMfa = setInterval(actualizar, 1000);
+  temporizadorReenvio = setInterval(actualizar, 1000);
+}
+
+function limpiarRetoMfa() {
+  clearInterval(temporizadorMfa);
+  clearInterval(temporizadorReenvio);
+  retoMfa = null;
+  sessionStorage.removeItem('mfa_pendiente');
+  inputMfa.value = '';
+  formMfa.reset();
+  form.classList.remove('d-none');
+  document.getElementById('login-register-prompt').classList.remove('d-none');
+  panelMfa.classList.add('d-none');
+  btn.disabled = false;
+}
+
+// Solo redirigir si la sesión sigue vigente o pudo renovarse.
+async function redirigirSesionActiva() {
+  if (!authEstaLogueado()) return;
+  const tokenValido = await authAsegurarTokenValido();
+  if (!tokenValido) return;
+  const sesionActual = authLeer();
+  window.location.replace(destinoTrasLogin(sesionActual?.rol, sesionActual?.estadoVerificacion));
+}
+redirigirSesionActiva();
+
+try {
+  const retoGuardado = JSON.parse(sessionStorage.getItem('mfa_pendiente') || 'null');
+  if (retoGuardado?.challengeId && Number(retoGuardado.expiraEn) > Date.now()) {
+    guardarRetoMfa(retoGuardado);
+  } else if (retoGuardado) {
+    sessionStorage.removeItem('mfa_pendiente');
+  }
+} catch {
+  sessionStorage.removeItem('mfa_pendiente');
+}
+
+const parametrosLogin = new URLSearchParams(window.location.search);
+const correoRegistro = parametrosLogin.get('correo');
+if (correoRegistro) {
+  document.getElementById('loginCorreo').value = correoRegistro;
+}
+if (parametrosLogin.get('registro') === 'completo') {
+  mostrarMensaje('Cuenta creada. Inicia sesión para completar la verificación de seguridad.', 'success');
+}
+
+form.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const apiBase = apiBaseUrl();
+  const correo = document.getElementById('loginCorreo').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const captchaHumano = document.getElementById('captchaHumano').checked;
+  const aceptaTerminos = document.getElementById('aceptaTerminos').checked;
+
+  if (!captchaHumano || !aceptaTerminos) {
+    mostrarMensaje('Debes aceptar términos y confirmar que eres humano', 'danger');
+    return;
+  }
+
+  btn.disabled = true;
+
+  try {
+    const resp = await fetch(apiBase + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ correo, password, captchaHumano })
+    });
+    const datos = await resp.json().catch(() => ({}));
+    if (resp.status !== 202 || datos.mfaRequired !== true || !datos.challengeId) {
+      const error = new Error(datos.message || datos.error || (resp.status === 503
+        ? 'El servicio de envío del código de seguridad no está disponible. Intenta de nuevo más tarde.'
+        : 'No fue posible iniciar la verificación de seguridad.'));
+      error.status = resp.status;
+      throw error;
+    }
+    guardarRetoMfa({
+      challengeId: datos.challengeId,
+      correoEnmascarado: datos.correoEnmascarado,
+      expiraEn: Date.now() + Number(datos.expiresIn || 300) * 1000,
+      reenviarEn: Date.now() + 60000
+    });
+    if (datos.deliveryUnconfirmed) {
+      mostrarEstadoMfa('No se pudo confirmar la entrega; el código podría haber llegado. Revisa tu correo o solicita un reenvío cuando esté disponible.', 'warning');
+    }
+  } catch (err) {
+    const mensajeSeguro = err.name === 'TypeError'
+      ? 'No fue posible conectar con el servicio de acceso. Intenta de nuevo en unos minutos.'
+      : err.message || 'No se pudo validar el acceso. Verifica tus datos e inténtalo nuevamente.';
+    mostrarMensaje(mensajeSeguro, 'danger');
+    btn.disabled = false;
+    aplicarIdioma(idiomaGuardado());
+  }
+});
+
+inputMfa.addEventListener('input', () => {
+  inputMfa.value = inputMfa.value.replace(/\D/g, '').slice(0, 6);
+});
+
+formMfa.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!retoMfa || !formMfa.reportValidity()) return;
+
+  btnMfaSubmit.disabled = true;
+  mostrarEstadoMfa('Verificando el código...', 'secondary');
+  try {
+    const response = await fetch(apiBaseUrl() + '/api/auth/mfa/verificar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ challengeId: retoMfa.challengeId, code: inputMfa.value })
+    });
+    const datos = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      if (response.status === 410 || (response.status === 429 && datos.code !== 'RATE_LIMITED')) {
+        mostrarEstadoMfa(datos.error || 'El código ya no es válido. Vuelve a iniciar sesión.');
+        btnMfaSubmit.disabled = true;
+        return;
+      }
+      throw new Error(datos.error || 'No se pudo verificar el código.');
+    }
+
+    sessionStorage.removeItem('mfa_pendiente');
+    clearInterval(temporizadorMfa);
+    clearInterval(temporizadorReenvio);
+    authGuardar(datos);
+    window.location.replace(destinoTrasLogin(datos.rol, datos.estadoVerificacion));
+  } catch (err) {
+    mostrarEstadoMfa(err.name === 'TypeError'
+      ? 'No fue posible conectar con el servicio de verificación. Intenta de nuevo.'
+      : err.message);
+    btnMfaSubmit.disabled = false;
+  }
+});
+
+btnMfaReenviar.addEventListener('click', async () => {
+  if (!retoMfa) return;
+  btnMfaReenviar.disabled = true;
+  mostrarEstadoMfa('Solicitando un nuevo código...', 'secondary');
+  try {
+    const response = await fetch(apiBaseUrl() + '/api/auth/mfa/reenviar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ challengeId: retoMfa.challengeId })
+    });
+    const datos = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const error = new Error(response.status === 503
+        ? (datos.error || 'El servicio de envío del código no está disponible. Vuelve a iniciar sesión más tarde.')
+        : (datos.error || 'No se pudo reenviar el código.'));
+      error.status = response.status;
+      throw error;
+    }
+    retoMfa.correoEnmascarado = datos.correoEnmascarado || retoMfa.correoEnmascarado;
+    retoMfa.expiraEn = Date.now() + Number(datos.expiresIn || 300) * 1000;
+    retoMfa.reenviarEn = Date.now() + 60000;
+    guardarRetoMfa(retoMfa);
+    mostrarEstadoMfa(datos.deliveryUnconfirmed
+      ? 'No se pudo confirmar la entrega; el código podría haber llegado. Revisa tu correo o solicita otro cuando esté disponible.'
+      : 'Código enviado. Revisa tu correo y la carpeta de correo no deseado.',
+    datos.deliveryUnconfirmed ? 'warning' : 'success');
+  } catch (err) {
+    const mensajeError = err.name === 'TypeError'
+      ? 'No fue posible conectar para reenviar el código.'
+      : err.message;
+    if (err.status === 503) {
+      limpiarRetoMfa();
+      mostrarMensaje(mensajeError, 'danger');
+    } else {
+      mostrarEstadoMfa(mensajeError);
+      btnMfaReenviar.disabled = false;
+    }
+  }
+});
+
+btnMfaCancelar.addEventListener('click', async () => {
+  if (!retoMfa) {
+    limpiarRetoMfa();
+    return;
+  }
+  btnMfaCancelar.disabled = true;
+  try {
+    const response = await fetch(apiBaseUrl() + '/api/auth/mfa/cancelar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ challengeId: retoMfa.challengeId })
+    });
+    const datos = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(datos.error || 'No se pudo cancelar la verificación.');
+    limpiarRetoMfa();
+  } catch (err) {
+    mostrarEstadoMfa(err.name === 'TypeError'
+      ? 'No fue posible conectar para cancelar la verificación. Intenta de nuevo.'
+      : err.message);
+  } finally {
+    btnMfaCancelar.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
+<!-- no esta mostrando el selecione soy humano. etc -->
