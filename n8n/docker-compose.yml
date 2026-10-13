@@ -1,0 +1,30 @@
+# n8n de Suministros Institucionales.
+#
+# Reconstruido el 2026-10-13 a partir del contenedor en ejecución (el compose
+# original en Downloads/Empresa-main ya no existía). Conserva el proyecto
+# "n8n", el volumen n8n_n8n_data (workflows y credenciales) y la red
+# n8n_default (donde está Mailpit).
+#
+# Los valores viven en n8n/.env (excluido de git). N8N_ENCRYPTION_KEY NUNCA
+# debe cambiar: con ella están cifradas las credenciales guardadas.
+#
+#   docker compose -p n8n -f n8n/docker-compose.yml up -d n8n
+name: n8n
+
+services:
+  n8n:
+    image: n8nio/n8n:1.110.1
+    container_name: empresa-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./workflows:/workflows:ro
+
+volumes:
+  n8n_data:

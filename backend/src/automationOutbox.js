@@ -29,7 +29,10 @@ const WORKFLOWS = {
   },
   W11: {
     url: 'N8N_W11_VERIFICATION_WEBHOOK_URL',
-    secret: 'N8N_W11_SECRET'
+    secret: 'N8N_W11_SECRET',
+    // n8n responde 200 vacío cuando el workflow falla antes de confirmar;
+    // W11 confirma explícitamente con 202.
+    estadoEsperado: 202
   }
 };
 
@@ -131,7 +134,7 @@ async function enviarEvento(evento) {
       body: firmado.cuerpo,
       signal: controlador.signal
     });
-    if (!respuesta.ok) {
+    if (!respuesta.ok || (configuracion.estadoEsperado && respuesta.status !== configuracion.estadoEsperado)) {
       const error = new Error('AUTOMATION_WEBHOOK_REJECTED');
       error.code = `AUTOMATION_HTTP_${respuesta.status}`;
       throw error;

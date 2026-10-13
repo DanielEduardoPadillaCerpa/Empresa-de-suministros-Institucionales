@@ -10,3 +10,7 @@ backend/storage/
 # Herramientas locales
 .aider*
 backend/generarHash.js
+
+# Respaldos locales de n8n (contienen credenciales cifradas)
+respaldos-n8n/
+backend/.env.respaldo-*
