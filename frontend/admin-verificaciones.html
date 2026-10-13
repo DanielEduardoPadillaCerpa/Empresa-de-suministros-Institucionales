@@ -31,10 +31,11 @@
     </button>
     <div class="collapse navbar-collapse" id="nav1">
       <ul class="navbar-nav ms-auto gap-lg-3 align-items-lg-center">
-        <li class="nav-item"><a class="nav-link" href="admin-dashboard.html">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-dashboard.html" data-i18n="nav_dashboard">Dashboard</a></li>
         <li class="nav-item"><a class="nav-link" href="admin-clientes.html">Clientes</a></li>
-        <li class="nav-item"><a class="nav-link active" href="admin-verificaciones.html">Verificaciones</a></li>
+        <li class="nav-item"><a class="nav-link active" href="admin-verificaciones.html" aria-current="page">Verificaciones</a></li>
         <li class="nav-item"><a class="nav-link" href="admin-productos.html">Productos</a></li>
+        <li class="nav-item"><a class="nav-link nav-alertas-stock" href="admin-productos.html?filtro=bajo">Alertas de stock</a></li>
         <li class="nav-item"><a class="nav-link" href="admin-pedidos.html">Pedidos</a></li>
         <li class="nav-item d-flex align-items-center" id="auth-nav-slot"></li>
       </ul>
@@ -43,8 +44,8 @@
 </nav>
 
 <main class="container py-4">
-  <h1 class="h3 fw-bold mb-1">Verificación institucional</h1>
-  <p class="text-muted mb-3">Revisa solicitudes de registro, decide con un motivo registrado y administra la elegibilidad de productos. Cada acción queda auditada.</p>
+  <h1 class="h3 fw-bold mb-1 admin-titulo-sobre-fondo">Verificación institucional</h1>
+  <p class="mb-3 admin-texto-sobre-fondo">Revisa solicitudes de registro, decide con un motivo registrado y administra la elegibilidad de productos. Cada acción queda auditada.</p>
   <div id="permisos-aviso" class="alert alert-warning" hidden></div>
 
   <ul class="nav nav-tabs mb-3" role="tablist">

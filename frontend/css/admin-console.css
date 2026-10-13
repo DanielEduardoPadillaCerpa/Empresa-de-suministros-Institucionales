@@ -116,7 +116,7 @@ body.admin-console-page .admin-console-hero::after {
   z-index: 0;
   width: min(69%, 1060px);
   pointer-events: none;
-  background-image: url("http://localhost:8081/img/image_ab9291c8.jpg");
+  background-image: var(--admin-hero-img, none);
   background-position: right 48%;
   background-size: cover;
   background-repeat: no-repeat;
@@ -723,3 +723,184 @@ body.admin-console-page #chatbot-panel .cb-human-button:hover {
     transition-duration: .01ms !important;
   }
 }
+
+/* ==========================================================================
+   Paneles administrativos — identidad unificada (2026-10-13)
+   ========================================================================== */
+
+/* 1. Eje X: ningún elemento (cabeceras a 100vw, tablas, offcanvas) puede
+      generar desplazamiento horizontal de la página. "clip" no rompe los
+      elementos sticky; "hidden" queda como respaldo para navegadores viejos. */
+html:has(body.admin-console-page),
+body.admin-console-page {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+/* 2. Fondo oficial de la marca: azul profundo → azul verdoso → verde vibrante,
+      con destellos amarillo verdosos en la esquina inferior derecha.
+      (Selector reforzado: global-ui.css aplica un fondo claro con
+      body:not(.landing-page):not(.detalle-page):not(.login-page) !important.) */
+html body.admin-console-page:not(.landing-page):not(.detalle-page):not(.login-page) {
+  background:
+    radial-gradient(1100px 620px at 102% 104%, rgba(198, 240, 74, .38), transparent 58%),
+    radial-gradient(900px 560px at 88% 78%, rgba(0, 176, 96, .42), transparent 62%),
+    radial-gradient(760px 520px at -6% 8%, rgba(16, 88, 120, .45), transparent 60%),
+    linear-gradient(155deg, #061a2e 0%, #0a2a40 38%, #0b4547 68%, #0c6447 100%) !important;
+  background-attachment: fixed !important;
+}
+
+/* Textos que quedan directamente sobre el fondo oscuro (fuera de tarjetas). */
+body.admin-console-page .clientes-seccion h2,
+body.admin-console-page .admin-titulo-sobre-fondo { color: #fff !important; }
+body.admin-console-page .clientes-seccion h2 span,
+body.admin-console-page .admin-texto-sobre-fondo,
+body.admin-console-page main > #estado { color: rgba(226, 240, 236, .82) !important; }
+
+/* Pestañas y filtros de Verificaciones sobre el fondo oscuro. */
+body.admin-console-page main > .nav-tabs { border-bottom-color: rgba(255, 255, 255, .18); }
+body.admin-console-page main > .nav-tabs .nav-link { color: rgba(226, 240, 236, .85); }
+body.admin-console-page main > .nav-tabs .nav-link.active { color: var(--admin-ink); background: #fff; border-color: #fff; }
+
+/* 3. Logo siempre visible en la esquina superior izquierda del menú. */
+body.admin-console-page .navbar-institucional {
+  background: rgba(6, 26, 46, .86) !important;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+body.admin-console-page .navbar-institucional .nav-link { white-space: nowrap; padding-inline: .6rem !important; }
+@media (min-width: 992px) {
+  body.admin-console-page .navbar-institucional .navbar-nav { column-gap: .15rem !important; }
+}
+body.admin-console-page .navbar-institucional .nav-alertas-stock::before {
+  content: ""; display: inline-block; width: .5rem; height: .5rem; margin-right: .4rem;
+  border-radius: 50%; background: #f5c542; box-shadow: 0 0 0 3px rgba(245, 197, 66, .2);
+  vertical-align: middle;
+}
+
+/* 4. Cabeceras con el arte de cada panel: la mitad izquierda queda limpia
+      para el texto (velo oscuro) y la derecha muestra la ilustración. */
+body.admin-dashboard-page { --admin-hero-img: url("http://localhost:8081/img/admin-dashboard.jpg"); }
+body.admin-clients-page   { --admin-hero-img: url("http://localhost:8081/img/admin-clientes.jpg"); }
+body.admin-products-page  { --admin-hero-img: url("http://localhost:8081/img/admin-productos.jpg"); }
+/* Pedidos: imagen general mientras no exista un arte propio (image_ab9291c8.jpg no está en backend/img). */
+body.admin-orders-page    { --admin-hero-img: url("http://localhost:8081/img/admin-dashboard.jpg"); }
+
+body.admin-console-page .admin-console-hero,
+body.admin-console-page:not(.landing-page):not(.catalogo-page) header.admin-console-hero,
+body.admin-console-page .clientes-intro.admin-console-hero {
+  background: #061a2e !important;
+}
+
+body.admin-console-page .admin-console-hero::after,
+body.admin-console-page .clientes-intro.admin-console-hero::after {
+  inset: 0;
+  width: auto;
+  height: auto;
+  opacity: 1;
+  background-image: var(--admin-hero-img);
+  background-size: cover;
+  background-position: right center;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* Velo de lectura sobre la mitad izquierda (reemplaza el patrón anterior). */
+body.admin-console-page .admin-console-hero::before,
+body.admin-console-page .clientes-intro.admin-console-hero::before {
+  opacity: 1;
+  background: linear-gradient(90deg, rgba(6, 22, 38, .9) 0%, rgba(6, 22, 38, .62) 34%, rgba(6, 22, 38, .12) 58%, rgba(6, 22, 38, 0) 70%);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* 5. Rejillas flexibles: tarjetas de 280 px mínimo que se acomodan solas
+      y se apilan en una columna en móviles. */
+body.admin-console-page .metricas-grid,
+body.admin-console-page .graficas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 1rem;
+}
+body.admin-console-page .graficas-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 1.25rem; }
+body.admin-console-page .metricas-grid > *,
+body.admin-console-page .graficas-grid > * { min-width: 0; }
+body.admin-console-page .chart-card canvas { max-width: 100%; }
+
+/* Barra del umbral y panel de últimos pedidos como superficies claras. */
+body.admin-console-page .dashboard-toolbar,
+body.admin-console-page .dashboard-panel {
+  padding: 1rem 1.25rem;
+  background: rgba(255, 255, 255, .96);
+  border: 1px solid rgba(255, 255, 255, .7);
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
+}
+body.admin-console-page .dashboard-umbral-label { color: var(--admin-muted); }
+body.admin-console-page .dashboard-panel .table-responsive { border: 0; box-shadow: none; }
+
+/* Tarjeta Inventario con las alertas de stock integradas. */
+body.admin-console-page .metric-sub { margin-top: -.15rem; font-size: .8rem; color: var(--admin-muted); }
+body.admin-console-page .metric-alerta {
+  display: flex; align-items: center; gap: .5rem; margin-top: .35rem; padding: .45rem .65rem;
+  font-size: .8rem; font-weight: 600; line-height: 1.3; text-decoration: none;
+  color: #8a5a00; background: #fff6dc; border: 1px solid #f5d98a; border-radius: 10px;
+}
+body.admin-console-page .metric-alerta:hover { color: #6b4500; background: #ffefc2; }
+body.admin-console-page .metric-alerta-num { font-size: 1rem; font-weight: 800; }
+body.admin-console-page .metric-alerta.sin-alertas { color: #166534; background: #e8f7ef; border-color: #bfe8d0; }
+
+/* 6. Móvil: el arte se desplaza a la derecha y el velo cubre todo el ancho
+      para que nunca tape ni compita con el texto. */
+@media (max-width: 767.98px) {
+  body.admin-console-page .admin-console-hero::after,
+  body.admin-console-page .clientes-intro.admin-console-hero::after {
+    background-position: 78% center;
+  }
+  body.admin-console-page .admin-console-hero::before,
+  body.admin-console-page .clientes-intro.admin-console-hero::before {
+    background: linear-gradient(180deg, rgba(6, 22, 38, .84) 0%, rgba(6, 22, 38, .72) 100%);
+  }
+  html body.admin-console-page:not(.landing-page):not(.detalle-page):not(.login-page) { background-attachment: scroll !important; }
+}
+
+/* Clientes: la cabecera es un div dentro de main (sin .container); su contenido
+   va por encima de la imagen (::after, z 0) y del velo (::before, z 1). */
+body.admin-console-page .clientes-intro.admin-console-hero > * {
+  position: relative;
+  z-index: 2;
+}
+body.admin-console-page .clientes-intro.admin-console-hero {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+body.admin-console-page .clientes-intro.admin-console-hero > h1,
+body.admin-console-page .clientes-intro.admin-console-hero > p {
+  max-width: min(46ch, 48%);
+}
+@media (max-width: 767.98px) {
+  body.admin-console-page .clientes-intro.admin-console-hero > h1,
+  body.admin-console-page .clientes-intro.admin-console-hero > p { max-width: none; }
+}
+/* Estados vacíos de Clientes: superficie clara legible sobre el fondo de marca. */
+body.admin-console-page .clientes-grid .estado-vacio {
+  color: #475569;
+  background: rgba(255, 255, 255, .94);
+  border-color: rgba(255, 255, 255, .6);
+}
+
+/* El logo tiene letras blancas: sobre la caja blanca anterior solo se veía el
+   escudo. En los paneles va directamente sobre la barra oscura, como en el sitio. */
+body.admin-console-page .navbar-institucional .navbar-brand {
+  padding: 0 !important;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+/* Filtros que quedan sobre el fondo oscuro (Verificaciones, Cumplimiento). */
+body.admin-console-page .tab-pane > form .form-label,
+body.admin-console-page .tab-pane > form .form-check-label,
+body.admin-console-page .tab-pane > p.small { color: rgba(226, 240, 236, .9) !important; }
+body.admin-console-page .tab-pane > p.small code { color: #c6f04a; }

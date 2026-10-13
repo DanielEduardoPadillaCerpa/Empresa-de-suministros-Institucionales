@@ -64,12 +64,11 @@
     </button>
     <div class="collapse navbar-collapse" id="nav1">
       <ul class="navbar-nav ms-auto gap-lg-3 align-items-lg-center">
-        <li class="nav-item"><a class="nav-link" href="landing.html" data-i18n="nav_inicio">Inicio</a></li>
-        <li class="nav-item"><a class="nav-link" href="index.html" data-i18n="nav_catalogo">Catálogo</a></li>
-        <li class="nav-item nav-registro-link"><a class="nav-link" href="registro.html" data-i18n="nav_registro">Registro de cliente</a></li>
-        <li class="nav-item"><a class="nav-link active" href="#" data-i18n="nav_dashboard">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link active" href="admin-dashboard.html" aria-current="page" data-i18n="nav_dashboard">Dashboard</a></li>
         <li class="nav-item"><a class="nav-link" href="admin-clientes.html">Clientes</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-verificaciones.html">Verificaciones</a></li>
         <li class="nav-item"><a class="nav-link" href="admin-productos.html">Productos</a></li>
+        <li class="nav-item"><a class="nav-link nav-alertas-stock" href="admin-productos.html?filtro=bajo">Alertas de stock</a></li>
         <li class="nav-item"><a class="nav-link" href="admin-pedidos.html">Pedidos</a></li>
         <li class="nav-item dropdown selector-idioma"></li>
         <li class="nav-item d-flex align-items-center" id="auth-nav-slot"></li>
@@ -94,10 +93,10 @@
 
 <main class="container py-5">
 
-  <div class="mb-4 d-flex flex-wrap gap-2 align-items-center justify-content-between">
+  <div class="dashboard-toolbar mb-4 d-flex flex-wrap gap-2 align-items-center justify-content-between">
     <div class="d-flex flex-wrap gap-2 align-items-center">
       <input type="hidden" id="apiBase" value="http://localhost:8081">
-      <label class="ms-3 me-2 small text-muted" data-i18n="admin_dashboard_stock_threshold">Umbral inventario bajo:</label>
+      <label class="me-2 small dashboard-umbral-label" for="umbralStock" data-i18n="admin_dashboard_stock_threshold">Umbral inventario bajo:</label>
       <input type="number" id="umbralStock" class="form-control form-control-sm" style="max-width:90px;" value="5" min="0">
       <button class="btn btn-sm btn-dark" onclick="cargarDashboard()" data-i18n="admin_dashboard_refresh">Actualizar</button>
     </div>
@@ -105,99 +104,65 @@
 
   <div id="estado" class="d-none"></div>
 
-  <!-- Tarjetas de métricas -->
-  <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-      <div class="metric-card">
-        <div class="d-flex justify-content-between align-items-start">
-          <span class="metric-label" data-i18n="admin_dashboard_metric_clients">Clientes registrados</span>
-          <span class="metric-icon">👥</span>
-        </div>
-        <span class="metric-value" id="metricClientes">—</span>
-        <button class="btn btn-sm btn-outline-dark btn-ver" onclick="window.location.href='admin-clientes.html'" data-i18n="admin_dashboard_view_btn">Ver</button>
+  <!-- Tarjetas de métricas: rejilla auto-fit (se apilan solas en móvil).
+       "Inventario bajo" ya no es una tarjeta aparte: el conteo vive dentro de
+       la tarjeta Inventario y el listado completo en el menú "Alertas de stock". -->
+  <div class="metricas-grid mb-4">
+    <div class="metric-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <span class="metric-label" data-i18n="admin_dashboard_metric_clients">Clientes registrados</span>
+        <span class="metric-icon">👥</span>
       </div>
+      <span class="metric-value" id="metricClientes">—</span>
+      <a class="btn btn-sm btn-outline-dark btn-ver" href="admin-clientes.html" data-i18n="admin_dashboard_view_btn">Ver</a>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="metric-card">
-        <div class="d-flex justify-content-between align-items-start">
-          <span class="metric-label" data-i18n="admin_dashboard_metric_products">Productos activos</span>
-          <span class="metric-icon">📦</span>
-        </div>
-        <span class="metric-value" id="metricProductos">—</span>
-        <button class="btn btn-sm btn-outline-dark btn-ver" onclick="window.location.href='admin-productos.html'" data-i18n="admin_dashboard_view_btn">Ver</button>
+    <div class="metric-card metric-card-inventario">
+      <div class="d-flex justify-content-between align-items-start">
+        <span class="metric-label">Inventario</span>
+        <span class="metric-icon">📦</span>
       </div>
+      <span class="metric-value" id="metricProductos">—</span>
+      <span class="metric-sub">productos activos</span>
+      <a class="metric-alerta" id="metricInventarioBajoEnlace" href="admin-productos.html?filtro=bajo">
+        <span class="metric-alerta-num" id="metricInventarioBajo">—</span>
+        <span>con stock bajo (≤ <span id="metricUmbral">5</span>) · ver alertas</span>
+      </a>
+      <a class="btn btn-sm btn-outline-dark btn-ver" href="admin-productos.html" data-i18n="admin_dashboard_view_btn">Ver</a>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="metric-card">
-        <div class="d-flex justify-content-between align-items-start">
-          <span class="metric-label" data-i18n="admin_dashboard_metric_low_stock">Inventario bajo</span>
-          <span class="metric-icon">⚠️</span>
-        </div>
-        <span class="metric-value alerta" id="metricInventarioBajo">—</span>
-        <button class="btn btn-sm btn-outline-dark btn-ver" onclick="window.location.href='admin-productos.html'" data-i18n="admin_dashboard_view_btn">Ver</button>
+    <div class="metric-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <span class="metric-label" data-i18n="admin_dashboard_metric_orders">Pedidos totales</span>
+        <span class="metric-icon">🧾</span>
       </div>
+      <span class="metric-value" id="metricPedidos">—</span>
+      <a class="btn btn-sm btn-outline-dark btn-ver" href="admin-pedidos.html" data-i18n="admin_dashboard_view_btn">Ver</a>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="metric-card">
-        <div class="d-flex justify-content-between align-items-start">
-          <span class="metric-label" data-i18n="admin_dashboard_metric_orders">Pedidos totales</span>
-          <span class="metric-icon">🧾</span>
-        </div>
-        <span class="metric-value" id="metricPedidos">—</span>
-        <button class="btn btn-sm btn-outline-dark btn-ver" onclick="window.location.href='admin-pedidos.html'" data-i18n="admin_dashboard_view_btn">Ver</button>
+    <div class="metric-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <span class="metric-label">Verificaciones pendientes</span>
+        <span class="metric-icon">🛡️</span>
       </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="metric-card">
-        <div class="d-flex justify-content-between align-items-start">
-          <span class="metric-label">Verificaciones pendientes</span>
-          <span class="metric-icon">🛡️</span>
-        </div>
-        <span class="metric-value alerta" id="metricVerificaciones">—</span>
-        <button class="btn btn-sm btn-outline-dark btn-ver" onclick="window.location.href='admin-verificaciones.html'">Revisar</button>
-      </div>
+      <span class="metric-value alerta" id="metricVerificaciones">—</span>
+      <a class="btn btn-sm btn-outline-dark btn-ver" href="admin-verificaciones.html">Revisar</a>
     </div>
   </div>
 
   <!-- Gráficas -->
-  <div class="row g-4 mb-4">
-    <div class="col-lg-6">
-      <div class="chart-card">
-        <h2 class="h6 mb-3" data-i18n="admin_dashboard_orders_by_day">Pedidos por día</h2>
-        <canvas id="chartPedidos"></canvas>
-      </div>
+  <div class="graficas-grid mb-4">
+    <div class="chart-card">
+      <h2 class="h6 mb-3" data-i18n="admin_dashboard_orders_by_day">Pedidos por día</h2>
+      <canvas id="chartPedidos"></canvas>
     </div>
-    <div class="col-lg-6">
-      <div class="chart-card">
-        <h2 class="h6 mb-3" data-i18n="admin_dashboard_products_by_category">Productos por categoría</h2>
-        <canvas id="chartCategorias"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <!-- Inventario bajo -->
-  <div class="mb-4">
-    <h2 class="h6 mb-3" data-i18n="admin_dashboard_low_stock_title">Productos con inventario bajo</h2>
-    <div class="table-responsive" style="background:var(--paper-50); border:1px solid rgba(11,35,64,0.12);">
-      <table class="table table-sm mb-0 align-middle">
-        <thead>
-          <tr>
-            <th data-i18n="admin_dashboard_product">Producto</th>
-            <th data-i18n="admin_dashboard_category">Categoría</th>
-            <th data-i18n="admin_dashboard_available_quantity">Cantidad disponible</th>
-          </tr>
-        </thead>
-        <tbody id="tbodyInventarioBajo">
-          <tr><td colspan="3" class="text-center text-muted py-3">Sin datos cargados todavía.</td></tr>
-        </tbody>
-      </table>
+    <div class="chart-card">
+      <h2 class="h6 mb-3" data-i18n="admin_dashboard_products_by_category">Productos por categoría</h2>
+      <canvas id="chartCategorias"></canvas>
     </div>
   </div>
 
   <!-- Últimos pedidos -->
-  <div>
+  <div class="dashboard-panel">
     <h2 class="h6 mb-3" data-i18n="admin_dashboard_latest_orders">Últimos pedidos registrados</h2>
-    <div class="table-responsive" style="background:var(--paper-50); border:1px solid rgba(11,35,64,0.12);">
+    <div class="table-responsive">
       <table class="table table-sm mb-0 align-middle">
         <thead>
           <tr>
@@ -317,21 +282,10 @@ async function cargarDashboard() {
 
     const productosBajos = productos.filter(p => Number(p.cantidad_disponible) <= umbral);
     document.getElementById('metricInventarioBajo').textContent = productosBajos.length;
-
-    // ---- Tabla: inventario bajo ----
-    const tbodyInv = document.getElementById('tbodyInventarioBajo');
-    if (!productosBajos.length) {
-      tbodyInv.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">No hay productos por debajo del umbral definido.</td></tr>';
-    } else {
-      tbodyInv.innerHTML = productosBajos
-        .sort((a, b) => Number(a.cantidad_disponible) - Number(b.cantidad_disponible))
-        .map(p => `
-          <tr>
-            <td>${escapeHtml(p.nombre)} ${Number(p.cantidad_disponible) === 0 ? '<span class="badge badge-agotado ms-1">Agotado</span>' : ''}</td>
-            <td>${escapeHtml(categoriasPorId[p.categoria_id] || '')}</td>
-            <td>${escapeHtml(p.cantidad_disponible)}</td>
-          </tr>`).join('');
-    }
+    document.getElementById('metricUmbral').textContent = umbral;
+    // El listado completo vive en Productos, filtrado por el mismo umbral.
+    document.getElementById('metricInventarioBajoEnlace').href = 'admin-productos.html?filtro=bajo&umbral=' + encodeURIComponent(umbral);
+    document.getElementById('metricInventarioBajoEnlace').classList.toggle('sin-alertas', productosBajos.length === 0);
 
     // ---- Tabla: últimos pedidos (ya vienen ordenados DESC por fecha desde el backend) ----
     const tbodyPed = document.getElementById('tbodyUltimosPedidos');

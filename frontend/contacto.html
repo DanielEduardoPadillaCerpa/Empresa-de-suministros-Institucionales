@@ -119,6 +119,13 @@
     const solicitudForm = document.getElementById('formSolicitud');
     const parametrosContacto = new URLSearchParams(window.location.search);
     const productoSolicitado = parametrosContacto.get('producto');
+    const pedidoSoporte = Number(parametrosContacto.get('pedido'));
+    if (parametrosContacto.get('tipo') === 'soporte') {
+      document.getElementById('tipoSolicitud').value = 'soporte';
+      if (Number.isSafeInteger(pedidoSoporte) && pedidoSoporte > 0) {
+        document.getElementById('mensaje').value = `Solicito el seguimiento y el número de guía del pedido #${pedidoSoporte}.`;
+      }
+    }
     if (parametrosContacto.get('tipo') === 'cotizacion') {
       document.getElementById('tipoSolicitud').value = 'cotizacion';
       if (productoSolicitado) {

@@ -185,7 +185,11 @@ function authRenderNavbar() {
   });
 
   const navbar = document.querySelector('.navbar .navbar-nav');
-  if (navbar && esVistaAdmin && esAdmin) {
+  // Los paneles con el menú administrativo unificado (Dashboard, Clientes,
+  // Verificaciones, Productos, Alertas de stock, Pedidos) conservan el logo y
+  // todo el menú; el modo "Regresar al panel principal" queda para las demás vistas.
+  const tieneMenuAdmin = Boolean(document.querySelector('.navbar .nav-alertas-stock'));
+  if (navbar && esVistaAdmin && esAdmin && !tieneMenuAdmin) {
     const brand = document.querySelector('.navbar .navbar-brand');
     const toggler = document.querySelector('.navbar .navbar-toggler');
     const navbarCollapse = navbar.closest('.navbar-collapse');
@@ -224,9 +228,11 @@ function authRenderNavbar() {
   }
 
   if (esAdmin) {
-    document.querySelectorAll('.navbar a[href="admin-dashboard.html"]').forEach(el => {
-      el.textContent = '← Regresar al panel principal';
-    });
+    if (!tieneMenuAdmin) {
+      document.querySelectorAll('.navbar a[href="admin-dashboard.html"]').forEach(el => {
+        el.textContent = '← Regresar al panel principal';
+      });
+    }
     document.querySelectorAll('.navbar a[href="historial.html"]').forEach(el => {
       el.textContent = 'Historial de clientes';
       el.href = 'admin-pedidos.html';

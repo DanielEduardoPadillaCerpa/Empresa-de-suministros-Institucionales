@@ -96,6 +96,8 @@ body #auth-nav-slot .dropdown-toggle { color: #fff; font-weight: 600; }
    empujaba el carrito fuera del borde derecho. */
 @media (min-width: 1400px) and (max-width: 1599.98px) {
   body .navbar-institucional .nav-search { width: 180px; }
+  /* Con sesión de cliente el menú tiene más enlaces (Historial, Mis reportes). */
+  body[data-authenticated="true"] .navbar-institucional .nav-search { width: 140px; }
 }
 @media (max-width: 1199.98px) {
   body .navbar-institucional .navbar-collapse { padding-top: 1rem; }

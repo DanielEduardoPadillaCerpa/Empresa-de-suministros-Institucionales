@@ -30,37 +30,21 @@ body[data-institution] .navbar-institucional {
   background: color-mix(in srgb, var(--tenant-navy) 92%, transparent) !important;
 }
 
+/* Paneles administrativos: fondo de marca y arte propio de cada panel
+   (admin-console.css). El tema institucional no los reemplaza. */
 body.admin-console-page[data-institution] {
   --admin-navy: var(--tenant-navy);
   --admin-navy-soft: color-mix(in srgb, var(--tenant-navy) 78%, #fff);
   --admin-green: var(--tenant-green);
-  background:
-    radial-gradient(900px 420px at 100% 4%, color-mix(in srgb, var(--tenant-green) 10%, transparent), transparent 58%),
-    linear-gradient(180deg, var(--tenant-wash), color-mix(in srgb, var(--tenant-wash) 82%, #fff)) !important;
 }
 
-body.admin-console-page[data-institution] header.admin-console-hero {
-  background:
-    linear-gradient(100deg, color-mix(in srgb, var(--tenant-navy) 98%, #000) 0%, color-mix(in srgb, var(--tenant-navy) 90%, transparent) 42%, color-mix(in srgb, var(--tenant-navy) 42%, transparent) 100%) !important;
-  border-bottom-color: var(--tenant-green);
-}
-
-body.admin-console-page[data-institution] .admin-console-hero::after {
-  background-image: linear-gradient(100deg, transparent, color-mix(in srgb, var(--tenant-navy) 10%, transparent)), var(--tenant-panel-image, none);
-}
-
+/* Catálogo: la imagen es la misma para todos (catalogo.jpg, en catalogo.css);
+   el tema institucional solo tiñe el borde inferior. */
 body[data-institution] .catalogo-hero {
-  background-image:
-    linear-gradient(90deg, color-mix(in srgb, var(--tenant-navy) 96%, transparent), color-mix(in srgb, var(--tenant-navy) 74%, transparent) 62%, color-mix(in srgb, var(--tenant-navy) 46%, transparent)),
-    var(--tenant-panel-image, none);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: var(--tenant-navy);
   border-image: linear-gradient(90deg, var(--tenant-green), transparent) 1;
 }
 
-body[data-institution] .admin-hero {
+body[data-institution]:not(.admin-console-page) .admin-hero {
   background:
     radial-gradient(ellipse at 90% 0%, color-mix(in srgb, var(--tenant-green) 24%, transparent), transparent 60%),
     linear-gradient(135deg, var(--tenant-navy), color-mix(in srgb, var(--tenant-navy) 78%, #fff));

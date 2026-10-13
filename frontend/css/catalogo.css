@@ -106,9 +106,11 @@ body.catalogo-page .catalogo-hero {
   position: relative; display: flex; align-items: center; min-height: 400px;
   padding: 72px 0 96px; color: #fff; text-align: left;
   background-color: #071d37;
+  /* catalogo.jpg: la mitad izquierda es el degradado verde-amarillo de la marca
+     (velo azul para que el texto blanco se lea); la derecha, los productos. */
   background-image:
-    linear-gradient(90deg, rgba(7,29,55,.55) 0%, rgba(7,29,55,.18) 45%, rgba(7,29,55,0) 70%),
-    url("http://localhost:8081/img/image_62125725.jpg");
+    linear-gradient(90deg, rgba(7,29,55,.78) 0%, rgba(7,29,55,.55) 36%, rgba(7,29,55,.08) 52%, rgba(7,29,55,0) 60%),
+    url("http://localhost:8081/img/catalogo.jpg");
   background-size: cover; background-position: right center; background-repeat: no-repeat;
   border-bottom: 3px solid var(--cat-green);
 }
@@ -274,7 +276,13 @@ body.catalogo-page .trust-item span { display: block; font-size: .8rem; color: v
   body.catalogo-page .select-pill { flex: 1 1 180px; }
   body.catalogo-page .select-pill .filtro-select { width: 100%; }
   body.catalogo-page .catalog-panel { padding: 1.25rem 1rem; }
-  body.catalogo-page .catalogo-hero { min-height: 340px; padding: 56px 0 84px; background-position: 70% center; }
+  body.catalogo-page .catalogo-hero {
+    min-height: 340px; padding: 56px 0 84px; background-position: 0 0, 78% center;
+    /* En móvil el texto queda sobre los productos: velo uniforme. */
+    background-image:
+      linear-gradient(180deg, rgba(7,29,55,.82) 0%, rgba(7,29,55,.74) 100%),
+      url("http://localhost:8081/img/catalogo.jpg");
+  }
 }
 
 /* ---------- Ajustes finos (tarjetas) ---------- */

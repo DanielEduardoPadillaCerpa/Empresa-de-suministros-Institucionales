@@ -80,7 +80,9 @@
       <ul class="navbar-nav ms-auto gap-lg-3 align-items-lg-center">
         <li class="nav-item"><a class="nav-link" href="admin-dashboard.html" data-i18n="nav_dashboard">Dashboard</a></li>
         <li class="nav-item"><a class="nav-link" href="admin-clientes.html">Clientes</a></li>
-        <li class="nav-item"><a class="nav-link active" href="admin-productos.html">Productos</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-verificaciones.html">Verificaciones</a></li>
+        <li class="nav-item"><a class="nav-link active" href="admin-productos.html" aria-current="page">Productos</a></li>
+        <li class="nav-item"><a class="nav-link nav-alertas-stock" href="admin-productos.html?filtro=bajo">Alertas de stock</a></li>
         <li class="nav-item"><a class="nav-link" href="admin-pedidos.html">Pedidos</a></li>
         <li class="nav-item dropdown selector-idioma"></li>
         <li class="nav-item d-flex align-items-center" id="auth-nav-slot"></li>
@@ -106,7 +108,7 @@
       <div class="filter-chips" role="group" aria-label="Filtrar productos">
         <button type="button" class="filter-chip active" data-filtro="todos">Ver todos</button>
         <button type="button" class="filter-chip" data-filtro="activos">Activos</button>
-        <button type="button" class="filter-chip" data-filtro="bajo">Inventario bajo <span class="small">(&le; 5)</span></button>
+        <button type="button" class="filter-chip" data-filtro="bajo">Inventario bajo <span class="small">(&le; <span id="umbralBajoEtiqueta">5</span>)</span></button>
       </div>
     </div>
     <button class="btn btn-sm btn-nuevo-producto" onclick="abrirModalNuevoProducto()">+ Nuevo producto</button>
@@ -376,6 +378,12 @@ async function apiFetch(sesion, url, opciones) {
 let productosCache = [];
 let categoriasCache = [];
 let filtroActivo = 'todos';
+// Umbral de inventario bajo: el del dashboard si llega por URL (?umbral=), si no 5.
+const parametrosUrl = new URLSearchParams(window.location.search);
+const umbralBajo = (() => {
+  const n = Number(parametrosUrl.get('umbral'));
+  return Number.isInteger(n) && n >= 0 && n <= 100000 ? n : 5;
+})();
 let imagenSeleccionada = null;
 
 async function cargarCategoriasSelect() {
@@ -397,7 +405,7 @@ function nombreCategoria(id) {
 
 function productoFiltrado(p) {
   if (filtroActivo === 'activos') return p.estado === 'activo';
-  if (filtroActivo === 'bajo') return Number(p.cantidad_disponible) <= 5;
+  if (filtroActivo === 'bajo') return Number(p.cantidad_disponible) <= umbralBajo;
   return true;
 }
 function estadoStock(valor) {
@@ -692,8 +700,22 @@ imagenDrop.addEventListener('keydown', e => {
 ['dragleave','drop'].forEach(evt => imagenDrop.addEventListener(evt, e => { e.preventDefault(); imagenDrop.classList.remove('is-dragging'); }));
 imagenDrop.addEventListener('drop', e => seleccionarImagen(e.dataTransfer.files[0]));
 
+// Acceso directo "Alertas de stock" del menú: abre con el filtro de inventario bajo.
+function aplicarFiltroInicial() {
+  document.getElementById('umbralBajoEtiqueta').textContent = umbralBajo;
+  if (parametrosUrl.get('filtro') !== 'bajo') return;
+  filtroActivo = 'bajo';
+  document.querySelectorAll('[data-filtro]').forEach(x => x.classList.toggle('active', x.dataset.filtro === 'bajo'));
+  document.querySelectorAll('.navbar-institucional .nav-link').forEach(a => {
+    const esAlertas = a.classList.contains('nav-alertas-stock');
+    a.classList.toggle('active', esAlertas);
+    if (esAlertas) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   alternarCamposPorMacro();
+  aplicarFiltroInicial();
   cargarProductos();
 });
 </script>

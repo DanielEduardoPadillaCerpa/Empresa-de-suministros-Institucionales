@@ -25,6 +25,36 @@
 <main class="container py-5">
   <div id="estado" class="text-muted small mb-3"></div>
   <div id="pedidosLista" class="d-grid gap-4"></div>
+
+  <!-- Seguimiento del pedido (botón "Rastrear guía") -->
+  <div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-labelledby="seguimientoTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="seguimientoTitulo">Seguimiento del pedido</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-1">Estado actual: <strong id="seguimientoEstado"></strong></p>
+          <p class="small text-muted mb-3">Pedido realizado el <span id="seguimientoFecha"></span></p>
+          <ol class="seguimiento-pasos" id="seguimientoPasos"></ol>
+          <div class="alert alert-light border small mb-0" id="seguimientoGuia"></div>
+        </div>
+        <div class="modal-footer">
+          <a class="btn btn-outline-dark btn-sm" id="seguimientoSoporte" href="contacto.html?tipo=soporte">Contactar soporte</a>
+          <button type="button" class="btn btn-dark btn-sm" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <style>
+    .seguimiento-pasos { list-style: none; padding: 0; margin: 0 0 1rem; }
+    .seguimiento-pasos li { position: relative; padding: 0 0 .9rem 1.6rem; border-left: 2px solid #e2e8f0; margin-left: .45rem; }
+    .seguimiento-pasos li::before { content: ""; position: absolute; left: -.5rem; top: .15rem; width: .9rem; height: .9rem; border-radius: 50%; background: #e2e8f0; }
+    .seguimiento-pasos li.hecho { border-left-color: #00b060; }
+    .seguimiento-pasos li.hecho::before { background: #00b060; }
+    .seguimiento-pasos li:last-child { border-left-color: transparent; }
+  </style>
 </main>
 
 <footer class="institucional py-4">
@@ -42,6 +72,89 @@
 <script src="js/navbar.js"></script>
 <script src="js/chatbot.js"></script>
 <script>
+// Estados del ENUM de pedidos. etapa = pasos completados de la línea de tiempo.
+const ESTADOS_PEDIDO = {
+  pendiente_pago: { etapa: 0, etiqueta: 'Pago pendiente', badge: 'bg-warning text-dark' },
+  pendiente: { etapa: 1, etiqueta: 'Pendiente', badge: 'bg-warning text-dark' },
+  pagado: { etapa: 1, etiqueta: 'Pagado', badge: 'bg-primary' },
+  confirmado: { etapa: 1, etiqueta: 'Confirmado', badge: 'bg-primary' },
+  preparado: { etapa: 2, etiqueta: 'Empacado', badge: 'bg-info text-dark' },
+  enviado: { etapa: 3, etiqueta: 'En tránsito', badge: 'bg-info text-dark' },
+  entregado: { etapa: 4, etiqueta: 'Entregado', badge: 'bg-success' },
+  cancelado: { etapa: 0, etiqueta: 'Cancelado', badge: 'bg-danger' },
+  expirado: { etapa: 0, etiqueta: 'Pago expirado', badge: 'bg-secondary' },
+  rechazado: { etapa: 0, etiqueta: 'Pago rechazado', badge: 'bg-danger' }
+};
+// El backend solo emite comprobante cuando el pago está aprobado.
+const ESTADOS_CON_COMPROBANTE = new Set(['pagado', 'confirmado', 'preparado', 'enviado', 'entregado']);
+// Los mismos que acepta PUT /api/pedidos/:id/cancelar.
+const ESTADOS_CANCELABLES = new Set(['pendiente', 'pendiente_pago']);
+let pedidosCargados = new Map();
+
+function escaparHtml(valor) {
+  const span = document.createElement('span');
+  span.textContent = valor == null ? '' : String(valor);
+  return span.innerHTML;
+}
+
+// "Descargar soporte": comprobante PDF del pedido (GET /api/comprobantes/:id?format=pdf).
+async function descargarSoporte(pedidoId) {
+  const sesion = authLeer();
+  if (!sesion?.token) {
+    window.location.href = 'login.html?redirect=historial.html';
+    return;
+  }
+  try {
+    if (!await authAsegurarTokenValido()) throw new Error('Tu sesión venció. Inicia sesión de nuevo.');
+    const resp = await fetch(API_BASE + '/api/comprobantes/' + encodeURIComponent(pedidoId) + '?format=pdf', {
+      headers: { Authorization: 'Bearer ' + authLeer().token }
+    });
+    if (!resp.ok) {
+      const datos = await resp.json().catch(() => ({}));
+      throw new Error(resp.status === 404
+        ? 'Este pedido todavía no tiene comprobante: se genera cuando el pago queda aprobado.'
+        : datos.error || 'No fue posible descargar el comprobante.');
+    }
+    const url = URL.createObjectURL(await resp.blob());
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = 'comprobante-pedido-' + pedidoId + '.pdf';
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (err) {
+    mostrarNotificacion(err.message === 'Failed to fetch' ? 'No hay comunicación con el servidor.' : err.message, 'error', 6000);
+  }
+}
+
+// "Rastrear guía": la plataforma no registra todavía el número de guía de la
+// transportadora; se muestra el seguimiento real del pedido y cómo pedir la guía.
+function verSeguimiento(pedidoId) {
+  const pedido = pedidosCargados.get(Number(pedidoId));
+  if (!pedido) return;
+  const estado = pedido.estado || 'pendiente';
+  const info = ESTADOS_PEDIDO[estado] || { etapa: 0, etiqueta: estado };
+  const pasos = [
+    ['Confirmado', 'Pago aprobado y pedido aceptado.'],
+    ['Empacado', 'El pedido se alista en bodega.'],
+    ['Despachado', 'Entregado a la transportadora.'],
+    ['Entregado', 'Recibido en la dirección registrada.']
+  ];
+  const finalizado = ['cancelado', 'expirado', 'rechazado'].includes(estado);
+  document.getElementById('seguimientoTitulo').textContent = 'Seguimiento del pedido #' + pedidoId;
+  document.getElementById('seguimientoEstado').textContent = info.etiqueta;
+  document.getElementById('seguimientoFecha').textContent = new Date(pedido.fechaPedido || pedido.fecha).toLocaleString('es-CO');
+  document.getElementById('seguimientoPasos').innerHTML = finalizado
+    ? '<li class="text-muted">Este pedido no continuará su envío (' + escaparHtml(info.etiqueta.toLowerCase()) + ').</li>'
+    : pasos.map(([titulo, detalle], i) => '<li class="' + (i < info.etapa ? 'hecho' : '') + '"><strong>' + titulo + '</strong><br><span class="small text-muted">' + detalle + '</span></li>').join('');
+  document.getElementById('seguimientoGuia').textContent = info.etapa >= 3
+    ? 'El número de guía de la transportadora aún no está registrado en la plataforma. Solicítalo a soporte indicando el número de pedido.'
+    : 'La guía se asigna cuando el pedido es despachado.';
+  document.getElementById('seguimientoSoporte').href = 'contacto.html?tipo=soporte&pedido=' + encodeURIComponent(pedidoId);
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalSeguimiento')).show();
+}
+
 async function cargarHistorial() {
   const sesion = authLeer();
   if (!sesion?.token) {
@@ -63,15 +176,13 @@ async function cargarHistorial() {
     if (!pedidos.length) {
       contenedor.innerHTML = '<div class="card-elevated p-4 text-center text-muted">No hay pedidos registrados.</div>';
     } else {
+      pedidosCargados = new Map(pedidos.map(p => [Number(p.id), p]));
       contenedor.innerHTML = pedidos.map(pedido => {
         const estadoPedido = pedido.estado || 'pendiente';
+        const infoEstado = ESTADOS_PEDIDO[estadoPedido] || { etapa: 0, etiqueta: estadoPedido, badge: 'bg-secondary' };
         const timeline = ['Confirmado', 'Empacado', 'Despachado', 'Entregado'];
-        const completed = {
-          pendiente: 1,
-          enviado: 3,
-          entregado: 4,
-          cancelado: 0
-        }[estadoPedido] || 1;
+        const completed = infoEstado.etapa;
+        const conComprobante = ESTADOS_CON_COMPROBANTE.has(estadoPedido);
 
         const pasos = timeline.map((etapa, index) => `
           <div class="d-flex flex-column align-items-center gap-2 ${index < completed ? 'text-success' : 'text-muted'}">
@@ -80,25 +191,14 @@ async function cargarHistorial() {
           </div>
         `).join('');
 
-        const labelEstado = {
-          pendiente: 'Pendiente',
-          enviado: 'En tránsito',
-          entregado: 'Entregado',
-          cancelado: 'Cancelado'
-        }[estadoPedido] || estadoPedido;
-
-        const badgeClass = {
-          pendiente: 'bg-warning text-dark',
-          enviado: 'bg-info text-dark',
-          entregado: 'bg-success',
-          cancelado: 'bg-danger'
-        }[estadoPedido] || 'bg-secondary';
+        const labelEstado = infoEstado.etiqueta;
+        const badgeClass = infoEstado.badge;
 
         const detalleItems = (pedido.items || []).map(item => `
           <div class="d-flex justify-content-between align-items-center border-top py-2">
             <div>
-              <div class="fw-semibold">${item.nombre}</div>
-              <small class="text-muted">Cantidad: ${item.cantidad}${item.variacion ? ' · ' + item.variacion : ''}</small>
+              <div class="fw-semibold">${escaparHtml(item.nombre)}</div>
+              <small class="text-muted">Cantidad: ${escaparHtml(item.cantidad)}${item.variacion ? ' · ' + escaparHtml(item.variacion) : ''}</small>
             </div>
             <strong>$${Number(item.precio || item.precio_unitario || 0).toLocaleString('es-CO')}</strong>
           </div>
@@ -111,7 +211,7 @@ async function cargarHistorial() {
                 <div class="font-monospace small text-uppercase text-muted">Pedido #${pedido.id}</div>
                 <div class="small text-muted">${new Date(pedido.fechaPedido || pedido.fecha).toLocaleString('es-CO')}</div>
               </div>
-              <span class="badge rounded-pill ${badgeClass}">${labelEstado}</span>
+              <span class="badge rounded-pill ${badgeClass}">${escaparHtml(labelEstado)}</span>
             </div>
 
             <div class="d-flex align-items-center justify-content-between gap-3 overflow-auto pb-3 mb-3">
@@ -128,18 +228,19 @@ async function cargarHistorial() {
               <div class="col-lg-4">
                 <div class="small text-uppercase text-muted mb-2">Resumen financiero</div>
                 <div class="bg-light rounded-3 p-3">
-                  <div class="d-flex justify-content-between py-2 border-bottom"><span>Subtotal</span><strong>$${Number(pedido.total || 0).toLocaleString('es-CO')}</strong></div>
-                  <div class="d-flex justify-content-between py-2 border-bottom"><span>IVA</span><strong>$${Math.round(Number(pedido.total || 0) * 0.19).toLocaleString('es-CO')}</strong></div>
+                  <div class="d-flex justify-content-between py-2 border-bottom"><span>Subtotal neto</span><strong>$${Math.round(Number(pedido.total || 0) / 1.19).toLocaleString('es-CO')}</strong></div>
+                  <div class="d-flex justify-content-between py-2 border-bottom"><span>IVA 19% (incluido)</span><strong>$${(Math.round(Number(pedido.total || 0)) - Math.round(Number(pedido.total || 0) / 1.19)).toLocaleString('es-CO')}</strong></div>
                   <div class="d-flex justify-content-between py-2"><span>Total</span><strong>$${Number(pedido.total || 0).toLocaleString('es-CO')}</strong></div>
                   <div class="d-flex gap-2 mt-3 flex-wrap">
-                    <button class="btn btn-sm btn-dark" type="button">Descargar soporte</button>
-                    <button class="btn btn-sm btn-outline-dark" type="button">Rastrear guía</button>
+                    <button class="btn btn-sm btn-dark" type="button" onclick="descargarSoporte(${Number(pedido.id)})"
+                      ${conComprobante ? '' : 'disabled title="El comprobante se genera cuando el pago queda aprobado."'}>Descargar soporte</button>
+                    <button class="btn btn-sm btn-outline-dark" type="button" onclick="verSeguimiento(${Number(pedido.id)})">Rastrear guía</button>
                   </div>
                 </div>
               </div>
             </div>
 
-            ${estadoPedido === 'pendiente' ? `
+            ${ESTADOS_CANCELABLES.has(estadoPedido) ? `
               <div class="mt-4">
                 <button class="btn btn-sm btn-outline-danger" onclick="cancelarPedido(${pedido.id})">Cancelar pedido</button>
               </div>
