@@ -193,60 +193,7 @@
     panelCarrito.addEventListener('hidden.bs.offcanvas', () => body.classList.remove('gl-cart-open'));
   }
 
-  // 5) Menú adaptable en TODAS las barras de navegación (públicas y de
-  //    administración): si los enlaces no caben en una fila, se usa el menú
-  //    hamburguesa en vez de desbordar la pantalla. Se vuelve a medir al
-  //    cambiar el tamaño de la ventana o el contenido del menú (sesión, idioma).
-  const ANCHO_EXPANDIR = { sm: 576, md: 768, lg: 992, xl: 1200, xxl: 1400 };
-
-  function navbarCabe(nav) {
-    const contenedor = nav.querySelector(':scope > .container, :scope > .container-fluid') || nav;
-    const limite = contenedor.getBoundingClientRect().right -
-      parseFloat(getComputedStyle(contenedor).paddingRight || 0) + 1;
-    return [...nav.querySelectorAll('.navbar-brand, .navbar-collapse, .navbar-nav > li, :scope > .container > .btn, :scope > .container > a')]
-      .every(el => el.getBoundingClientRect().right <= limite);
-  }
-
-  function ajustarNavbar(nav) {
-    const expandir = [...nav.classList].map(c => /^navbar-expand-(\w+)$/.exec(c)).find(Boolean);
-    const minimo = expandir ? ANCHO_EXPANDIR[expandir[1]] : 0;
-    // Por debajo del punto de quiebre, Bootstrap ya usa el menú hamburguesa.
-    if (!expandir || window.innerWidth < minimo) {
-      nav.classList.remove('nav-compacta');
-      return;
-    }
-    // Se mide en modo expandido y se decide sin pintar entre medio.
-    nav.classList.add('nav-midiendo');
-    nav.classList.remove('nav-compacta');
-    const cabe = navbarCabe(nav);
-    nav.classList.toggle('nav-compacta', !cabe);
-    nav.classList.remove('nav-midiendo');
-  }
-
-  let ajustePendiente = false;
-  function ajustarNavbars() {
-    if (ajustePendiente) return;
-    ajustePendiente = true;
-    requestAnimationFrame(() => {
-      ajustePendiente = false;
-      document.querySelectorAll('nav.navbar').forEach(ajustarNavbar);
-    });
-  }
-
-  function iniciarNavbarsAdaptables() {
-    ajustarNavbars();
-    const observador = new MutationObserver(ajustarNavbars);
-    document.querySelectorAll('nav.navbar').forEach(nav =>
-      observador.observe(nav, { childList: true, subtree: true, characterData: true }));
-    window.addEventListener('resize', ajustarNavbars);
-    window.addEventListener('load', ajustarNavbars);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajustarNavbars);
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciarNavbarsAdaptables);
-  else iniciarNavbarsAdaptables();
-  window.ajustarNavbars = ajustarNavbars;
-
-  // 6) Respaldo para cupones si la página no define aplicarCupon()
+  // 5) Respaldo para cupones si la página no define aplicarCupon()
   if (typeof window.aplicarCupon !== 'function') {
     window.aplicarCupon = function () {
       const codigo = (document.getElementById('cuponDescuento') || {}).value;
