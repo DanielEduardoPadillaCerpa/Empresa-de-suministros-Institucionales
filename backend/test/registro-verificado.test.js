@@ -163,6 +163,7 @@ test('captcha: un solo intento, respuesta correcta y vencimiento', () => {
   const reto = crearReto();
   assert.match(reto.svg, /^<svg/);
   assert.ok(!reto.svg.includes(`>${reto.respuesta}<`), 'el SVG no debe contener el resultado');
+  assert.ok(!/<text/i.test(reto.svg), 'las cifras van como trazos, no como texto legible por un bot');
   assert.equal(verificarCaptcha(reto.id, reto.respuesta), true);
   assert.equal(verificarCaptcha(reto.id, reto.respuesta), false, 'no se puede reutilizar');
   const otro = crearReto();
@@ -197,6 +198,24 @@ test('n8n: solo viaja {evento, solicitud_id, resultado} con firma verificable', 
 
   global.fetch = async () => { throw new Error('n8n caído'); };
   assert.equal(await enviarAviso('registro.recibido', 42, 'coincide'), false, 'un fallo de n8n no lanza');
+});
+
+test('n8n W12: el nodo Code acepta la firma del backend y rechaza alteraciones', () => {
+  const { codigoVerificar } = require(path.join('..', '..', 'n8n', 'generar-w12.js'));
+  const secreto = 'secreto-de-prueba-con-mas-de-32-caracteres';
+  const ejecutar = (headers, body) => new Function('require', '$input', '$env', codigoVerificar)(
+    require, { first: () => ({ json: { headers, body } }) }, { N8N_REGISTRO_SECRET: secreto }
+  );
+  const ts = String(Math.floor(Date.now() / 1000));
+  const cuerpo = { evento: 'registro.aprobado', solicitud_id: 7, resultado: 'aprobada' };
+  const headers = { 'x-timestamp': ts, 'x-signature': firmar(secreto, ts, cuerpo.evento, cuerpo.solicitud_id) };
+
+  assert.deepEqual(ejecutar(headers, cuerpo)[0].json, cuerpo);
+  assert.throws(() => ejecutar(headers, { ...cuerpo, solicitud_id: 8 }), /Firma inválida/);
+  assert.throws(() => ejecutar({ ...headers, 'x-signature': 'f'.repeat(64) }, cuerpo), /Firma inválida/);
+  assert.throws(() => ejecutar(headers, { ...cuerpo, nit: '999000001' }), /Cuerpo no permitido/);
+  const viejo = String(Number(ts) - 600);
+  assert.throws(() => ejecutar({ 'x-timestamp': viejo, 'x-signature': firmar(secreto, viejo, cuerpo.evento, 7) }, cuerpo), /vencido/);
 });
 
 // ===========================================================================

@@ -21,25 +21,70 @@ function purgar(ahora = Date.now()) {
 
 const azar = (min, max) => crypto.randomInt(min, max + 1);
 
+// Las cifras se dibujan como trazos (no como <text>): un bot no puede leer el
+// resultado del SVG; tendría que reconocer la imagen. Cada trazo se deforma al
+// azar para que dos retos con la misma operación no produzcan el mismo SVG.
+const P = { a: [0, 0], b: [1, 0], c: [1, 0.5], d: [1, 1], e: [0, 1], f: [0, 0.5] };
+const SEG = { t: ['a', 'b'], ur: ['b', 'c'], lr: ['c', 'd'], bo: ['d', 'e'], ll: ['e', 'f'], ul: ['f', 'a'], m: ['f', 'c'] };
+const GLIFOS = {
+  0: ['t', 'ur', 'lr', 'bo', 'll', 'ul'], 1: ['ur', 'lr'], 2: ['t', 'ur', 'm', 'll', 'bo'],
+  3: ['t', 'ur', 'm', 'lr', 'bo'], 4: ['ul', 'm', 'ur', 'lr'], 5: ['t', 'ul', 'm', 'lr', 'bo'],
+  6: ['t', 'ul', 'm', 'lr', 'bo', 'll'], 7: ['t', 'ur', 'lr'], 8: Object.keys(SEG), 9: ['t', 'ul', 'ur', 'm', 'lr', 'bo']
+};
+const SIMBOLOS = {
+  '+': [[[0.5, 0.2], [0.5, 0.8]], [[0.15, 0.5], [0.85, 0.5]]],
+  '=': [[[0.15, 0.35], [0.85, 0.35]], [[0.15, 0.65], [0.85, 0.65]]]
+};
+const ruido = escala => (crypto.randomInt(0, 2001) / 1000 - 1) * escala;
+
+function trazosDe(caracter) {
+  if (SIMBOLOS[caracter]) return SIMBOLOS[caracter];
+  return GLIFOS[caracter].map(s => SEG[s].map(p => P[p]));
+}
+
+function dibujarCaracter(caracter, x0, y0) {
+  const ancho = azar(12, 15);
+  const alto = azar(24, 28);
+  const giro = ruido(0.3);
+  const [cx, cy] = [x0 + ancho / 2, y0 + alto / 2];
+  const transformar = ([u, v]) => {
+    const x = x0 + (u + ruido(0.07)) * ancho - cx;
+    const y = y0 + (v + ruido(0.05)) * alto - cy;
+    return [cx + x * Math.cos(giro) - y * Math.sin(giro), cy + x * Math.sin(giro) + y * Math.cos(giro)];
+  };
+  const color = `hsl(${azar(200, 225)},60%,${azar(18, 30)}%)`;
+  return trazosDe(caracter).map(([p1, p2]) => {
+    const [x1, y1] = transformar(p1);
+    const [x2, y2] = transformar(p2);
+    const [qx, qy] = [(x1 + x2) / 2 + ruido(3), (y1 + y2) / 2 + ruido(3)];
+    return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}Q${qx.toFixed(1)} ${qy.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${color}" stroke-width="3.2" stroke-linecap="round" fill="none"/>`;
+  }).join('');
+}
+
 function dibujar(texto) {
   const ancho = 170;
   const alto = 56;
   const partes = [];
-  for (let i = 0; i < 6; i += 1) {
-    partes.push(`<line x1="${azar(0, ancho)}" y1="${azar(0, alto)}" x2="${azar(0, ancho)}" y2="${azar(0, alto)}" stroke="hsl(${azar(190, 230)},40%,${azar(55, 75)}%)" stroke-width="${azar(1, 2)}"/>`);
+  for (let i = 0; i < 7; i += 1) {
+    partes.push(`<path d="M${azar(0, ancho)} ${azar(0, alto)}Q${azar(0, ancho)} ${azar(0, alto)} ${azar(0, ancho)} ${azar(0, alto)}" stroke="hsl(${azar(190, 230)},35%,${azar(60, 78)}%)" stroke-width="${azar(1, 2)}" fill="none"/>`);
   }
   for (let i = 0; i < 30; i += 1) {
     partes.push(`<circle cx="${azar(0, ancho)}" cy="${azar(0, alto)}" r="1" fill="hsl(${azar(180, 240)},30%,60%)"/>`);
   }
-  let x = 14;
+  // Los trazos se mezclan en orden aleatorio para que el orden del SVG no
+  // revele qué trazos forman cada cifra.
+  const trazos = [];
+  let x = 12;
   for (const caracter of texto) {
-    if (caracter === ' ') { x += 8; continue; }
-    const y = azar(34, 42);
-    const giro = azar(-22, 22);
-    partes.push(`<text x="${x}" y="${y}" transform="rotate(${giro} ${x} ${y})" font-family="Verdana,Arial,sans-serif" font-size="${azar(24, 28)}" font-weight="700" fill="hsl(${azar(200, 225)},60%,${azar(18, 30)}%)">${caracter}</text>`);
-    x += azar(17, 21);
+    if (caracter === ' ') { x += 6; continue; }
+    trazos.push(...dibujarCaracter(caracter, x, azar(12, 18)).split('/>').filter(Boolean).map(t => `${t}/>`));
+    x += azar(20, 24);
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${ancho}" height="${alto}" viewBox="0 0 ${ancho} ${alto}"><rect width="100%" height="100%" fill="#f1f5f9"/>${partes.join('')}</svg>`;
+  for (let i = trazos.length - 1; i > 0; i -= 1) {
+    const j = crypto.randomInt(0, i + 1);
+    [trazos[i], trazos[j]] = [trazos[j], trazos[i]];
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${ancho}" height="${alto}" viewBox="0 0 ${ancho} ${alto}"><rect width="100%" height="100%" fill="#f1f5f9"/>${partes.join('')}${trazos.join('')}</svg>`;
 }
 
 // Uso interno y en pruebas: devuelve también la respuesta. La ruta HTTP solo
