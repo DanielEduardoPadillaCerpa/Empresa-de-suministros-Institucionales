@@ -4,6 +4,7 @@ const { pool } = require('../db');
 const { secretoJwt } = require('../configSegura');
 const { descifrarCampo } = require('../seguridad/cifradoCampos');
 const { verificarEnPadron } = require('../seguridad/padron');
+const { ejecutarLote } = require('../seguridad/registroVerificado');
 const { registrarAuditoria } = require('../auditoria');
 const { enviarCorreoEnSegundoPlano, escaparHtml } = require('../seguridad/correo');
 const { avisarN8n } = require('../seguridad/avisosN8n');
@@ -11,45 +12,76 @@ const { avisarN8n } = require('../seguridad/avisosN8n');
 const router = express.Router();
 const PERMISO = 'clientes.gestionar';
 
-// Autenticación y autorización del panel en UNA consulta: sesión vigente
-// (session_version), cuenta activa, rol admin leído de la base, sesión con MFA
-// y permiso de gestión de clientes (o superadministrador). Así aprobar o
-// rechazar cuesta dos viajes a MySQL: este y el UPDATE.
-async function requiereAdminSolicitudes(req, res, next) {
+// ---------------------------------------------------------------------------
+// Autenticación y autorización del panel
+// ---------------------------------------------------------------------------
+// Requisitos: JWT HS256 con MFA, sesión vigente (session_version), cuenta
+// activa, rol admin LEÍDO DE LA BASE, sin contraseña inicial pendiente y con
+// el permiso clientes.gestionar (o superadministrador).
+//
+// Rendimiento: el contador, aprobar y rechazar hacen UN solo viaje a MySQL.
+// La fila del administrador se lee en el mismo lote que la operación y, en los
+// UPDATE, las mismas condiciones van dentro del WHERE (CONDICION_ADMIN): si el
+// administrador no es válido, el UPDATE no cambia nada.
+
+const SQL_ADMIN = `SELECT a.session_version, a.debe_cambiar_password, a.estado_cuenta, a.rol, a.es_superadmin, a.correo,
+       EXISTS (SELECT 1 FROM staff_permisos p WHERE p.usuario_id = a.id AND p.permiso = ?) AS tiene_permiso
+FROM usuarios a WHERE a.id = ?`;
+
+const CONDICION_ADMIN = `a.session_version = ? AND a.estado_cuenta = 'activa' AND a.rol = 'admin'
+  AND a.debe_cambiar_password = FALSE
+  AND (a.es_superadmin = TRUE OR EXISTS (SELECT 1 FROM staff_permisos p WHERE p.usuario_id = a.id AND p.permiso = ?))`;
+
+function leerSesion(req) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
-  if (!token) return res.status(401).json({ error: 'No autenticado' });
+  if (!token) return { error: [401, { error: 'No autenticado' }] };
   let datos;
   try {
     datos = jwt.verify(token, secretoJwt(), { algorithms: ['HS256'] });
   } catch {
-    return res.status(401).json({ error: 'Sesión inválida o expirada' });
+    return { error: [401, { error: 'Sesión inválida o expirada' }] };
   }
   const uid = Number(datos.uid);
-  if (datos.mfa !== true || !Number.isSafeInteger(uid) || uid < 1) {
-    return res.status(401).json({ error: 'Sesión inválida o expirada' });
+  const sv = Number(datos.sv || 0);
+  if (datos.mfa !== true || !Number.isSafeInteger(uid) || uid < 1 || !Number.isSafeInteger(sv) || sv < 0) {
+    return { error: [401, { error: 'Sesión inválida o expirada' }] };
   }
+  return { uid, sv };
+}
+
+// Misma regla que CONDICION_ADMIN, evaluada en Node para responder el motivo.
+function rechazoAdmin(fila, sv) {
+  if (!fila || Number(fila.session_version || 0) !== sv) {
+    return [401, { error: 'La sesión fue revocada. Inicia sesión nuevamente.' }];
+  }
+  if (fila.estado_cuenta !== 'activa' || fila.rol !== 'admin') {
+    return [403, { error: 'Acceso restringido: solo administradores.' }];
+  }
+  if (fila.debe_cambiar_password) {
+    return [403, { code: 'PASSWORD_CHANGE_REQUIRED', error: 'Debes cambiar tu contraseña inicial antes de continuar.' }];
+  }
+  if (!fila.es_superadmin && !Number(fila.tiene_permiso)) {
+    return [403, { error: 'Tu rol administrativo no tiene permiso para esta acción.', permisoRequerido: PERMISO }];
+  }
+  return null;
+}
+
+// Solo valida el JWT (sin base): las rutas de un viaje autorizan en su lote.
+function requiereSesion(req, res, next) {
+  const sesion = leerSesion(req);
+  if (sesion.error) return res.status(sesion.error[0]).json(sesion.error[1]);
+  req.sesion = sesion;
+  return next();
+}
+
+// Para lista y detalle: una consulta de autorización antes de leer datos.
+async function requiereAdmin(req, res, next) {
   try {
-    const [filas] = await pool.query(
-      `SELECT u.session_version, u.debe_cambiar_password, u.estado_cuenta, u.rol, u.es_superadmin, u.correo,
-              EXISTS (SELECT 1 FROM staff_permisos p WHERE p.usuario_id = u.id AND p.permiso = ?) AS tiene_permiso
-       FROM usuarios u WHERE u.id = ?`,
-      [PERMISO, uid]
-    );
-    const fila = filas[0];
-    if (!fila || Number(fila.session_version || 0) !== Number(datos.sv || 0)) {
-      return res.status(401).json({ error: 'La sesión fue revocada. Inicia sesión nuevamente.' });
-    }
-    if (fila.estado_cuenta !== 'activa' || fila.rol !== 'admin') {
-      return res.status(403).json({ error: 'Acceso restringido: solo administradores.' });
-    }
-    if (fila.debe_cambiar_password) {
-      return res.status(403).json({ code: 'PASSWORD_CHANGE_REQUIRED', error: 'Debes cambiar tu contraseña inicial antes de continuar.' });
-    }
-    if (!fila.es_superadmin && !Number(fila.tiene_permiso)) {
-      return res.status(403).json({ error: 'Tu rol administrativo no tiene permiso para esta acción.', permisoRequerido: PERMISO });
-    }
-    req.usuario = { uid, correo: fila.correo, rol: 'admin' };
+    const [filas] = await pool.query(SQL_ADMIN, [PERMISO, req.sesion.uid]);
+    const rechazo = rechazoAdmin(filas[0], req.sesion.sv);
+    if (rechazo) return res.status(rechazo[0]).json(rechazo[1]);
+    req.usuario = { uid: req.sesion.uid, correo: filas[0].correo, rol: 'admin' };
     return next();
   } catch (err) {
     console.error('[solicitudes] No se pudo validar la sesión:', err.code || 'SESSION_CHECK_FAILED');
@@ -57,18 +89,24 @@ async function requiereAdminSolicitudes(req, res, next) {
   }
 }
 
-router.use(requiereAdminSolicitudes);
+router.use(requiereSesion);
 
 const ESTADOS = new Set(['pendiente', 'aprobada', 'rechazada']);
 const idValido = valor => /^\d{1,15}$/.test(String(valor));
 
 // GET /api/admin/solicitudes/contador -> { pendientes }. COUNT sobre el índice
-// (estado, creado_en, id); el panel lo consulta cada pocos segundos.
+// (estado, creado_en, id), en el mismo viaje que la autorización.
 router.get('/contador', async (req, res) => {
   try {
-    const [[fila]] = await pool.query("SELECT COUNT(*) AS pendientes FROM solicitudes_registro WHERE estado = 'pendiente'");
+    const [filasAdmin, [conteo]] = await ejecutarLote(
+      `${SQL_ADMIN};
+       SELECT COUNT(*) AS pendientes FROM solicitudes_registro WHERE estado = 'pendiente'`,
+      [PERMISO, req.sesion.uid]
+    );
+    const rechazo = rechazoAdmin(filasAdmin[0], req.sesion.sv);
+    if (rechazo) return res.status(rechazo[0]).json(rechazo[1]);
     res.set('Cache-Control', 'no-store');
-    res.json({ pendientes: Number(fila.pendientes) });
+    res.json({ pendientes: Number(conteo.pendientes) });
   } catch (err) {
     console.error('[solicitudes] Error contando:', err.code || 'COUNT_FAILED');
     res.status(503).json({ error: 'No disponible temporalmente.' });
@@ -77,7 +115,7 @@ router.get('/contador', async (req, res) => {
 
 // GET /api/admin/solicitudes?estado=pendiente -> lista SIN NIT ni nombre:
 // correo, institución, estado, bandera de verificación y fecha. No descifra nada.
-router.get('/', async (req, res) => {
+router.get('/', requiereAdmin, async (req, res) => {
   const estado = ESTADOS.has(req.query.estado) ? req.query.estado : 'pendiente';
   const limite = Math.min(Math.max(Number(req.query.limite) || 100, 1), 200);
   try {
@@ -110,7 +148,7 @@ router.get('/', async (req, res) => {
 
 // GET /api/admin/solicitudes/:id -> detalle descifrado en el servidor, con el
 // nombre del padrón al lado y la verificación repetida en este momento.
-router.get('/:id', async (req, res) => {
+router.get('/:id', requiereAdmin, async (req, res) => {
   if (!idValido(req.params.id)) return res.status(400).json({ error: 'Solicitud inválida.' });
   try {
     const [filas] = await pool.query(
@@ -149,28 +187,21 @@ router.get('/:id', async (req, res) => {
 });
 
 // Correo del solicitante para avisarle la decisión (fuera de la respuesta).
-async function avisarSolicitante(id, aprobada, motivo) {
-  try {
-    const [filas] = await pool.query(
-      'SELECT u.correo FROM solicitudes_registro s JOIN usuarios u ON u.id = s.usuario_id WHERE s.id = ?',
-      [id]
-    );
-    if (!filas[0]) return;
-    enviarCorreoEnSegundoPlano(aprobada
-      ? {
-        to: filas[0].correo,
-        subject: 'Tu cuenta fue aprobada',
-        text: 'Tu solicitud de cuenta fue aprobada. Ya puedes iniciar sesión; te enviaremos un código de seguridad a este correo.'
-      }
-      : {
-        to: filas[0].correo,
-        subject: 'Tu solicitud de cuenta no fue aprobada',
-        text: `Tu solicitud de cuenta no fue aprobada.\n\nMotivo: ${motivo}\n\nPuedes registrarte de nuevo con los datos correctos.`,
-        html: `<p>Tu solicitud de cuenta no fue aprobada.</p><p><strong>Motivo:</strong> ${escaparHtml(motivo)}</p><p>Puedes registrarte de nuevo con los datos correctos.</p>`
-      });
-  } catch (err) {
-    console.error('[solicitudes] No se pudo preparar el aviso:', err.code || 'NOTICE_FAILED');
-  }
+// Aviso al solicitante por correo, fuera de la respuesta.
+function avisarSolicitante(correo, aprobada, motivo) {
+  if (!correo) return;
+  enviarCorreoEnSegundoPlano(aprobada
+    ? {
+      to: correo,
+      subject: 'Tu cuenta fue aprobada',
+      text: 'Tu solicitud de cuenta fue aprobada. Ya puedes iniciar sesión; te enviaremos un código de seguridad a este correo.'
+    }
+    : {
+      to: correo,
+      subject: 'Tu solicitud de cuenta no fue aprobada',
+      text: `Tu solicitud de cuenta no fue aprobada.\n\nMotivo: ${motivo}\n\nPuedes registrarte de nuevo con los datos correctos.`,
+      html: `<p>Tu solicitud de cuenta no fue aprobada.</p><p><strong>Motivo:</strong> ${escaparHtml(motivo)}</p><p>Puedes registrarte de nuevo con los datos correctos.</p>`
+    });
 }
 
 // Diagnóstico solo cuando la decisión no se aplicó (camino poco frecuente).
@@ -188,33 +219,58 @@ async function motivoNoAplicada(id) {
   };
 }
 
+// Aprobar y rechazar: UN solo viaje a MySQL con tres sentencias:
+//   1. la fila del administrador (para responder 401/403 con el motivo),
+//   2. el UPDATE atómico sobre la solicitud y la cuenta, condicionado a que la
+//      solicitud siga pendiente Y a que el administrador sea válido,
+//   3. el correo del solicitante, para avisarle sin otra consulta.
+// affectedRows = 2 (solicitud + cuenta) indica que la decisión se aplicó.
+async function decidir(req, { sqlSet, condicionExtra = '', valoresSet, valoresExtra = [] }) {
+  const { uid, sv } = req.sesion;
+  const [filasAdmin, actualizacion, filasCorreo] = await ejecutarLote(
+    `${SQL_ADMIN};
+     UPDATE solicitudes_registro s
+     JOIN usuarios u ON u.id = s.usuario_id
+     JOIN usuarios a ON a.id = ?
+     SET ${sqlSet}, s.decidida_por = a.id, s.decidida_en = NOW()
+     WHERE s.id = ? AND s.estado = 'pendiente' AND u.estado_cuenta = 'pendiente'
+       ${condicionExtra}
+       AND ${CONDICION_ADMIN};
+     SELECT u.correo FROM solicitudes_registro s JOIN usuarios u ON u.id = s.usuario_id WHERE s.id = ?`,
+    [PERMISO, uid, uid, ...valoresSet, req.params.id, ...valoresExtra, sv, PERMISO, req.params.id]
+  );
+  return {
+    rechazo: rechazoAdmin(filasAdmin[0], sv),
+    aplicada: actualizacion.affectedRows === 2,
+    admin: filasAdmin[0] ? { uid, correo: filasAdmin[0].correo, rol: 'admin' } : null,
+    correoSolicitante: filasCorreo[0]?.correo || null
+  };
+}
+
 // POST /api/admin/solicitudes/:id/aprobar  { confirmar?: true }
-// Atómico: un solo UPDATE sobre la solicitud y la cuenta, condicionado a que
-// siga pendiente y, si la verificación no coincide, a la confirmación explícita.
+// Si la verificación no dio "coincide", aprobar exige confirmar: true.
 router.post('/:id/aprobar', async (req, res) => {
   if (!idValido(req.params.id)) return res.status(400).json({ error: 'Solicitud inválida.' });
   const confirmar = req.body?.confirmar === true;
   try {
-    const [r] = await pool.query(
-      `UPDATE solicitudes_registro s
-       JOIN usuarios u ON u.id = s.usuario_id
-       SET s.estado = 'aprobada', s.decidida_por = ?, s.decidida_en = NOW(),
-           u.estado_cuenta = 'activa'
-       WHERE s.id = ? AND s.estado = 'pendiente' AND u.estado_cuenta = 'pendiente'
-         AND (s.resultado_verificacion = 'coincide' OR ? = 1)`,
-      [req.usuario.uid, req.params.id, confirmar ? 1 : 0]
-    );
-    if (r.affectedRows !== 2) {
+    const r = await decidir(req, {
+      sqlSet: "s.estado = 'aprobada', u.estado_cuenta = 'activa'",
+      valoresSet: [],
+      condicionExtra: "AND (s.resultado_verificacion = 'coincide' OR ? = 1)",
+      valoresExtra: [confirmar ? 1 : 0]
+    });
+    if (r.rechazo) return res.status(r.rechazo[0]).json(r.rechazo[1]);
+    if (!r.aplicada) {
       const motivo = await motivoNoAplicada(req.params.id);
       return res.status(motivo.status).json(motivo);
     }
     res.json({ ok: true, id: Number(req.params.id), estado: 'aprobada' });
     registrarAuditoria({
-      usuario: req.usuario, accion: 'aprobar_registro', entidad: 'solicitud_registro', entidadId: req.params.id,
+      usuario: r.admin, accion: 'aprobar_registro', entidad: 'solicitud_registro', entidadId: req.params.id,
       detalle: { confirmacionExplicita: confirmar }
     });
     avisarN8n('registro.aprobado', req.params.id, 'aprobada');
-    avisarSolicitante(req.params.id, true);
+    avisarSolicitante(r.correoSolicitante, true);
   } catch (err) {
     console.error('[solicitudes] Error aprobando:', err.code || 'APPROVE_FAILED');
     if (!res.headersSent) res.status(503).json({ error: 'No fue posible aprobar temporalmente.' });
@@ -229,25 +285,22 @@ router.post('/:id/rechazar', async (req, res) => {
     return res.status(400).json({ error: 'Escribe el motivo del rechazo (entre 5 y 500 caracteres).' });
   }
   try {
-    const [r] = await pool.query(
-      `UPDATE solicitudes_registro s
-       JOIN usuarios u ON u.id = s.usuario_id
-       SET s.estado = 'rechazada', s.motivo_rechazo = ?, s.decidida_por = ?, s.decidida_en = NOW(),
-           u.estado_cuenta = 'rechazada'
-       WHERE s.id = ? AND s.estado = 'pendiente' AND u.estado_cuenta = 'pendiente'`,
-      [motivo, req.usuario.uid, req.params.id]
-    );
-    if (r.affectedRows !== 2) {
+    const r = await decidir(req, {
+      sqlSet: "s.estado = 'rechazada', s.motivo_rechazo = ?, u.estado_cuenta = 'rechazada'",
+      valoresSet: [motivo]
+    });
+    if (r.rechazo) return res.status(r.rechazo[0]).json(r.rechazo[1]);
+    if (!r.aplicada) {
       const diagnostico = await motivoNoAplicada(req.params.id);
       return res.status(diagnostico.status).json(diagnostico.code === 'CONFIRMACION_REQUERIDA'
-        ? { status: 409, error: 'No se pudo rechazar: la cuenta asociada no está pendiente.' }
+        ? { error: 'No se pudo rechazar: la cuenta asociada no está pendiente.' }
         : diagnostico);
     }
     res.json({ ok: true, id: Number(req.params.id), estado: 'rechazada' });
     // El motivo no va a la auditoría: puede contener datos personales.
-    registrarAuditoria({ usuario: req.usuario, accion: 'rechazar_registro', entidad: 'solicitud_registro', entidadId: req.params.id });
+    registrarAuditoria({ usuario: r.admin, accion: 'rechazar_registro', entidad: 'solicitud_registro', entidadId: req.params.id });
     avisarN8n('registro.rechazado', req.params.id, 'rechazada');
-    avisarSolicitante(req.params.id, false, motivo);
+    avisarSolicitante(r.correoSolicitante, false, motivo);
   } catch (err) {
     console.error('[solicitudes] Error rechazando:', err.code || 'REJECT_FAILED');
     if (!res.headersSent) res.status(503).json({ error: 'No fue posible rechazar temporalmente.' });

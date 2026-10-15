@@ -22,6 +22,18 @@ async function loteTransaccional(sql, valores) {
   }
 }
 
+// Varias sentencias independientes en un solo viaje (sin transacción).
+// Devuelve el resultado de cada sentencia, en orden.
+async function ejecutarLote(sql, valores) {
+  const conexion = await poolTransacciones.getConnection();
+  try {
+    const [resultados] = await conexion.query(sql, valores);
+    return resultados;
+  } finally {
+    conexion.release();
+  }
+}
+
 const SQL_CUENTA_NUEVA = `
 START TRANSACTION;
 INSERT INTO clientes
@@ -130,4 +142,4 @@ async function insertarRetoMfa({ usuarioId, retoId, codigoHash, vigenciaMinutos,
   return Number(fila.creado) === 1;
 }
 
-module.exports = { procesarRegistro, insertarRetoMfa, loteTransaccional };
+module.exports = { procesarRegistro, insertarRetoMfa, loteTransaccional, ejecutarLote };

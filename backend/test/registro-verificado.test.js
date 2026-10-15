@@ -386,6 +386,16 @@ test('flujo: captcha, validación y acceso al panel', async () => {
   assert.equal((await request(app).get('/api/admin/solicitudes').set('Authorization', `Bearer ${tokenSinPermiso}`)).status, 403);
   const tokenSinMfa = jwt.sign({ uid: bd.adminId, rol: 'admin', sv: 0 }, process.env.JWT_SECRET);
   assert.equal((await request(app).get('/api/admin/solicitudes').set('Authorization', `Bearer ${tokenSinMfa}`)).status, 401);
+
+  // Aprobar en un solo viaje: la autorización va dentro del UPDATE.
+  await request(app).post('/api/auth/registro').send(registro({ correo: 'maria@prueba.test', nombreCompleto: 'María Fernanda López' }));
+  const maria = bd.solicitudDe(bd.usuarioPorCorreo('maria@prueba.test').id);
+  const sinPermiso = await request(app).post(`/api/admin/solicitudes/${maria.id}/aprobar`).set('Authorization', `Bearer ${tokenSinPermiso}`).send({});
+  assert.equal(sinPermiso.status, 403);
+  const tokenRevocado = jwt.sign({ uid: bd.adminId, rol: 'admin', mfa: true, sv: 7 }, process.env.JWT_SECRET);
+  const revocado = await request(app).post(`/api/admin/solicitudes/${maria.id}/aprobar`).set('Authorization', `Bearer ${tokenRevocado}`).send({});
+  assert.equal(revocado.status, 401);
+  assert.equal(bd.usuarioPorCorreo('maria@prueba.test').estado_cuenta, 'pendiente', 'ningún intento no autorizado cambia la cuenta');
 });
 
 // ===========================================================================
@@ -503,9 +513,37 @@ function crearBaseSimulada() {
     throw new Error(`Consulta no simulada: ${s.slice(0, 120)}`);
   }
 
-  // Lotes transaccionales (poolTransacciones)
+  function filaAdmin(permiso, uid) {
+    const u = usuarios.get(Number(uid));
+    return u ? [{ ...u, tiene_permiso: permisos.has(`${u.id}:${permiso}`) ? 1 : 0 }] : [];
+  }
+  function adminValido(uid, sv, permiso) {
+    const u = usuarios.get(Number(uid));
+    return Boolean(u && u.session_version === sv && u.estado_cuenta === 'activa' && u.rol === 'admin' &&
+      !u.debe_cambiar_password && (u.es_superadmin || permisos.has(`${u.id}:${permiso}`)));
+  }
+
+  // Lotes (poolTransacciones)
   async function lote(sql, p) {
     const s = String(sql).replace(/\s+/g, ' ');
+    if (/COUNT\(\*\) AS pendientes/.test(s)) {
+      return [[filaAdmin(p[0], p[1]), [{ pendientes: [...solicitudes.values()].filter(x => x.estado === 'pendiente').length }]]];
+    }
+    if (/UPDATE solicitudes_registro s/.test(s)) {
+      const aprobar = /SET s.estado = 'aprobada'/.test(s);
+      const [permiso, uid, , ...resto] = p;
+      const [motivo, id, confirmar, sv] = aprobar ? [null, resto[0], resto[1], resto[2]] : [resto[0], resto[1], null, resto[2]];
+      const x = solicitudes.get(Number(id));
+      const u = x && usuarios.get(x.usuario_id);
+      let cambiadas = 0;
+      if (x && x.estado === 'pendiente' && u.estado_cuenta === 'pendiente' && adminValido(uid, sv, permiso) &&
+          (!aprobar || x.resultado_verificacion === 'coincide' || confirmar === 1)) {
+        Object.assign(x, aprobar ? { estado: 'aprobada', decidida_por: uid } : { estado: 'rechazada', motivo_rechazo: motivo, decidida_por: uid });
+        u.estado_cuenta = aprobar ? 'activa' : 'rechazada';
+        cambiadas = 2;
+      }
+      return [[filaAdmin(permiso, uid), { affectedRows: cambiadas }, x ? [{ correo: u.correo }] : []]];
+    }
     if (/INSERT INTO clientes/.test(s)) {
       const [, , tipo, , correo, hash, nitHash, nitCif, nombreCif, tipoSol, resultado] = p;
       if ([...usuarios.values()].some(u => u.correo === correo)) throw Object.assign(new Error('dup'), { code: 'ER_DUP_ENTRY' });
