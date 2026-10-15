@@ -376,3 +376,37 @@ body.gl-cart-open #chatbot-panel { display: none !important; }
   #chatbot-panel { right: 12px; left: 12px; width: auto; max-width: none; bottom: 92px; }
   #chatbot-toggle { right: 16px; bottom: 16px; }
 }
+
+/* ---------- RESPONSIVE GLOBAL: SIN BARRA HORIZONTAL ----------
+   1. Ninguna página se desplaza en el eje X. "clip" (a diferencia de
+      "hidden") no rompe los elementos sticky.
+   2. Menú adaptable: js/global-layout.js mide si los enlaces caben en una
+      fila; si no caben (sin importar el ancho de la pantalla ni cuántos
+      enlaces agregue la sesión), la barra pasa a menú hamburguesa
+      (.nav-compacta) en lugar de salirse por la derecha. */
+html, body { max-width: 100%; overflow-x: hidden; overflow-x: clip; }
+img, video, canvas, svg, iframe { max-width: 100%; }
+img, video { height: auto; }
+.table-responsive, .vf-tabla-wrap { max-width: 100%; }
+pre, code { overflow-wrap: anywhere; }
+
+nav.navbar.nav-compacta,
+nav.navbar.nav-compacta > .container,
+nav.navbar.nav-compacta > .container-fluid { flex-wrap: wrap !important; }
+nav.navbar.nav-compacta .navbar-toggler { display: inline-block !important; margin-left: auto; }
+nav.navbar.nav-compacta .navbar-collapse { flex-basis: 100% !important; flex-grow: 1 !important; padding-top: 1rem; }
+nav.navbar.nav-compacta .navbar-collapse:not(.show):not(.collapsing) { display: none !important; }
+nav.navbar.nav-compacta .navbar-collapse.show { display: block !important; }
+nav.navbar.nav-compacta .navbar-nav {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: .25rem !important;
+  max-height: calc(100vh - 90px);
+  overflow-y: auto;
+}
+nav.navbar.nav-compacta .navbar-nav .dropdown-menu { position: static !important; }
+nav.navbar.nav-compacta .nav-tools-start { margin-left: 0 !important; }
+nav.navbar.nav-compacta .nav-search { width: 100% !important; margin: .5rem 0; }
+nav.navbar.nav-compacta #nav-regresar-admin { order: 3; margin: .5rem 0 0 !important; }
+/* Mientras se mide, sin animaciones. */
+nav.navbar.nav-midiendo .navbar-collapse { transition: none !important; }
