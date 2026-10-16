@@ -66,6 +66,7 @@ function crearApp() {
   app.use('/api/reportes', require('./routes/reportes'));
   app.use('/api/auth', require('./routes/auth').router);
   app.use('/api/admin/solicitudes', require('./routes/solicitudesRegistro'));
+  app.use('/api/admin/contacto', require('./routes/adminContacto'));
   app.use('/api/verificacion', require('./routes/verificacion'));
   app.use('/api/pedidos', require('./routes/pedidos'));
   app.use('/api/productos', require('./routes/productos'));

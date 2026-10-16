@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-10-16: reportes de clientes para el administrador, contacto, auditoría y Mi cuenta
+
+### Agregado
+- Bandeja **Reportes de clientes** (`admin-reportes-clientes.html`): el administrador ve los reportes que envía cada cliente con su entidad, persona y correo, los marca en revisión o atendidos y responde; el cliente ve el estado y la respuesta en "Mis reportes". Botón "Reportes" por cliente en `admin-clientes.html`.
+- Panel **Solicitudes de contacto** (`admin-contacto.html`): PQRS, soporte y cotizaciones con NIT y correo descifrados, estado, respuesta y envío opcional al remitente; pestaña **Datos de cuenta** para resolver las solicitudes de corrección o eliminación.
+- Panel **Auditoría** (`admin-auditoria.html`) con filtros por entidad, acción, correo y fechas, y paginación.
+- Página **Mi cuenta** (`mi-cuenta.html`): datos de contacto, cambio de correo con código, enlace al cambio de contraseña, cerrar todas las sesiones y solicitudes sobre los datos.
+- Avisos al buzón `ADMIN_NOTIFICATION_EMAIL` (correo directo, sin el contenido) cuando llega un reporte o una solicitud de contacto; aviso al cliente cuando le responden.
+- Migración `004_seguimiento_reportes_contacto` y SQL equivalente en `backend/sql/`.
+- Pruebas `test/reportes-contacto-auditoria.spec.js` (23).
+
+### Cambiado
+- `GET /api/reportes/mensual` exige sesión de administrador con `clientes.gestionar` (antes era público).
+- `POST /api/atencion/calificacion` limitado a 20 por IP cada 15 minutos.
+- Un reporte que el equipo ya tomó no se puede editar ni borrar (409).
+- El menú de la cuenta muestra Mi cuenta a todos y, al administrador, los paneles de atención con contadores.
+
+### Decisión
+- n8n no transporta reportes ni solicitudes: contienen texto libre y datos personales, y las decisiones viven en el backend. Los avisos van por correo directo y sin contenido.
+
 ## 2026-10-15: registro verificado, aprobación del administrador y MFA sin n8n
 
 ### Agregado

@@ -45,6 +45,19 @@ Detalle textual: [13_EVIDENCIAS/2026-10-16_resumen_npm_test.md](13_EVIDENCIAS/20
 | `npm ls --depth=0` | Versiones listadas en [`../04_DESARROLLO/07_DEPENDENCIAS_Y_VERSIONES.md`](../04_DESARROLLO/07_DEPENDENCIAS_Y_VERSIONES.md) |
 | Revisión de los 12 JSON de n8n | Todos `active: false` |
 
+## 1b. Corrida EJ-2026-10-16-02 (reportes, contacto, auditoría y Mi cuenta)
+
+Ejecutada tras corregir BUG-001, BUG-002, BUG-004, BUG-005 y BUG-028. **[OBS]**
+
+| Suite | Entorno | Resultado |
+|---|---|---|
+| `npm test`: Jest (incluye la nueva `test/reportes-contacto-auditoria.spec.js`, 23 casos) | Node 24.19.0, base simulada | **130/130** aprobadas |
+| `npm test`: node:test | Igual | **51/51** aprobadas |
+| E2E de API (script temporal de la sesión) | Backend real contra MySQL 8 local en Docker (`suministros_ui_test`, puerto 3307) y Mailpit (SMTP 1025); **sin conexión a Clever Cloud**; migración 004 aplicada sobre MySQL real | **37/37**: reporte mensual 401/403/200, reporte del cliente → aviso al buzón admin sin el texto, bandeja del admin con entidad y correo, bloqueo de edición en gestión (409), respuesta visible al cliente y aviso por correo, PQRS con NIT y correo descifrados y respuesta enviada al remitente, Mi cuenta (perfil, solicitudes, resolución y aviso), auditoría con filtros |
+| E2E de interfaz en jsdom (script temporal de la sesión) | Mismas páginas servidas por el backend de prueba | **38/38**: menú de la cuenta y avisos, Mis reportes, Reportes de clientes, Solicitudes de contacto (dos pestañas), Auditoría, Indicadores, Mi cuenta (cliente y administrador) |
+
+Notas: jsdom no implementa `<canvas>`, así que los gráficos de Chart.js no se dibujan en esta prueba; ese mensaje se excluyó. En la primera corrida hubo falsos negativos por la espera de Mailpit (los correos llegaron) y por los limitadores en memoria acumulados entre corridas; la corrida final se hizo con el servidor reiniciado y los datos limpios.
+
 ## 2. No ejecutado en esta auditoría
 
 `npm run test:integration` (sin MySQL de pruebas), interfaz jsdom, `npm run medir` (usa base real), pruebas manuales en navegador, SMTP real, importación de workflows n8n, pruebas de seguridad activas.

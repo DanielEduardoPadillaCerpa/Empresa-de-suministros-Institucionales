@@ -21,11 +21,11 @@ Ningún defecto proviene de una prueba fallida: la corrida automatizada del 2026
 
 | ID | Título | Severidad | Módulo | REQ afectado | Estado |
 |---|---|---|---|---|---|
-| BUG-001 | Reporte mensual accesible sin autenticación | Alta | MOD-12 | REQ-F-033, REQ-NF-017 | Abierto |
-| BUG-002 | Calificaciones sin autenticación ni límite de tasa | Baja | MOD-11 | REQ-F-032, REQ-NF-004 | Abierto |
+| BUG-001 | Reporte mensual accesible sin autenticación | Alta | MOD-12 | REQ-F-033, REQ-NF-017 | Corregido (2026-10-16) |
+| BUG-002 | Calificaciones sin autenticación ni límite de tasa | Baja | MOD-11 | REQ-F-032, REQ-NF-004 | Corregido (2026-10-16) |
 | BUG-003 | `API_BASE` fijo en `http://localhost:8081` | Media | MOD-17 | REQ-F-039 (despliegue) | Abierto |
-| BUG-004 | Mi cuenta sin pantalla | Media | MOD-03 | REQ-F-010…REQ-F-013 | Abierto |
-| BUG-005 | Resolución de solicitudes de cuenta sin pantalla | Baja | MOD-03 | REQ-F-013 | Abierto |
+| BUG-004 | Mi cuenta sin pantalla | Media | MOD-03 | REQ-F-010…REQ-F-013 | Corregido (2026-10-16) |
+| BUG-005 | Resolución de solicitudes de cuenta sin pantalla | Baja | MOD-03 | REQ-F-013 | Corregido (2026-10-16) |
 | BUG-006 | `nodemailer` 6.10.1 con vulnerabilidades altas | Alta | MOD-09 | REQ-F-025, REQ-F-006 | Abierto (conocido desde 2026-10-13) |
 | BUG-007 | Constante sin uso con hash bcrypt embebido | Baja | MOD-15 | REQ-NF-009 | Abierto |
 | BUG-008 | Documentación previa inconsistente | Baja | Transversal | — | Abierto |
@@ -48,7 +48,7 @@ Ningún defecto proviene de una prueba fallida: la corrida automatizada del 2026
 | BUG-025 | El estado `usuarios.estado_cuenta = suspendida` nunca se asigna | Baja | MOD-01/04 | REQ-F-028 | Abierto |
 | BUG-026 | Librerías de CDN sin integridad (SRI) | Baja | MOD-17 | REQ-NF-005 | Abierto |
 | BUG-027 | `.env.example` desalineado con el código | Baja | MOD-16 | — | Abierto |
-| BUG-028 | Funciones sin pantalla: auditoría, solicitudes de contacto (PQRS) e inventario bajo | Baja | MOD-11/12/13 | REQ-F-016, REQ-F-032, REQ-F-034 | Abierto |
+| BUG-028 | Funciones sin pantalla: auditoría, solicitudes de contacto (PQRS) e inventario bajo | Baja | MOD-11/12/13 | REQ-F-016, REQ-F-032, REQ-F-034 | Parcialmente corregido (2026-10-16): auditoría y PQRS con pantalla; inventario bajo sigue sin pantalla |
 | BUG-029 | `clientes.nit`, `nombre_unidad` y `direccion_instalacion` se guardan en claro; la documentación previa afirma que las direcciones se cifran | Baja | MOD-10 | REQ-NF-001, REQ-NF-017 | Abierto |
 | BUG-030 | W6 no desactiva el guardado de ejecuciones en n8n | Baja | MOD-14 | REQ-NF-008 | Abierto |
 | BUG-031 | Borrar un cliente elimina en cascada pedidos, pagos y comprobantes | Media | MOD-10/15 | REQ-F-026 | Abierto |
@@ -159,6 +159,18 @@ Identificados al consolidar la documentación el 2026-10-16 y **confirmados por 
 
 ### BUG-031 — Borrar un cliente elimina en cascada pedidos, pagos y comprobantes
 - **Evidencia:** Claves foráneas `ON DELETE CASCADE` desde `pedidos`, `pagos`, `comprobantes` (`backend/src/db.js`). **Propuesta [REC]:** Borrado lógico o restricción de borrado.
+
+## 2c. Correcciones del 2026-10-16
+
+| ID | Corrección | Evidencia |
+|---|---|---|
+| BUG-001 | `GET /api/reportes/mensual` exige sesión, rol admin y `clientes.gestionar` | `backend/src/routes/reportes.js`; prueba `reportes-contacto-auditoria.spec.js` ("reporte mensual protegido"); E2E API 37/37 |
+| BUG-002 | Límite de 20 calificaciones cada 15 min por IP | `backend/src/routes/atencion.js`; prueba "las calificaciones tienen límite por conexión" |
+| BUG-004 | Pantalla `frontend/mi-cuenta.html` (perfil, correo, contraseña, sesiones, solicitudes de datos) | E2E de interfaz 38/38 |
+| BUG-005 | Pestaña "Datos de cuenta" en `frontend/admin-contacto.html` | E2E de interfaz |
+| BUG-028 | `frontend/admin-auditoria.html` y `frontend/admin-contacto.html`; queda pendiente la pantalla de inventario bajo | E2E de interfaz |
+
+Causa del reporte "el admin no recibe los reportes": los reportes de "Mis reportes" se guardaban en `reportes_cliente`, pero no existía ningún endpoint ni pantalla de administrador que los leyera (solo su autor podía verlos), y `reportes.html` mostraba otra fuente (calificaciones del chatbot). Se agregó la bandeja `admin-reportes-clientes.html` con estado y respuesta (migración 004).
 
 ## 3. Ciclo de vida de un defecto
 

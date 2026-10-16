@@ -517,13 +517,38 @@ router.post('/solicitud-cambio', limitarSolicitud, async (req, res) => {
   }
 });
 
+// Solicitudes de corrección o eliminación del propio titular, con la respuesta
+// del administrador cuando ya se resolvieron.
+router.get('/mis-solicitudes', limitarLecturaEdicion, async (req, res) => {
+  const clienteId = idClienteAutenticado(req);
+  if (!clienteId) return res.json([]);
+  try {
+    const [filas] = await pool.query(
+      `SELECT id, campo, detalle, estado, respuesta_admin, creado_en, resuelta_en
+       FROM solicitudes_cuenta
+       WHERE usuario_id = ? AND cliente_id = ?
+       ORDER BY creado_en DESC
+       LIMIT 50`,
+      [req.usuario.uid, clienteId]
+    );
+    res.set('Cache-Control', 'no-store');
+    return res.json(filas);
+  } catch (err) {
+    console.error('[mi-cuenta] No se pudieron consultar las solicitudes propias:', err.code || 'OWN_REQUEST_LIST_FAILED');
+    return res.status(500).json({ error: 'No fue posible consultar tus solicitudes.' });
+  }
+});
+
 router.get('/solicitudes', requiereAdmin, requierePermiso('clientes.gestionar'), async (req, res) => {
   try {
     const [filas] = await pool.query(
-      `SELECT id, cliente_id, campo, detalle, estado, respuesta_admin, creado_en,
-              resuelta_en, resuelta_por
-       FROM solicitudes_cuenta
-       ORDER BY (estado = 'pendiente') DESC, creado_en DESC
+      `SELECT s.id, s.cliente_id, s.campo, s.detalle, s.estado, s.respuesta_admin, s.creado_en,
+              s.resuelta_en, s.resuelta_por, u.correo, c.nombre_unidad, r.correo AS resuelta_por_correo
+       FROM solicitudes_cuenta s
+       JOIN usuarios u ON u.id = s.usuario_id
+       LEFT JOIN clientes c ON c.id = s.cliente_id
+       LEFT JOIN usuarios r ON r.id = s.resuelta_por
+       ORDER BY (s.estado = 'pendiente') DESC, s.creado_en DESC
        LIMIT 200`
     );
     res.set('Cache-Control', 'no-store');
@@ -556,6 +581,17 @@ router.patch('/solicitudes/:id', requiereAdmin, requierePermiso('clientes.gestio
       return res.status(404).json({ error: 'La solicitud no existe o ya fue resuelta.' });
     }
     await auditarCuenta(req.usuario, 'editar', ['solicitud_cambio_estado'], solicitudId);
+    const [titular] = await pool.query(
+      'SELECT u.correo FROM solicitudes_cuenta s JOIN usuarios u ON u.id = s.usuario_id WHERE s.id = ?',
+      [solicitudId]
+    );
+    if (titular[0]?.correo) {
+      enviarCorreoEnSegundoPlano({
+        to: titular[0].correo,
+        subject: 'Tu solicitud sobre tus datos fue resuelta',
+        text: `Tu solicitud #${solicitudId} fue ${datos.estado}.\n\nInicia sesión y abre "Mi cuenta" para ver la respuesta del administrador.`
+      });
+    }
     return res.json({ ok: true, estado: datos.estado });
   } catch (err) {
     console.error('[mi-cuenta] No se pudo resolver la solicitud:', err.code || 'ACCOUNT_REQUEST_DECISION_FAILED');

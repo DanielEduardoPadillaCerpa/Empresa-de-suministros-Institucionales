@@ -3,6 +3,7 @@ const { rateLimit } = require('express-rate-limit');
 const { pool } = require('../db');
 const { cifrar } = require('../crypto');
 const { manejarMensaje, limitarMensajes } = require('./asistente');
+const { avisarAdministrador } = require('../avisosAdmin');
 
 const router = express.Router();
 const limitarSolicitudesInstitucionales = rateLimit({
@@ -13,6 +14,17 @@ const limitarSolicitudesInstitucionales = rateLimit({
   handler: (req, res) => res.status(429).json({
     error: 'Se alcanzó el límite temporal de solicitudes. Inténtalo más tarde.'
   })
+});
+
+// Las calificaciones alimentan los indicadores del panel: sin límite, un
+// script podría llenar la tabla y distorsionar el promedio.
+const limitarCalificaciones = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test' && process.env.TEST_RATE_LIMITS !== '1',
+  handler: (req, res) => res.status(429).json({ error: 'Demasiadas calificaciones desde esta conexión. Inténtalo más tarde.' })
 });
 
 router.post('/mensaje', limitarMensajes, (req, res) => manejarMensaje(req, res));
@@ -49,17 +61,20 @@ router.post('/solicitudes', limitarSolicitudesInstitucionales, async (req, res) 
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [tipoSolicitud, tipoEntidad, entidad, cifrar(nit), cifrar(correo), criticidad, mensaje]
     );
-    return res.status(201).json({
-      ok: true,
-      radicado: `SI-${String(resultado.insertId).padStart(8, '0')}`
+    const radicado = `SI-${String(resultado.insertId).padStart(8, '0')}`;
+    res.status(201).json({ ok: true, radicado });
+    avisarAdministrador({
+      asunto: `Nueva solicitud de contacto ${radicado} (${criticidad})`,
+      texto: `Llegó la solicitud ${radicado}: tipo ${tipoSolicitud}, criticidad ${criticidad}.\n\nRevísala en el panel administrativo: Solicitudes de contacto.`
     });
+    return undefined;
   } catch (error) {
     console.error('[atencion] No se pudo registrar la solicitud institucional:', error.code || 'CONTACT_REQUEST_FAILED');
     return res.status(500).json({ error: 'No fue posible registrar la solicitud. Inténtalo de nuevo más tarde.' });
   }
 });
 
-router.post('/calificacion', async (req, res) => {
+router.post('/calificacion', limitarCalificaciones, async (req, res) => {
   try {
     const { conversacionId, calificacion, comentario, escaladoAHumano } = req.body || {};
     if (!Number.isInteger(calificacion) || calificacion < 1 || calificacion > 5) {

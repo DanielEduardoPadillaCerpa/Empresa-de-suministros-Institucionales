@@ -158,11 +158,18 @@ function authRenderNavbar() {
       slot.innerHTML = '<div class="dropdown nav-account">' + boton +
         '<ul class="dropdown-menu dropdown-menu-end">' +
         '<li><h6 class="dropdown-header">' + correoSeguro.innerHTML + '</h6></li>' +
+        '<li><a class="dropdown-item" href="mi-cuenta.html">Mi cuenta</a></li>' +
         (sesion.rol === 'admin'
-          ? '<li><a class="dropdown-item" href="admin-verificaciones.html">Verificaciones</a></li>'
-          : '<li><a class="dropdown-item" href="mi-verificacion.html">Mi verificación</a></li>') +
-        '<li><a class="dropdown-item" href="historial.html">Historial</a></li>' +
-        '<li><a class="dropdown-item" href="mis-reportes.html">Mis reportes</a></li>' +
+          ? '<li><a class="dropdown-item" href="admin-verificaciones.html">Verificaciones</a></li>' +
+            '<li><hr class="dropdown-divider"></li>' +
+            '<li><h6 class="dropdown-header">Atención</h6></li>' +
+            '<li><a class="dropdown-item" href="admin-reportes-clientes.html">Reportes de clientes <span class="badge rounded-pill text-bg-danger badge-reportes-clientes" hidden></span></a></li>' +
+            '<li><a class="dropdown-item" href="admin-contacto.html">Solicitudes de contacto <span class="badge rounded-pill text-bg-danger badge-contacto" hidden></span></a></li>' +
+            '<li><a class="dropdown-item" href="reportes.html">Indicadores</a></li>' +
+            '<li><a class="dropdown-item" href="admin-auditoria.html">Auditoría</a></li>'
+          : '<li><a class="dropdown-item" href="mi-verificacion.html">Mi verificación</a></li>' +
+            '<li><a class="dropdown-item" href="historial.html">Historial</a></li>' +
+            '<li><a class="dropdown-item" href="mis-reportes.html">Mis reportes</a></li>') +
         '<li><hr class="dropdown-divider"></li>' +
         '<li><button type="button" class="dropdown-item" onclick="authCerrarSesion()">Cerrar sesión</button></li>' +
         '</ul></div>';
@@ -240,7 +247,7 @@ function authRenderNavbar() {
     });
     document.querySelectorAll('.navbar a[href="mis-reportes.html"]').forEach(el => {
       el.textContent = 'Reportes de clientes';
-      el.href = 'reportes.html';
+      el.href = 'admin-reportes-clientes.html';
     });
     document.querySelectorAll('.navbar a[href="registro.html"]').forEach(el => {
       el.textContent = 'Nuevo cliente';

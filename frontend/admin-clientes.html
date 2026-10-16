@@ -224,6 +224,7 @@ function renderClienteCard(cliente, b2c) {
     <div class="cliente-meta mt-2">Registrado: ${escapeHtml((cliente.fechaRegistro ?? '').toString().replace('T', ' ').slice(0, 16) || 'Sin fecha')}</div>
     <div class="cliente-actions">
       <button class="btn btn-sm btn-primary" onclick="verCompras(${JSON.stringify(cliente.id)})">Ver compras</button>
+      <a class="btn btn-sm btn-outline-primary" href="admin-reportes-clientes.html?cliente=${encodeURIComponent(cliente.id)}">Reportes</a>
       <button class="btn btn-sm btn-outline-secondary" onclick="abrirModalEditarCliente(${JSON.stringify(cliente.id)})">Editar</button>
       <button class="btn btn-sm btn-outline-danger" onclick="eliminarCliente(${JSON.stringify(cliente.id)})">Eliminar</button>
     </div>

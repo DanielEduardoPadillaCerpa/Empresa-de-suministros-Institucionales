@@ -179,6 +179,10 @@ Los cambios fueron estos:
 | 10 | Revisar y fusionar la rama a `main`, etiquetar versiones y depurar residuos y la documentación previa inconsistente | BUG-008, BUG-009, BUG-018, BUG-023 |
 | 11 | Validación jurídica y asignación formal de responsables; aprobar este conjunto documental | RSK-010, RSK-013 |
 
+## 15. Seguimiento posterior (2026-10-16)
+
+Después de la auditoría se corrigieron BUG-001, BUG-002, BUG-004 y BUG-005, y parcialmente BUG-028 (código, migración 004, pantallas nuevas y pruebas). Las recomendaciones 1 y 9 de la §14 quedan atendidas, salvo la pantalla de inventario bajo. Detalle en [../05_PRUEBAS/09_REGISTRO_DE_DEFECTOS.md](../05_PRUEBAS/09_REGISTRO_DE_DEFECTOS.md) y en [../05_PRUEBAS/10_RESULTADOS_DE_EJECUCION.md](../05_PRUEBAS/10_RESULTADOS_DE_EJECUCION.md).
+
 ## Referencias
 
 - [00_INDICE_DOCUMENTAL.md](00_INDICE_DOCUMENTAL.md)

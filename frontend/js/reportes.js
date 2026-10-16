@@ -34,9 +34,32 @@ async function cargarReporte() {
   const estado = document.getElementById('reportes-estado');
 
   try {
-    const resp = await fetch(base + '/api/reportes/mensual');
+    if (typeof authAsegurarTokenValido === 'function' && !await authAsegurarTokenValido()) {
+      window.location.href = 'login.html?redirect=reportes.html';
+      return;
+    }
+    const resp = await fetch(base + '/api/reportes/mensual', {
+      headers: { Authorization: 'Bearer ' + authLeer().token },
+      cache: 'no-store'
+    });
+    if (resp.status === 401) {
+      window.location.href = 'login.html?redirect=reportes.html';
+      return;
+    }
+    if (resp.status === 403) {
+      if (estado) estado.textContent = 'Tu cuenta administrativa no tiene el permiso "clientes.gestionar" para ver los indicadores.';
+      return;
+    }
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
+
+    // Reportes enviados por los clientes desde "Mis reportes".
+    const rc = data.reportesClientes;
+    if (rc && estado) {
+      estado.innerHTML = `Reportes de clientes: <strong>${escapeHtml(rc.total)}</strong> en total, ` +
+        `<strong>${escapeHtml(rc.nuevos)}</strong> sin revisar · ` +
+        '<a href="admin-reportes-clientes.html">Abrir la bandeja de reportes</a>';
+    }
 
     // --- A) Clientes atendidos ---
     document.getElementById('kpiAtendidos').textContent = data.clientesAtendidos ?? 0;
@@ -113,7 +136,6 @@ async function cargarReporte() {
       }
     }
 
-    if (estado) estado.textContent = '';
   } catch (err) {
     console.error(err);
     if (estado) estado.textContent = '';

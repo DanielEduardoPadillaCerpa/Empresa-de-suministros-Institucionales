@@ -177,19 +177,33 @@ Rutas completas: prefijo `/api/verificacion` (p. ej. `/api/verificacion/admin/di
 | GET | `/api/asistente/sugerencias` | Público | — | 200 `{sugerencias}` | asistente.js:231 | ✔ |
 | GET | `/api/asistente/pendientes/resumen-semanal` | Máquina (`Authorization: Bearer ASSISTANT_WEEKLY_SUMMARY_TOKEN`, ≥32) | — | 200 `{periodo_dias, total, por_dia}`; 401; 503 | asistente.js:248 | ✔ |
 | POST | `/api/atencion/mensaje` | Público (20/min) | Igual que asistente (motor local, sin n8n) | 200 | atencion.js:18 | ✔ |
-| POST | `/api/atencion/solicitudes` | Público (5/15 min), *honeypot* `website` | `{tipoSolicitud, tipoEntidad, entidad, nit 9–10 díg., correo, criticidad, mensaje 20–2000, autorizacionDatos:'true'}` | 201 `{ok, radicado:'SI-00000000'}`; 400 | atencion.js:20 | — |
-| POST | `/api/atencion/calificacion` | **Público sin límite** (BUG-002) | `{conversacionId?, calificacion 1–5, comentario ≤1000, escaladoAHumano}` | 201 `{id}`; 400 | atencion.js:62 | — |
+| POST | `/api/atencion/solicitudes` | Público (5/15 min), *honeypot* `website` | `{tipoSolicitud, tipoEntidad, entidad, nit 9–10 díg., correo, criticidad, mensaje 20–2000, autorizacionDatos:'true'}` | 201 `{ok, radicado:'SI-00000000'}`; 400 | atencion.js:32 | ✔ |
+| POST | `/api/atencion/calificacion` | Público (20/15 min por IP; BUG-002 corregido) | `{conversacionId?, calificacion 1–5, comentario ≤1000, escaladoAHumano}` | 201 `{id}`; 400 | atencion.js:77 | ✔ |
 
-## 13. Reportes y auditoría (MOD-12, MOD-13)
+## 13. Reportes, contacto y auditoría (MOD-11, MOD-12, MOD-13)
+
+Actualizado el 2026-10-16 (corrección de BUG-001, BUG-002, BUG-004, BUG-005 y BUG-028). "Admin" = rol admin leído de la base + permiso indicado (o superadministrador).
 
 | Método | Ruta | Acceso | Entrada | Respuesta | Archivo |
 |---|---|---|---|---|---|
-| GET | `/api/reportes/mensual` | **Público — sin autenticación (BUG-001)** | — | 200 `{clientesAtendidos, escaladosAHumano, calificacionPromedio, sugerencias (20 comentarios ≤3), pedidosPorEstado, productosMasVendidos}` | reportes.js:6 |
-| GET | `/api/mis-reportes` | Usuario | — | 200 reportes propios | misreportes.js:10 |
-| POST | `/api/mis-reportes` | Usuario con cliente | `{comentario, calificacion 1–5}` | 201 `{id}`; 400 | misreportes.js:27 |
-| PUT | `/api/mis-reportes/:id` | Usuario dueño | Igual | 200; 400; 403; 404 | misreportes.js:56 |
-| DELETE | `/api/mis-reportes/:id` | Usuario dueño | — | 200; 403; 404 | misreportes.js:88 |
-| GET | `/api/auditoria` | Staff:`auditoria.ver` | `?limite ≤500`, `?entidad` | 200 registros | auditoria.js:9 |
+| GET | `/api/reportes/mensual` | Admin: `clientes.gestionar` | — | 200 `{clientesAtendidos, escaladosAHumano, calificacionPromedio, sugerencias, pedidosPorEstado, productosMasVendidos, reportesClientes:{total, nuevos, calificacionPromedio}}`; 401; 403 | reportes.js:29 |
+| GET | `/api/reportes/clientes/contador` | Admin: `clientes.gestionar` | — | 200 `{nuevos}` | reportes.js:82 |
+| GET | `/api/reportes/clientes` | Admin: `clientes.gestionar` | `?estado=nuevo|en_revision|atendido|todos`, `?clienteId`, `?limite ≤200`, `?antesDeId` | 200 `{reportes:[{id, clienteId, comentario, calificacion, fecha, estado, respuestaAdmin, atendidoEn, atendidoPor, cliente:{entidad, funcionario, correo, tipoInstitucion}}], hayMas}`; 400 | reportes.js:96 |
+| PATCH | `/api/reportes/clientes/:id` | Admin: `clientes.gestionar` | `{estado, respuesta? ≤1000}` (estricto) | 200; 400; 404. Audita `gestionar_reporte_cliente` sin el texto; con respuesta avisa al cliente por correo sin el texto | reportes.js:168 |
+| GET | `/api/mis-reportes` | Usuario | — | 200 reportes propios con `estado`, `respuesta_admin`, `atendido_en` | misreportes.js:53 |
+| POST | `/api/mis-reportes` | Usuario con cliente (10/h por IP) | `{comentario ≤2000, calificacion 1–5}` | 201 `{id}`; 400; 429. Avisa a `ADMIN_NOTIFICATION_EMAIL` sin el comentario | misreportes.js:72 |
+| PUT | `/api/mis-reportes/:id` | Usuario dueño, reporte `nuevo` | Igual | 200; 400; 403; 404; 409 `REPORTE_EN_GESTION` | misreportes.js:98 |
+| DELETE | `/api/mis-reportes/:id` | Usuario dueño, reporte `nuevo` | — | 200; 403; 404; 409 | misreportes.js:116 |
+| GET | `/api/admin/contacto/contador` | Admin: `clientes.gestionar` | — | 200 `{recibidas}` | adminContacto.js:30 |
+| GET | `/api/admin/contacto` | Admin: `clientes.gestionar` | `?estado=recibida|en_gestion|cerrada|todas`, `?tipo`, `?limite`, `?antesDeId` | 200 `{solicitudes:[{id, radicado, tipoSolicitud, tipoEntidad, entidad, nit, correo, criticidad, mensaje, estado, respuestaAdmin, …}], hayMas}` (NIT y correo descifrados; audita `ver_solicitudes_contacto`) | adminContacto.js:42 |
+| PATCH | `/api/admin/contacto/:id` | Admin: `clientes.gestionar` | `{estado, respuesta? ≤1000, notificar?}` | 200 `{ok, estado, notificada}`; 400; 404. Con `notificar` envía la respuesta al correo del remitente | adminContacto.js:110 |
+| GET | `/api/mi-cuenta/mis-solicitudes` | Usuario | — | 200 solicitudes propias con respuesta | miCuenta.js:522 |
+| GET | `/api/mi-cuenta/solicitudes` | Admin: `clientes.gestionar` | — | 200 (incluye `correo`, `nombre_unidad`, `resuelta_por_correo`) | miCuenta.js:542 |
+| PATCH | `/api/mi-cuenta/solicitudes/:id` | Admin: `clientes.gestionar` | `{estado, respuesta?}` | 200; 404. Avisa al titular por correo sin la respuesta | miCuenta.js:562 |
+| GET | `/api/auditoria` | Admin: `auditoria.ver` | `?entidad`, `?accion`, `?correo` (prefijo, comodines literales), `?desde`/`?hasta` (AAAA-MM-DD), `?limite ≤500`, `?antesDeId` | 200 arreglo de registros; 400 | auditoria.js:15 |
+| GET | `/api/auditoria/filtros` | Admin: `auditoria.ver` | — | 200 `{entidades, acciones}` | auditoria.js:69 |
+
+Pantallas: `admin-reportes-clientes.html`, `admin-contacto.html` (pestañas Contacto y Datos de cuenta), `admin-auditoria.html`, `mi-cuenta.html`, `mis-reportes.html` y `reportes.html`. Migración `004_seguimiento_reportes_contacto` (columnas de estado y respuesta).
 
 ## 14. Automatizaciones — `/api/automatizaciones` (MOD-14)
 
@@ -204,8 +218,8 @@ Rutas completas: prefijo `/api/verificacion` (p. ej. `/api/verificacion/admin/di
 
 | ID | Hallazgo | Recomendación [REC] |
 |---|---|---|
-| BUG-001 | `GET /api/reportes/mensual` sin autenticación expone métricas y comentarios | Exigir `requiereAutenticacion` + `requiereAdmin` + permiso (p. ej. `pedidos.gestionar` o uno nuevo `reportes.ver`) |
-| BUG-002 | `POST /api/atencion/calificacion` sin límite | Añadir `express-rate-limit` y validar `conversacionId` existente |
+| BUG-001 | **Corregido 2026-10-16.** `GET /api/reportes/mensual` sin autenticación expone métricas y comentarios | Exigir `requiereAutenticacion` + `requiereAdmin` + permiso (p. ej. `pedidos.gestionar` o uno nuevo `reportes.ver`) |
+| BUG-002 | **Corregido 2026-10-16.** `POST /api/atencion/calificacion` sin límite | Añadir `express-rate-limit` y validar `conversacionId` existente |
 | — | Rutas retiradas que responden 410: `POST /api/pedidos`, `POST /api/pagos/procesar` | Mantener o eliminar tras confirmar que ningún cliente las usa (`frontend/js/cart.js` solo las menciona en un comentario) |
 | — | El diagnóstico informa `mfaN8n` (configuración de W5), que ya no interviene en el envío MFA | Retirar o renombrar el indicador |
 

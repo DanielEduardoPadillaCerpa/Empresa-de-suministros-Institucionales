@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reportes de clientes — Panel administrativo</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/theme-modern.css">
+<link rel="stylesheet" href="css/global-ui.css">
+<link rel="stylesheet" href="css/admin-console.css">
+<link rel="stylesheet" href="css/verificacion.css">
+<style>
+  .verif-page { background: #f8fafc; min-height: 100vh; }
+  .panel-sticky { position: sticky; top: 1rem; }
+  .panel-detalle dt { font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; color: #64748b; }
+  .panel-detalle dd { margin-bottom: .55rem; overflow-wrap: anywhere; }
+  .comentario-cliente { white-space: pre-wrap; overflow-wrap: anywhere; background: #f1f5f9; border-radius: .5rem; padding: .75rem; }
+  .estrellas { color: #a9812f; letter-spacing: 1px; white-space: nowrap; }
+  .vf-tabla tbody tr[data-id] { cursor: pointer; }
+  .vf-tabla tbody tr:focus-visible { outline: 2px solid #0B2D4A; outline-offset: -2px; }
+  .resumen-celda { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @media (max-width: 991px) { .panel-sticky { position: static; } }
+</style>
+</head>
+<body class="verif-page admin-console-page" data-gl-nav="off" data-gl-cart="off" data-gl-chat="off">
+<script src="js/global-layout.js"></script>
+<nav class="navbar navbar-expand-lg navbar-institucional py-2">
+  <div class="container">
+    <a class="navbar-brand" href="landing.html" aria-label="Suministros Institucionales - Ir al inicio">
+      <img class="brand-logo" src="http://localhost:8081/img/logo-suministros.png" alt="Suministros Institucionales" width="171" height="46">
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav1" aria-label="Menú">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="nav1">
+      <ul class="navbar-nav ms-auto gap-lg-3 align-items-lg-center">
+        <li class="nav-item"><a class="nav-link" href="admin-dashboard.html" data-i18n="nav_dashboard">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-solicitudes.html">Solicitudes <span class="badge rounded-pill text-bg-danger badge-solicitudes" hidden></span></a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-clientes.html">Clientes</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-verificaciones.html">Verificaciones</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-productos.html">Productos</a></li>
+        <li class="nav-item"><a class="nav-link nav-alertas-stock" href="admin-productos.html?filtro=bajo">Alertas de stock</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin-pedidos.html">Pedidos</a></li>
+        <li class="nav-item d-flex align-items-center" id="auth-nav-slot"></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4">
+  <h1 class="h3 fw-bold mb-1 admin-titulo-sobre-fondo">Reportes de clientes</h1>
+  <p class="mb-3 admin-texto-sobre-fondo">Observaciones y sugerencias que los clientes envían desde "Mis reportes". Al responder, el cliente ve tu respuesta en su panel y recibe un aviso por correo (sin el texto). Cada gestión queda en la auditoría.</p>
+  <div id="aviso" class="alert alert-warning" hidden></div>
+  <div id="filtro-cliente" class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2 py-2" hidden></div>
+
+  <div class="vf-conteos" id="filtros" role="group" aria-label="Filtrar por estado">
+    <button type="button" class="activo" data-estado="nuevo">Nuevos <span id="conteo-nuevos"></span></button>
+    <button type="button" data-estado="en_revision">En revisión</button>
+    <button type="button" data-estado="atendido">Atendidos</button>
+    <button type="button" data-estado="todos">Todos</button>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-7">
+      <div class="vf-panel p-2 vf-tabla-wrap">
+        <table class="vf-tabla">
+          <thead><tr><th>Fecha</th><th>Cliente</th><th>Reporte</th><th>Calif.</th><th>Estado</th></tr></thead>
+          <tbody id="lista"><tr><td colspan="5" class="text-muted">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+      <button class="btn btn-sm btn-outline-secondary mt-2" id="btn-mas" hidden>Cargar más</button>
+    </div>
+    <div class="col-lg-5">
+      <div class="vf-panel panel-sticky" id="detalle" aria-live="polite">
+        <p class="text-muted mb-0">Selecciona un reporte para leerlo y responderlo.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/admin-solicitudes-contador.js"></script>
+<script src="js/panel-comun.js"></script>
+<script>
+const { esc, fecha } = PanelComun;
+const PAGINA = 'admin-reportes-clientes.html' + window.location.search;
+const api = PanelComun.crearApi(PAGINA);
+const ESTADOS = {
+  nuevo: ['obligatorio', 'Nuevo'],
+  en_revision: ['condicional', 'En revisión'],
+  atendido: ['cumplido', 'Atendido']
+};
+const INSTITUCIONES = { policia: 'Policía', defensa: 'Defensa', bomberos: 'Bomberos', socorro: 'Socorro', penitenciario: 'Penitenciario', corporativo: 'Corporativo' };
+
+const parametros = new URLSearchParams(window.location.search);
+const clienteFiltro = /^\d+$/.test(parametros.get('cliente') || '') ? parametros.get('cliente') : null;
+let estadoFiltro = clienteFiltro ? 'todos' : 'nuevo';
+let reportes = [];
+let seleccionado = null;
+let hayMas = false;
+
+const etiqueta = e => { const [clase, texto] = ESTADOS[e] || ['', e]; return `<span class="vf-etiqueta ${clase}">${esc(texto)}</span>`; };
+const estrellas = n => '★'.repeat(Number(n) || 0) + '☆'.repeat(5 - (Number(n) || 0));
+const nombreCliente = r => r.cliente.entidad || r.cliente.funcionario || r.cliente.correo || `Cliente #${r.clienteId}`;
+
+function pintarLista() {
+  const cuerpo = document.getElementById('lista');
+  if (!reportes.length) {
+    cuerpo.innerHTML = '<tr><td colspan="5" class="text-muted">No hay reportes en esta vista.</td></tr>';
+  } else {
+    cuerpo.innerHTML = reportes.map(r => `
+      <tr tabindex="0" data-id="${r.id}" class="${r.id === seleccionado ? 'seleccionada' : ''}">
+        <td class="text-nowrap">${fecha(r.fecha)}</td>
+        <td>${esc(nombreCliente(r))}<div class="small text-muted">${esc(r.cliente.correo)}</div></td>
+        <td class="resumen-celda">${esc(r.comentario)}</td>
+        <td><span class="estrellas" aria-label="${r.calificacion} de 5">${estrellas(r.calificacion)}</span></td>
+        <td>${etiqueta(r.estado)}</td>
+      </tr>`).join('');
+  }
+  document.getElementById('btn-mas').hidden = !hayMas;
+}
+
+async function cargarLista({ agregar = false } = {}) {
+  const consulta = new URLSearchParams({ estado: estadoFiltro, limite: '50' });
+  if (clienteFiltro) consulta.set('clienteId', clienteFiltro);
+  if (agregar && reportes.length) consulta.set('antesDeId', String(reportes[reportes.length - 1].id));
+  try {
+    const datos = await api('/api/reportes/clientes?' + consulta);
+    reportes = agregar ? reportes.concat(datos.reportes) : datos.reportes;
+    hayMas = datos.hayMas;
+    pintarLista();
+    document.getElementById('aviso').hidden = true;
+  } catch (err) {
+    const aviso = document.getElementById('aviso');
+    aviso.textContent = PanelComun.mensajePermiso(err);
+    aviso.hidden = false;
+    document.getElementById('lista').innerHTML = '';
+  }
+}
+
+async function refrescarConteo() {
+  try {
+    const { nuevos } = await api('/api/reportes/clientes/contador');
+    document.getElementById('conteo-nuevos').textContent = nuevos ? `(${nuevos})` : '';
+  } catch { /* el aviso de permiso ya lo muestra la lista */ }
+}
+
+function abrir(id) {
+  const r = reportes.find(x => x.id === id);
+  if (!r) return;
+  seleccionado = id;
+  pintarLista();
+  const panel = document.getElementById('detalle');
+  panel.innerHTML = `
+    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+      <h2 class="h5 mb-0">Reporte #${r.id}</h2>
+      ${etiqueta(r.estado)}
+    </div>
+    <dl class="panel-detalle row mb-2">
+      <dt class="col-4">Entidad</dt><dd class="col-8">${esc(r.cliente.entidad || '—')}</dd>
+      <dt class="col-4">Persona</dt><dd class="col-8">${esc(r.cliente.funcionario || '—')}</dd>
+      <dt class="col-4">Correo</dt><dd class="col-8">${esc(r.cliente.correo || '—')}</dd>
+      <dt class="col-4">Institución</dt><dd class="col-8">${esc(INSTITUCIONES[r.cliente.tipoInstitucion] || r.cliente.tipoInstitucion || '—')}</dd>
+      <dt class="col-4">Enviado</dt><dd class="col-8">${fecha(r.fecha)}</dd>
+      <dt class="col-4">Calificación</dt><dd class="col-8"><span class="estrellas">${estrellas(r.calificacion)}</span> (${r.calificacion}/5)</dd>
+    </dl>
+    <p class="small fw-semibold mb-1">Lo que escribió el cliente</p>
+    <div class="comentario-cliente mb-3">${esc(r.comentario)}</div>
+    ${r.atendidoEn ? `<p class="small text-muted">Última gestión: ${fecha(r.atendidoEn)}${r.atendidoPor ? ' por ' + esc(r.atendidoPor) : ''}</p>` : ''}
+    <label class="form-label small" for="respuesta">Respuesta al cliente (la verá en "Mis reportes")</label>
+    <textarea class="form-control form-control-sm mb-2" id="respuesta" rows="4" maxlength="1000" placeholder="Ej.: Gracias por el reporte. Revisamos el pedido y reprogramamos la entrega para el jueves.">${esc(r.respuestaAdmin || '')}</textarea>
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-success btn-sm" id="btn-atender">Responder y marcar atendido</button>
+      ${r.estado !== 'en_revision' ? '<button class="btn btn-outline-secondary btn-sm" id="btn-revision">Marcar en revisión</button>' : ''}
+    </div>
+    <div id="gestion-msg" class="small mt-2" role="status"></div>
+    <hr>
+    <div class="d-flex flex-wrap gap-3 small">
+      <a href="admin-reportes-clientes.html?cliente=${encodeURIComponent(r.clienteId)}">Todos los reportes de este cliente</a>
+      <a href="admin-clientes.html">Ficha en Clientes</a>
+    </div>`;
+  document.getElementById('btn-atender').addEventListener('click', () => gestionar(r, 'atendido'));
+  document.getElementById('btn-revision')?.addEventListener('click', () => gestionar(r, 'en_revision'));
+}
+
+async function gestionar(r, estado) {
+  const msg = document.getElementById('gestion-msg');
+  const respuesta = document.getElementById('respuesta').value.trim();
+  if (estado === 'atendido' && !respuesta) {
+    msg.className = 'small mt-2 text-danger';
+    msg.textContent = 'Escribe la respuesta para el cliente antes de marcarlo como atendido.';
+    return;
+  }
+  const cuerpo = { estado };
+  if (respuesta) cuerpo.respuesta = respuesta;
+  document.querySelectorAll('#btn-atender, #btn-revision').forEach(b => { b.disabled = true; });
+  try {
+    await api('/api/reportes/clientes/' + r.id, { method: 'PATCH', body: JSON.stringify(cuerpo) });
+    mostrarNotificacion(estado === 'atendido' ? 'Respuesta guardada: el cliente ya puede verla.' : 'Reporte marcado en revisión.', 'success');
+    Object.assign(r, { estado, respuestaAdmin: respuesta || r.respuestaAdmin, atendidoEn: new Date().toISOString(), atendidoPor: authLeer()?.correo || null });
+    if (estadoFiltro !== 'todos' && estadoFiltro !== estado) {
+      reportes = reportes.filter(x => x.id !== r.id);
+      seleccionado = null;
+      pintarLista();
+      document.getElementById('detalle').innerHTML = '<p class="text-muted mb-0">Selecciona un reporte para leerlo y responderlo.</p>';
+    } else {
+      abrir(r.id);
+    }
+    refrescarConteo();
+    window.ContadoresAtencion?.refrescar();
+  } catch (err) {
+    msg.className = 'small mt-2 text-danger';
+    msg.textContent = PanelComun.mensajePermiso(err);
+    document.querySelectorAll('#btn-atender, #btn-revision').forEach(b => { b.disabled = false; });
+  }
+}
+
+document.getElementById('lista').addEventListener('click', e => {
+  const fila = e.target.closest('tr[data-id]');
+  if (fila) abrir(Number(fila.dataset.id));
+});
+document.getElementById('lista').addEventListener('keydown', e => {
+  const fila = e.target.closest('tr[data-id]');
+  if (fila && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); abrir(Number(fila.dataset.id)); }
+});
+document.getElementById('filtros').addEventListener('click', e => {
+  const boton = e.target.closest('button[data-estado]');
+  if (!boton) return;
+  estadoFiltro = boton.dataset.estado;
+  document.querySelectorAll('#filtros button').forEach(b => b.classList.toggle('activo', b === boton));
+  seleccionado = null;
+  document.getElementById('detalle').innerHTML = '<p class="text-muted mb-0">Selecciona un reporte para leerlo y responderlo.</p>';
+  cargarLista();
+});
+document.getElementById('btn-mas').addEventListener('click', () => cargarLista({ agregar: true }));
+
+(async function iniciar() {
+  if (!PanelComun.exigirSesion(PAGINA, { admin: true })) return;
+  authRenderNavbar();
+  document.querySelectorAll('#filtros button').forEach(b => b.classList.toggle('activo', b.dataset.estado === estadoFiltro));
+  if (clienteFiltro) {
+    const chip = document.getElementById('filtro-cliente');
+    chip.innerHTML = `<span>Mostrando solo los reportes del cliente #${esc(clienteFiltro)}.</span><a class="btn btn-sm btn-outline-primary" href="admin-reportes-clientes.html">Ver los de todos los clientes</a>`;
+    chip.hidden = false;
+  }
+  await cargarLista();
+  refrescarConteo();
+})();
+</script>
+</body>
+</html>

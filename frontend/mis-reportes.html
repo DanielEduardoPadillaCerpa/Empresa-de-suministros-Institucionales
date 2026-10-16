@@ -18,7 +18,7 @@
   <div class="container py-3">
     <div class="eyebrow mb-2" data-i18n="orders_client_panel">Panel del cliente</div>
     <h1 class="display-serif h2 mb-2" data-i18n="mis_reportes_heading">Mis reportes y sugerencias</h1>
-    <p class="lead col-lg-8 mb-0" data-i18n="mis_reportes_lead">Registra observaciones sobre el servicio o los productos. Puedes editar o eliminar tus propios reportes en cualquier momento.</p>
+    <p class="lead col-lg-8 mb-0" data-i18n="mis_reportes_lead">Registra observaciones sobre el servicio o los productos. El equipo las revisa y te responde aquí; puedes editarlas o eliminarlas mientras no las haya tomado.</p>
   </div>
 </header>
 
@@ -35,11 +35,12 @@
           <th data-i18n="mis_reportes_date">Fecha</th>
           <th data-i18n="mis_reportes_comment">Comentario</th>
           <th data-i18n="mis_reportes_rating">Calificación</th>
+          <th>Estado y respuesta</th>
           <th data-i18n="orders_actions">Acciones</th>
         </tr>
       </thead>
       <tbody id="tbodyReportes">
-        <tr><td colspan="4" class="text-center text-muted py-4" data-i18n="mis_reportes_empty">Aún no tienes reportes registrados.</td></tr>
+        <tr><td colspan="5" class="text-center text-muted py-4" data-i18n="mis_reportes_empty">Aún no tienes reportes registrados.</td></tr>
       </tbody>
     </table>
   </div>
@@ -111,6 +112,13 @@ function exigirSesion() {
 
 let reportesCache = [];
 
+// Estado que fija el administrador al gestionar el reporte.
+const ESTADOS_REPORTE = {
+  nuevo: ['text-bg-secondary', 'Enviado'],
+  en_revision: ['text-bg-warning', 'En revisión'],
+  atendido: ['text-bg-success', 'Atendido']
+};
+
 function estrellas(n) {
   const num = Number(n) || 0;
   return '★'.repeat(num) + '☆'.repeat(5 - num);
@@ -133,18 +141,28 @@ async function cargarReportes() {
     reportesCache = reportes;
 
     if (!reportes.length) {
-      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4" data-i18n="mis_reportes_empty">Aún no tienes reportes registrados.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4" data-i18n="mis_reportes_empty">Aún no tienes reportes registrados.</td></tr>';
     } else {
-      tbody.innerHTML = reportes.map(r => `
+      tbody.innerHTML = reportes.map(r => {
+        const [claseEstado, textoEstado] = ESTADOS_REPORTE[r.estado] || ESTADOS_REPORTE.nuevo;
+        const editable = !r.estado || r.estado === 'nuevo';
+        return `
         <tr>
           <td class="text-muted">${new Date(r.fecha).toLocaleString()}</td>
-          <td>${escapeHtml(r.comentario)}</td>
+          <td style="white-space:pre-wrap">${escapeHtml(r.comentario)}</td>
           <td>${estrellas(r.calificacion)}</td>
-          <td class="text-nowrap">
-            <button class="btn btn-sm btn-outline-secondary" onclick="abrirModalEditarReporte(${r.id})">Editar</button>
-            <button class="btn btn-sm btn-outline-danger" onclick="eliminarReporte(${r.id})">Eliminar</button>
+          <td>
+            <span class="badge ${claseEstado}">${textoEstado}</span>
+            ${r.respuesta_admin ? `<div class="small mt-1" style="white-space:pre-wrap"><strong>Respuesta:</strong> ${escapeHtml(r.respuesta_admin)}</div>` : ''}
           </td>
-        </tr>`).join('');
+          <td class="text-nowrap">
+            ${editable ? `
+            <button class="btn btn-sm btn-outline-secondary" onclick="abrirModalEditarReporte(${r.id})">Editar</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="eliminarReporte(${r.id})">Eliminar</button>`
+            : '<span class="small text-muted">En manos del equipo</span>'}
+          </td>
+        </tr>`;
+      }).join('');
     }
     estado.textContent = reportes.length + ' reporte(s) cargado(s).';
   } catch (err) {
@@ -245,7 +263,8 @@ async function eliminarReporte(id) {
     await cargarReportes();
   } catch (err) {
     document.getElementById('estado').textContent = '';
-    mostrarNotificacion('Portal temporalmente fuera de línea. Reconectando con el servidor central...', 'error');
+    mostrarNotificacion(err.message || 'No fue posible eliminar el reporte.', 'error');
+    cargarReportes();
   }
 }
 
