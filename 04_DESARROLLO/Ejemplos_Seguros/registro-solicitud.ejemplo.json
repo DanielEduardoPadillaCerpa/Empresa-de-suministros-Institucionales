@@ -1,0 +1,12 @@
+{
+  "_comentario": "DOC-04-EJE-02 · Ejemplo FICTICIO de POST /api/auth/registro (tipo policia, sin campos específicos). No contiene datos reales. Esquema: backend/src/registroInstitucional.js (zod .strict(): campos extra -> 400). Elimine esta clave _comentario antes de enviarlo.",
+  "tipoInstitucion": "policia",
+  "nombreCompleto": "Juan Camilo Rodríguez",
+  "nit": "999000001-2",
+  "correo": "juan.rodriguez@suministros-prueba.test",
+  "password": "<CONTRASENA_DE_10_A_72_CARACTERES>",
+  "aceptaTerminos": true,
+  "aceptaTratamiento": true,
+  "captchaId": "<ID_DEVUELTO_POR_GET_/api/auth/captcha>",
+  "captchaRespuesta": "<RESULTADO_DE_LA_SUMA>"
+}

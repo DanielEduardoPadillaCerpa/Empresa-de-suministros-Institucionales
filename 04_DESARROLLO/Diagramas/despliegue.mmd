@@ -1,0 +1,32 @@
+%% DOC-04-DIA-02 · Diagrama de despliegue (laboratorio observado) · v1.0 · 2026-10-16 · BORRADOR
+%% [OBS] Backend local en el equipo de laboratorio; MySQL en Clever Cloud (documentacion previa);
+%% n8n y Mailpit en Docker local. No hay evidencia de un despliegue productivo (NO DETERMINADO).
+flowchart LR
+    subgraph EQ["Equipo de laboratorio - Windows 11"]
+        NODE["Node.js 24 - backend/server.js puerto 8081"]
+        BROW["Navegador"]
+        subgraph DOCK["Docker"]
+            N8N["empresa-n8n - n8nio/n8n 1.110.1 - puerto 5678"]
+            MP["Mailpit - SMTP 1025 y web 8025"]
+            MYT[("MySQL 8 de pruebas - puerto 3307")]
+        end
+        DOCS[("backend/storage - documentos cifrados")]
+    end
+    subgraph CC["Clever Cloud - MySQL gestionado"]
+        MYP[("Base principal - 5 conexiones por usuario")]
+        PAD[("Base del padron de laboratorio")]
+    end
+    CDN["cdn.jsdelivr.net"]
+    DG["datos.gov.co"]
+
+    BROW -->|"HTTP sin TLS"| NODE
+    BROW --> CDN
+    NODE -->|"mysql2, aprox. 150 ms por viaje"| MYP
+    NODE -->|"solo SELECT"| PAD
+    NODE --> MP
+    NODE --> DOCS
+    NODE -->|"webhooks HMAC"| N8N
+    N8N -->|"host.docker.internal"| NODE
+    N8N --> MP
+    N8N --> DG
+    MYT -.->|"solo pruebas de integracion"| NODE

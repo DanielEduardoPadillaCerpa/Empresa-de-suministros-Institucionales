@@ -85,3 +85,20 @@ npm run medir            # tiempos de registro, login y aprobación contra la ba
 ```
 
 Guía completa (flujo, claves, n8n, tiempos medidos, cómo probar y pendientes): [docs/REGISTRO_VERIFICADO.md](docs/REGISTRO_VERIFICADO.md).
+
+## Documentación empresarial del proyecto (2026-10-16)
+
+Estructura documental completa, generada a partir de una auditoría del código (el código no se movió ni se modificó):
+
+| Carpeta | Contenido |
+|---|---|
+| [00_GESTION_DEL_PROYECTO](00_GESTION_DEL_PROYECTO/00_INDICE_DOCUMENTAL.md) | Índice documental, ficha, riesgos, decisiones, cambios e [informe final de auditoría](00_GESTION_DEL_PROYECTO/11_INFORME_FINAL_DE_AUDITORIA_DOCUMENTAL.md) |
+| [01_INGENIERIA_DE_REQUERIMIENTOS](01_INGENIERIA_DE_REQUERIMIENTOS/04_ESPECIFICACION_DE_REQUERIMIENTOS_SRS.md) | SRS, requerimientos, reglas de negocio y matriz de trazabilidad |
+| [02_ANALISIS](02_ANALISIS/01_DOCUMENTO_DE_ANALISIS_DEL_SISTEMA.md) | Procesos, actores, casos de uso, flujos y modelo conceptual |
+| [03_DISENO](03_DISENO/01_DOCUMENTO_DE_DISENO_DEL_SOFTWARE.md) | Arquitectura, componentes, base de datos, API, seguridad y ADR |
+| [04_DESARROLLO](04_DESARROLLO/README.md) | Guía técnica, inventario, endpoints, variables, scripts e integraciones |
+| [05_PRUEBAS](05_PRUEBAS/01_PLAN_DE_PRUEBAS.md) | Plan, casos de prueba, defectos, resultados y cobertura |
+| [06_IMPLEMENTACION](06_IMPLEMENTACION/01_PLAN_DE_IMPLEMENTACION.md) | Instalación, configuración, despliegue, respaldo, rollback y manuales |
+| [07_MANTENIMIENTO_Y_SOPORTE](07_MANTENIMIENTO_Y_SOPORTE/01_PLAN_DE_MANTENIMIENTO.md) | Mantenimiento, incidentes, diagnóstico y continuidad |
+
+Todos los documentos están en estado BORRADOR, pendientes de validación y aprobación.

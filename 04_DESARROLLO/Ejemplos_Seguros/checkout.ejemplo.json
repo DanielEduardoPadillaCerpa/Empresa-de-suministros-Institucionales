@@ -1,0 +1,17 @@
+{
+  "_comentario": "DOC-04-EJE-03 · Ejemplo FICTICIO de POST /api/checkout. Requiere cabeceras Authorization: Bearer <ACCESS_TOKEN> e Idempotency-Key: <16-128 caracteres [A-Za-z0-9_-]>. Precios e inventario los calcula el servidor; no envíe precios ni datos de tarjeta. Elimine _comentario antes de enviarlo.",
+  "items": [
+    { "id": 1, "cantidad": 2 },
+    { "id": 4, "cantidad": 1 }
+  ],
+  "enviarComprobante": false,
+  "metodo": "mock",
+  "direccionEntrega": "Calle Ficticia 123, Ciudad de Prueba",
+  "datosComprador": {
+    "tipo": "empresa",
+    "razonSocial": "Entidad de Prueba S.A.S.",
+    "nit": "999000001",
+    "nombreComprador": "Persona de Prueba",
+    "telefono": "+57 300 000 0000"
+  }
+}

@@ -1,0 +1,57 @@
+%% DOC-04-DIA-01 · Diagrama de componentes · v1.0 · 2026-10-16 · BORRADOR
+%% Fuente: backend/src/app.js, server.js, routes/*, n8n/workflows
+flowchart TB
+    subgraph NAV["Navegador"]
+        PAG["Paginas HTML Bootstrap"]
+        JSF["js: auth, cart, chatbot, captcha, i18n"]
+        LS[("localStorage: sesion y carrito")]
+    end
+    subgraph BE["Backend Node.js Express - un proceso"]
+        APP["app.js: CORS, cabeceras, parsers, estaticos"]
+        AUTH["routes/auth.js + middlewares"]
+        SOL["routes/solicitudesRegistro.js"]
+        CAT["routes/productos.js y categorias.js"]
+        CHK["routes/checkout.js y pagos.js"]
+        PED["routes/pedidos.js y comprobantes.js"]
+        VER["routes/verificacion.js"]
+        OTR["routes: clientes, miCuenta, asistente, atencion, reportes, misreportes, auditoria"]
+        AUTZ["autorizacion.js y tenancy.js"]
+        SEG["seguridad: cifradoCampos, captcha, padron, correo, contrasenas"]
+        CRY["crypto.js y configSegura.js"]
+        WRK["Workers: emailOutbox, automationOutbox, paymentJobs, verificacionJobs, sync padron"]
+        DBM["db.js y migraciones"]
+    end
+    MY[("MySQL 8")]
+    PADRON[("Fuente del padron - solo lectura")]
+    SMTP["Servidor SMTP o Mailpit"]
+    N8N["n8n W1 a W12"]
+    DG["datos.gov.co"]
+    FS[("DOCUMENTOS_DIR - archivos cifrados")]
+
+    PAG --> JSF
+    JSF --> LS
+    JSF -->|"HTTP JSON + Bearer"| APP
+    APP --> AUTH
+    APP --> SOL
+    APP --> CAT
+    APP --> CHK
+    APP --> PED
+    APP --> VER
+    APP --> OTR
+    CAT --> AUTZ
+    CHK --> AUTZ
+    VER --> AUTZ
+    OTR --> AUTZ
+    AUTH --> SEG
+    SOL --> SEG
+    VER --> CRY
+    VER --> FS
+    AUTZ --> DBM
+    DBM --> MY
+    SEG --> PADRON
+    SEG --> SMTP
+    WRK --> MY
+    WRK --> SMTP
+    WRK -->|"HMAC"| N8N
+    N8N -->|"token o HMAC"| APP
+    N8N --> DG

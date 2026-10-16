@@ -1,0 +1,77 @@
+%% DOC-04-DIA-03 · Modelo entidad-relacion resumido · v1.0 · 2026-10-16 · BORRADOR
+%% Fuente: backend/src/db.js y migraciones 001-003. Solo tablas y claves principales.
+%% Tablas sin FK omitidas: atenciones, solicitudes_contacto, faq_asistente, asistente_pendientes,
+%% automation_outbox, automation_nonces, auditoria, schema_migraciones, padron_institucional.
+erDiagram
+    clientes ||--o{ usuarios : "cliente_id"
+    clientes ||--o{ datos_sensibles : "cliente_id"
+    clientes ||--o{ pedidos : "cliente_id"
+    clientes ||--o{ reportes_cliente : "cliente_id"
+    clientes ||--o{ documentos_verificacion : "cliente_id"
+    clientes ||--o{ verificacion_historial : "cliente_id"
+    clientes ||--o{ solicitudes_verificacion : "cliente_id"
+    clientes ||--o| identificadores_personales : "cliente_id"
+    clientes ||--o{ solicitudes_registro : "cliente_id"
+    clientes ||--o{ solicitudes_cuenta : "cliente_id"
+    usuarios ||--o{ refresh_tokens : "usuario_id"
+    usuarios ||--o{ retos_mfa : "usuario_id"
+    usuarios ||--o{ staff_permisos : "usuario_id"
+    usuarios ||--o{ solicitudes_registro : "usuario_id"
+    usuarios ||--o{ autorizaciones_compra : "usuario_id"
+    categorias ||--o{ productos : "categoria_id"
+    productos ||--o{ productos_elegibilidad : "producto_id"
+    productos ||--o{ detalle_pedido : "producto_id"
+    pedidos ||--o{ detalle_pedido : "pedido_id"
+    pedidos ||--o{ pagos : "pedido_id"
+    pagos ||--o{ eventos_pago : "pago_id"
+    pedidos ||--o| comprobantes : "pedido_id"
+    comprobantes ||--o{ correo_outbox : "comprobante_id"
+    comprobantes ||--o{ solicitudes_reenvio_comprobante : "comprobante_id"
+    solicitudes_verificacion ||--o{ verificacion_comprobaciones : "solicitud_id"
+    solicitudes_verificacion ||--o{ autorizaciones_compra : "solicitud_id"
+
+    clientes {
+        int id PK
+        varchar nit
+        text nombre_funcionario "cifrado"
+        varchar tipo_institucion
+        enum estado_verificacion
+        datetime verificado_hasta
+    }
+    usuarios {
+        int id PK
+        varchar correo UK
+        varchar password_hash "bcrypt"
+        enum rol "cliente o admin"
+        enum estado_cuenta "pendiente activa rechazada suspendida"
+        int session_version
+        boolean es_superadmin
+    }
+    productos {
+        int id PK
+        varchar nombre
+        decimal precio
+        int cantidad_disponible
+        boolean restringido
+        varchar institucion_id
+        enum revision_legal
+    }
+    pedidos {
+        int id PK
+        json items
+        decimal total
+        enum estado
+    }
+    pagos {
+        bigint id PK
+        varchar idempotency_key UK
+        bigint monto_centavos
+        enum estado
+    }
+    solicitudes_registro {
+        bigint id PK
+        char nit_hash "HMAC"
+        text nit_cifrado
+        enum resultado_verificacion
+        enum estado
+    }
