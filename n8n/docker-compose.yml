@@ -3,12 +3,16 @@
 # Reconstruido el 2026-10-13 a partir del contenedor en ejecución (el compose
 # original en Downloads/Empresa-main ya no existía). Conserva el proyecto
 # "n8n", el volumen n8n_n8n_data (workflows y credenciales) y la red
-# n8n_default (donde está Mailpit).
+# n8n_default. El 2026-10-16 se agregó Mailpit, que antes solo existía en
+# ese compose perdido.
 #
-# Los valores viven en n8n/.env (excluido de git). N8N_ENCRYPTION_KEY NUNCA
-# debe cambiar: con ella están cifradas las credenciales guardadas.
+# Los valores viven en n8n/.env (excluido de git; plantilla: .env.example).
+# N8N_ENCRYPTION_KEY NUNCA debe cambiar: con ella están cifradas las
+# credenciales guardadas.
 #
-#   docker compose -p n8n -f n8n/docker-compose.yml up -d n8n
+#   docker compose -p n8n -f n8n/docker-compose.yml up -d
+#
+# Para llevarlo a otro computador: README.md de esta carpeta.
 name: n8n
 
 services:
@@ -25,6 +29,19 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
       - ./workflows:/workflows:ro
+
+  # Buzón de pruebas: atrapa los correos enviados a smtp mailpit:1025 (desde
+  # n8n) o localhost:1025 (desde el backend). Bandeja: http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: empresa-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
 
 volumes:
   n8n_data:
