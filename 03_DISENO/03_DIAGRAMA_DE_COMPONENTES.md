@@ -32,6 +32,7 @@ Routers montados, servicios de dominio, workers en segundo plano e integraciones
 | `/api/reportes` | `routes/reportes.js` | MOD-12 |
 | `/api/auth` | `routes/auth.js` (JSON ≤ 10 kb) | MOD-01/02 |
 | `/api/admin/solicitudes` | `routes/solicitudesRegistro.js` (JSON ≤ 10 kb) | MOD-02 |
+| `/api/admin/contacto` | `routes/adminContacto.js` (agregado el 2026-10-16) | MOD-11 |
 | `/api/verificacion` | `routes/verificacion.js` | MOD-04 |
 | `/api/pedidos` | `routes/pedidos.js` | MOD-08 |
 | `/api/productos` | `routes/productos.js` | MOD-06 |
@@ -42,56 +43,29 @@ Routers montados, servicios de dominio, workers en segundo plano e integraciones
 
 ## 2. Diagrama de componentes
 
+El sistema se muestra en tres vistas para que cada diagrama sea legible: la general, la de los routers con los servicios que usan y la de los trabajos en segundo plano. **[OBS]**
+
+### 2.1 Vista general
+
 ```mermaid
-flowchart TB
+flowchart LR
   subgraph Cliente["Navegador"]
-    PAGES["Paginas HTML frontend"]
-    JSAUTH["js/auth.js sesion localStorage"]
-    JSCART["js/cart.js carrito localStorage"]
+    direction TB
+    PAGES["Páginas HTML del frontend"]
+    JSAUTH["js/auth.js: sesión en localStorage"]
+    JSCART["js/cart.js: carrito en localStorage"]
     JSCHAT["js/chatbot.js"]
   end
-
-  subgraph Backend["Proceso Node.js server.js"]
-    APP["app.js CORS cabeceras parsers estaticos"]
-    subgraph Rutas["Routers /api"]
-      RAUTH["auth"]
-      RSOL["admin/solicitudes"]
-      RCTA["mi-cuenta"]
-      RVER["verificacion"]
-      RPROD["productos y categorias"]
-      RCHK["checkout"]
-      RPAG["pagos"]
-      RPED["pedidos"]
-      RCOMP["comprobantes"]
-      RCLI["clientes"]
-      RASIS["asistente y atencion"]
-      RREP["reportes y mis-reportes"]
-      RAUD["auditoria"]
-      RAUTO["automatizaciones"]
-    end
-    subgraph Servicios["Servicios"]
-      AUTZ["autorizacion.js y tenancy.js"]
-      SEG["seguridad: captcha contrasenas cifradoCampos padron registroVerificado correo avisosN8n"]
-      CRY["crypto.js anillo v2"]
-      VERI["verificacion.js verificacionCompra.js"]
-      PAY["paymentProvider mock"]
-      REC["receiptService receiptTokens"]
-      ASIS["assistant motor indiceCatalogo llmAdapter"]
-      AUDM["auditoria.js"]
-      DBM["db.js pools y migraciones"]
-    end
-    subgraph Workers["Trabajos en segundo plano"]
-      WMAIL["emailOutbox cada 5 s"]
-      WAUTO["automationOutbox cada 5 s y deteccion de stock bajo"]
-      WPAY["paymentJobs expiracion cada 60 s"]
-      WVER["verificacionJobs cada 5 min"]
-      WPAD["sincronizacion del padron cada 10 min"]
-      WIDX["refresco del indice del asistente"]
-    end
+  subgraph Backend["Proceso Node.js (server.js)"]
+    direction TB
+    APP["app.js: CORS, cabeceras, parsers y estáticos"]
+    RUTAS["Routers /api (vista 2.2)"]
+    SERV["Servicios de dominio (vista 2.2)"]
+    WORK["Trabajos en segundo plano (vista 2.3)"]
+    DBM["db.js: pools y migraciones"]
   end
-
   DB[("MySQL principal")]
-  FUENTE[("Fuente del padron solo lectura")]
+  FUENTE[("Fuente del padrón, solo lectura")]
   SMTP["SMTP o consola de laboratorio"]
   N8N["n8n W1 W3 W6 W8 W11 W12"]
   OLLAMA["Ollama local opcional"]
@@ -100,9 +74,57 @@ flowchart TB
   JSAUTH --> APP
   JSCART --> APP
   JSCHAT --> APP
-  APP --> Rutas
+  APP --> RUTAS
+  RUTAS --> SERV
+  SERV --> DBM
+  WORK --> DBM
+  DBM --> DB
+  SERV --> SMTP
+  SERV -->|"W12 HMAC"| N8N
+  WORK --> SMTP
+  WORK -->|"HMAC"| N8N
+  WORK --> FUENTE
+  N8N -->|"token o HMAC"| RUTAS
+  SERV --> OLLAMA
+```
+
+### 2.2 Routers y servicios que usan
+
+```mermaid
+flowchart LR
+  subgraph Rutas["Routers /api"]
+    direction TB
+    RAUTH["auth"]
+    RSOL["admin/solicitudes"]
+    RCON["admin/contacto"]
+    RCTA["mi-cuenta"]
+    RVER["verificacion"]
+    RPROD["productos y categorias"]
+    RCHK["checkout"]
+    RPAG["pagos"]
+    RPED["pedidos"]
+    RCOMP["comprobantes"]
+    RCLI["clientes"]
+    RASIS["asistente y atencion"]
+    RREP["reportes y mis-reportes"]
+    RAUD["auditoria"]
+    RAUTO["automatizaciones"]
+  end
+  subgraph Servicios["Servicios de dominio"]
+    direction TB
+    SEG["seguridad: captcha, contraseñas, cifradoCampos, padrón, registroVerificado, correo, avisosN8n"]
+    AUTZ["autorizacion.js y tenancy.js"]
+    VERI["verificacion.js y verificacionCompra.js"]
+    PAY["paymentProvider (mock)"]
+    REC["receiptService y receiptTokens"]
+    ASIS["assistant: motor, indiceCatalogo, llmAdapter"]
+    CRY["crypto.js (anillo v2)"]
+    AUDM["auditoria.js"]
+  end
   RAUTH --> SEG
   RSOL --> SEG
+  RCTA --> SEG
+  RCON --> SEG
   RVER --> VERI
   RPROD --> AUTZ
   RCHK --> AUTZ
@@ -112,19 +134,35 @@ flowchart TB
   RCOMP --> REC
   RASIS --> ASIS
   ASIS --> AUTZ
-  ASIS --> OLLAMA
-  Rutas --> AUDM
-  Servicios --> DBM
   SEG --> CRY
   VERI --> CRY
-  DBM --> DB
+  RAUTO --> VERI
+  Rutas --> AUDM
+```
+
+Todos los routers y servicios usan `db.js` para llegar a MySQL (vista 2.1). `admin/contacto` se agregó el 2026-10-16.
+
+### 2.3 Trabajos en segundo plano
+
+```mermaid
+flowchart LR
+  subgraph Workers["Trabajos en segundo plano"]
+    direction TB
+    WMAIL["emailOutbox, cada 5 s"]
+    WAUTO["automationOutbox, cada 5 s, y detección de stock bajo"]
+    WPAY["paymentJobs: expiración, cada 60 s"]
+    WVER["verificacionJobs, cada 5 min"]
+    WPAD["Sincronización del padrón, cada 10 min"]
+    WIDX["Refresco del índice del asistente"]
+  end
+  DB[("MySQL principal")]
+  SMTP["SMTP o consola de laboratorio"]
+  N8N["n8n"]
+  FUENTE[("Fuente del padrón")]
   WMAIL --> SMTP
-  SEG --> SMTP
   WAUTO -->|"HMAC"| N8N
-  SEG -->|"W12 HMAC"| N8N
-  N8N -->|"token o HMAC"| RAUTO
   WPAD --> FUENTE
-  Workers --> DBM
+  Workers --> DB
 ```
 
 ## 3. Responsabilidades de los workers [OBS]

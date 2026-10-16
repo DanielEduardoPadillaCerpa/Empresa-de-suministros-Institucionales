@@ -14,3 +14,6 @@ backend/generarHash.js
 # Respaldos locales de n8n (contienen credenciales cifradas)
 respaldos-n8n/
 backend/.env.respaldo-*
+
+# Caché del conversor de documentación a Word
+04_DESARROLLO/Scripts_y_Herramientas/convertir-a-word/cache-diagramas/

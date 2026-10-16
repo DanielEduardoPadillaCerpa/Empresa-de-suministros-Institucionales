@@ -17,45 +17,23 @@ Representar las 34 tablas y sus claves foráneas reales (DIS-002).
 
 Solo relaciones declaradas como `FOREIGN KEY` en `backend/src/db.js` y `backend/src/migraciones/00*.js`. Las relaciones lógicas sin FK se listan aparte. Para legibilidad se muestran solo las columnas clave; el detalle completo está en [07_DICCIONARIO_TECNICO_DE_DATOS.md](07_DICCIONARIO_TECNICO_DE_DATOS.md).
 
-## 1. Diagrama general
+## 1. Diagramas por área
+
+Las 35 relaciones con `FOREIGN KEY` se reparten en tres diagramas para que se puedan leer; `clientes` y `usuarios` aparecen en varios porque son el eje del modelo. **[OBS]**
+
+### 1.1 Cuentas, sesión y registro
 
 ```mermaid
 erDiagram
-  clientes ||--o{ datos_sensibles : "cliente_id"
   clientes ||--o{ usuarios : "cliente_id"
-  clientes ||--o{ pedidos : "cliente_id"
-  clientes ||--o{ reportes_cliente : "cliente_id"
+  clientes ||--o{ datos_sensibles : "cliente_id"
   clientes ||--o{ solicitudes_cuenta : "cliente_id"
-  clientes ||--o{ verificacion_historial : "cliente_id"
-  clientes ||--o{ documentos_verificacion : "cliente_id"
-  clientes ||--o{ solicitudes_verificacion : "cliente_id"
-  clientes ||--o| identificadores_personales : "cliente_id"
-  clientes ||--o{ autorizaciones_compra : "cliente_id"
   clientes ||--o{ solicitudes_registro : "cliente_id"
   usuarios ||--o{ refresh_tokens : "usuario_id"
   usuarios ||--o{ retos_mfa : "usuario_id"
-  usuarios ||--o{ solicitudes_reenvio_comprobante : "usuario_id"
   usuarios ||--o{ solicitudes_cuenta : "usuario_id y resuelta_por"
   usuarios ||--o{ staff_permisos : "usuario_id y otorgado_por"
-  usuarios ||--o{ verificacion_historial : "actor_usuario_id"
-  usuarios ||--o{ documentos_verificacion : "subido_por"
-  usuarios ||--o{ productos_elegibilidad : "creado_por"
-  usuarios ||--o{ solicitudes_verificacion : "usuario_id y decidida_por"
-  usuarios ||--o{ verificacion_comprobaciones : "actor_usuario_id"
-  usuarios ||--o{ identificadores_personales : "usuario_id"
-  usuarios ||--o{ autorizaciones_compra : "usuario_id"
   usuarios ||--o{ solicitudes_registro : "usuario_id y decidida_por"
-  categorias ||--o{ productos : "categoria_id"
-  productos ||--o{ detalle_pedido : "producto_id"
-  productos ||--o{ productos_elegibilidad : "producto_id"
-  pedidos ||--o{ detalle_pedido : "pedido_id"
-  pedidos ||--o{ pagos : "pedido_id"
-  pedidos ||--o| comprobantes : "pedido_id"
-  pagos ||--o{ eventos_pago : "pago_id"
-  comprobantes ||--o{ correo_outbox : "comprobante_id"
-  comprobantes ||--o{ solicitudes_reenvio_comprobante : "comprobante_id"
-  solicitudes_verificacion ||--o{ verificacion_comprobaciones : "solicitud_id"
-  solicitudes_verificacion ||--o{ autorizaciones_compra : "solicitud_id"
 
   clientes {
     int id PK
@@ -73,6 +51,60 @@ erDiagram
     enum estado_cuenta
     boolean es_superadmin
   }
+  solicitudes_registro {
+    bigint id PK
+    int usuario_id FK
+    int cliente_id FK
+    char nit_hash
+    enum resultado_verificacion
+    enum estado
+  }
+```
+
+### 1.2 Verificación institucional y autorización de compra
+
+```mermaid
+erDiagram
+  clientes ||--o{ verificacion_historial : "cliente_id"
+  clientes ||--o{ documentos_verificacion : "cliente_id"
+  clientes ||--o{ solicitudes_verificacion : "cliente_id"
+  clientes ||--o| identificadores_personales : "cliente_id"
+  clientes ||--o{ autorizaciones_compra : "cliente_id"
+  usuarios ||--o{ verificacion_historial : "actor_usuario_id"
+  usuarios ||--o{ documentos_verificacion : "subido_por"
+  usuarios ||--o{ solicitudes_verificacion : "usuario_id y decidida_por"
+  usuarios ||--o{ verificacion_comprobaciones : "actor_usuario_id"
+  usuarios ||--o{ identificadores_personales : "usuario_id"
+  usuarios ||--o{ autorizaciones_compra : "usuario_id"
+  solicitudes_verificacion ||--o{ verificacion_comprobaciones : "solicitud_id"
+  solicitudes_verificacion ||--o{ autorizaciones_compra : "solicitud_id"
+
+  solicitudes_verificacion {
+    bigint id PK
+    char ref UK
+    int cliente_id FK
+    enum estado
+  }
+```
+
+### 1.3 Catálogo, pedidos, pagos, comprobantes y reportes
+
+```mermaid
+erDiagram
+  categorias ||--o{ productos : "categoria_id"
+  productos ||--o{ detalle_pedido : "producto_id"
+  productos ||--o{ productos_elegibilidad : "producto_id"
+  usuarios ||--o{ productos_elegibilidad : "creado_por"
+  clientes ||--o{ pedidos : "cliente_id"
+  clientes ||--o{ reportes_cliente : "cliente_id"
+  pedidos ||--o{ detalle_pedido : "pedido_id"
+  pedidos ||--o{ pagos : "pedido_id"
+  pedidos ||--o| comprobantes : "pedido_id"
+  pagos ||--o{ eventos_pago : "pago_id"
+  comprobantes ||--o{ correo_outbox : "comprobante_id"
+  comprobantes ||--o{ solicitudes_reenvio_comprobante : "comprobante_id"
+  usuarios ||--o{ solicitudes_reenvio_comprobante : "usuario_id"
+
   productos {
     int id PK
     int categoria_id FK
@@ -93,73 +125,30 @@ erDiagram
     enum estado
     bigint monto_centavos
   }
-  solicitudes_registro {
-    bigint id PK
-    int usuario_id FK
+  reportes_cliente {
+    int id PK
     int cliente_id FK
-    char nit_hash
-    enum resultado_verificacion
+    int calificacion
     enum estado
-  }
-  solicitudes_verificacion {
-    bigint id PK
-    char ref UK
-    int cliente_id FK
-    enum estado
+    varchar respuesta_admin
   }
 ```
+
+`reportes_cliente.estado` y `respuesta_admin` los agregó la migración `004_seguimiento_reportes_contacto` (2026-10-16).
 
 ## 2. Tablas sin claves foráneas
 
-```mermaid
-erDiagram
-  padron_institucional {
-    bigint id PK
-    bigint fuente_id UK
-    char nit_hash
-    text nombre_cifrado
-    varchar tipo_institucion
-    enum estado
-  }
-  automation_outbox {
-    bigint id PK
-    enum workflow
-    varchar dedupe_key UK
-    json payload
-  }
-  automation_nonces {
-    char nonce PK
-    datetime recibido_en
-  }
-  atenciones {
-    int id PK
-    varchar conversacion_id
-    int calificacion
-  }
-  solicitudes_contacto {
-    bigint id PK
-    enum tipo_solicitud
-    text nit_cifrado
-  }
-  faq_asistente {
-    int id PK
-    varchar pregunta UK
-  }
-  asistente_pendientes {
-    bigint id PK
-    varchar conversacion_id
-  }
-  auditoria {
-    int id PK
-    int usuario_id
-    varchar accion
-    varchar entidad
-  }
-  schema_migraciones {
-    varchar version PK
-    datetime aplicada_en
-  }
-```
+| Tabla | Columnas clave | Propósito |
+|---|---|---|
+| `padron_institucional` | `id` PK, `fuente_id` UK, `nit_hash`, `nombre_cifrado`, `tipo_institucion`, `estado` | Copia cifrada del padrón |
+| `automation_outbox` | `id` PK, `workflow`, `dedupe_key` UK, `payload` | Eventos firmados hacia n8n |
+| `automation_nonces` | `nonce` PK, `recibido_en` | Anti-repetición de respuestas de n8n |
+| `atenciones` | `id` PK, `conversacion_id`, `calificacion` | Calificaciones del asistente |
+| `solicitudes_contacto` | `id` PK, `tipo_solicitud`, `nit_cifrado`, `estado`, `respuesta_admin` | PQRS, soporte y cotizaciones |
+| `faq_asistente` | `id` PK, `pregunta` UK | Preguntas frecuentes del asistente |
+| `asistente_pendientes` | `id` PK, `conversacion_id` | Preguntas que el asistente no resolvió |
+| `auditoria` | `id` PK, `usuario_id`, `accion`, `entidad` | Registro de acciones administrativas |
+| `schema_migraciones` | `version` PK, `aplicada_en` | Control de migraciones versionadas |
 
 ## 3. Relaciones lógicas sin FK [OBS]
 

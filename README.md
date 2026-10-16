@@ -102,3 +102,5 @@ Estructura documental completa, generada a partir de una auditoría del código 
 | [07_MANTENIMIENTO_Y_SOPORTE](07_MANTENIMIENTO_Y_SOPORTE/01_PLAN_DE_MANTENIMIENTO.md) | Mantenimiento, incidentes, diagnóstico y continuidad |
 
 Todos los documentos están en estado BORRADOR, pendientes de validación y aprobación.
+
+Cada documento está en dos formatos, en la misma carpeta: **Word (`.docx`)** para entregar e imprimir, y Markdown (`.md`) como fuente editable. Después de editar un `.md`, su Word se regenera con el [conversor](04_DESARROLLO/Scripts_y_Herramientas/convertir-a-word/README.md).
