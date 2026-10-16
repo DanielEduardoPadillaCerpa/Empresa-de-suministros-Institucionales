@@ -44,7 +44,7 @@ Ver [02_IDENTIFICACION_DE_INTERESADOS.md](02_IDENTIFICACION_DE_INTERESADOS.md). 
 |---|---|---|
 | Registro verificado y aprobación | REQ-F-001 a REQ-F-004 | Mayormente IMPLEMENTADO Y VERIFICADO |
 | Autenticación con MFA y sesión | REQ-F-005 a REQ-F-009 | Mayormente IMPLEMENTADO Y VERIFICADO |
-| Mi cuenta | REQ-F-010 a REQ-F-013 | PARCIALMENTE IMPLEMENTADO (sin pantallas, BUG-004) |
+| Mi cuenta | REQ-F-010 a REQ-F-013 | IMPLEMENTADO Y VERIFICADO (pantalla `mi-cuenta.html` desde el 2026-10-16) |
 | Catálogo segmentado y administración | REQ-F-014 a REQ-F-017 | Mixto |
 | Compra, pago mock, pedidos y comprobantes | REQ-F-018 a REQ-F-025 | Mixto; sin pasarela real (REQ-F-040) |
 | Verificación institucional en la compra | REQ-F-027 a REQ-F-030 | Mixto |

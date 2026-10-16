@@ -205,7 +205,7 @@ Todos los módulos MOD-01 a MOD-17. Convenciones de origen (O1 comportamiento ex
 | Actor | ACT-03, ACT-04 |
 | Origen | O1, O2 (`../backend/README.md` "Mi cuenta") |
 | Evidencia | `../backend/src/routes/miCuenta.js` |
-| Estado | PARCIALMENTE IMPLEMENTADO — API verificada (`mi-cuenta.spec.js`); **no existe pantalla** (BUG-004) |
+| Estado | IMPLEMENTADO Y VERIFICADO — API (`mi-cuenta.spec.js`) y pantalla `frontend/mi-cuenta.html` (prueba de interfaz del 2026-10-16). BUG-004 corregido |
 | Criterio de aceptación | CA-010 |
 | Dependencias | REQ-F-007 |
 | Observaciones | RN-021. |
@@ -219,7 +219,7 @@ Todos los módulos MOD-01 a MOD-17. Convenciones de origen (O1 comportamiento ex
 | Actor | ACT-03, ACT-04 |
 | Origen | O1, O2 (`../backend/README.md` "Mi cuenta") |
 | Evidencia | `../backend/src/routes/miCuenta.js` |
-| Estado | PARCIALMENTE IMPLEMENTADO — API verificada (`mi-cuenta.spec.js`, cambio de correo*); sin pantalla (BUG-004) |
+| Estado | IMPLEMENTADO Y VERIFICADO (API, `mi-cuenta.spec.js`, cambio de correo*). La pantalla `frontend/mi-cuenta.html` existe desde el 2026-10-16, pero su formulario de correo no se recorrió en la prueba de interfaz |
 | Criterio de aceptación | CA-011 |
 | Dependencias | REQ-F-006, REQ-F-034 |
 | Observaciones | Correo duplicado → respuesta genérica sin crear reto. |
@@ -233,7 +233,7 @@ Todos los módulos MOD-01 a MOD-17. Convenciones de origen (O1 comportamiento ex
 | Actor | Todos los autenticados |
 | Origen | O1, O2 (`../backend/README.md`) |
 | Evidencia | `../backend/src/routes/miCuenta.js`, `../frontend/cambiar-password.html` |
-| Estado | IMPLEMENTADO Y VERIFICADO — `mi-cuenta.spec.js`; "cerrar todas" sin pantalla |
+| Estado | IMPLEMENTADO Y VERIFICADO — `mi-cuenta.spec.js`; "cerrar todas las sesiones" en `frontend/mi-cuenta.html` (prueba de interfaz del 2026-10-16) |
 | Criterio de aceptación | CA-012 |
 | Dependencias | REQ-F-007 |
 | Observaciones | Defecto corregido el 2026-10-13: zona horaria del MFA reciente (`../docs/RESULTADOS_PRUEBAS.md`). |
@@ -247,7 +247,7 @@ Todos los módulos MOD-01 a MOD-17. Convenciones de origen (O1 comportamiento ex
 | Actor | ACT-03, ACT-05 |
 | Origen | O1, O2 (`../docs/TRATAMIENTO_DATOS_PERSONALES.md` §3) |
 | Evidencia | `../backend/src/routes/miCuenta.js`, tabla `solicitudes_cuenta` en `../backend/src/db.js` |
-| Estado | PARCIALMENTE IMPLEMENTADO — API verificada (`mi-cuenta.spec.js`); sin pantallas para titular ni administrador (BUG-004, BUG-005) |
+| Estado | IMPLEMENTADO Y VERIFICADO — API (`mi-cuenta.spec.js`, `reportes-contacto-auditoria.spec.js`); pantallas del titular (`mi-cuenta.html`) y del administrador (`admin-contacto.html`, pestaña "Datos de cuenta") (prueba de interfaz del 2026-10-16). BUG-004 y BUG-005 corregidos |
 | Criterio de aceptación | CA-013 |
 | Dependencias | REQ-F-035 |
 | Observaciones | No existe borrado automático (BUG-015). |

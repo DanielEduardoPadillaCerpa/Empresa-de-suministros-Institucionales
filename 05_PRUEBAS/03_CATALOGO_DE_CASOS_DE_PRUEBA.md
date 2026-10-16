@@ -36,10 +36,10 @@ Rutas de pruebas automatizadas relativas a `backend/test/`.
 | TC-007 | REQ-F-007 | Revocación por session_version y estado | APROBADO |
 | TC-008 | REQ-F-008 | Refresh rotativo y logout | BLOQUEADO |
 | TC-009 | REQ-F-009 | Cambio obligatorio de contraseña inicial | APROBADO |
-| TC-010 | REQ-F-010 | Consultar y editar perfil propio (API) | APROBADO (API) — pantalla inexistente, BUG-004 |
-| TC-011 | REQ-F-011 | Cambio de correo con código | APROBADO (API) — pantalla inexistente, BUG-004 |
+| TC-010 | REQ-F-010 | Consultar y editar perfil propio | APROBADO — API y pantalla `mi-cuenta.html` (prueba de interfaz del 2026-10-16) |
+| TC-011 | REQ-F-011 | Cambio de correo con código | APROBADO (API); el formulario de la pantalla no se recorrió en la prueba de interfaz |
 | TC-012 | REQ-F-012 | Cambio de contraseña y cerrar sesiones | APROBADO |
-| TC-013 | REQ-F-013 | Solicitudes de corrección/eliminación | APROBADO (API) — pantallas inexistentes, BUG-004/005 |
+| TC-013 | REQ-F-013 | Solicitudes de corrección/eliminación | APROBADO — API y pantallas `mi-cuenta.html` y `admin-contacto.html` (prueba de interfaz del 2026-10-16) |
 | TC-014 | REQ-F-014 | Catálogo según contexto | APROBADO (reglas); sub-caso HTTP BLOQUEADO |
 | TC-015 | REQ-F-015 | Detalle y filtro por categoría | BLOQUEADO |
 | TC-016 | REQ-F-016 | Administrar productos y categorías | BLOQUEADO |
@@ -197,7 +197,7 @@ Rutas de pruebas automatizadas relativas a `backend/test/`.
 - **Observado:** pasó.
 - **Estado:** APROBADO (API)
 - **Evidencia:** `mi-cuenta.spec.js` («GET devuelve únicamente el perfil asociado al cliente del JWT», «PATCH rechaza campos fuera de la allowlist…», «PATCH normaliza el teléfono y audita nombres de campos sin sus valores», «PATCH rechaza HTML, teléfonos no colombianos…»).
-- **Observaciones:** no existe pantalla de Mi cuenta (BUG-004).
+- **Observaciones:** pantalla `mi-cuenta.html` desde el 2026-10-16; la prueba de interfaz carga el perfil y guarda la dirección de entrega (BUG-004 corregido).
 
 ### TC-011 — Cambio de correo con código
 - **Objetivo:** solicitud con contraseña actual, código al correo nuevo, confirmación que sincroniza correos y revoca sesiones.
@@ -206,7 +206,7 @@ Rutas de pruebas automatizadas relativas a `backend/test/`.
 - **Observado:** pasó.
 - **Estado:** APROBADO (API)
 - **Evidencia:** `mi-cuenta.spec.js` (bloque «cambio de correo con verificación MFA», 8 pruebas, incluidas «confirmar sincroniza ambos correos…» y «si falla la auditoría transaccional, tampoco confirma el cambio de correo»).
-- **Observaciones:** sin pantalla (BUG-004).
+- **Observaciones:** el formulario existe en `mi-cuenta.html` desde el 2026-10-16, pero el recorrido con el código de correo no está en la prueba de interfaz.
 
 ### TC-012 — Cambio de contraseña y cerrar sesiones
 - **REQ:** REQ-F-012
@@ -222,7 +222,7 @@ Rutas de pruebas automatizadas relativas a `backend/test/`.
 - **Observado:** pasó.
 - **Estado:** APROBADO (API)
 - **Evidencia:** `mi-cuenta.spec.js` («la solicitud de privacidad encola al n8n solo id y tipo», «solo un administrador con clientes.gestionar puede resolver solicitudes de cuenta», «un administrador sin clientes.gestionar no resuelve solicitudes de cuenta»).
-- **Observaciones:** BUG-004 y BUG-005 (sin pantallas).
+- **Observaciones:** BUG-004 y BUG-005 corregidos: la prueba de interfaz envía una solicitud desde `mi-cuenta.html` y la aprueba en `admin-contacto.html`.
 
 ### TC-014 — Catálogo según contexto
 - **REQ:** REQ-F-014 · RN-007, RN-008

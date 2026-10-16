@@ -51,7 +51,7 @@ Proveer una plataforma web en la que entidades públicas e institucionales adqui
 
 | Elemento | Estado | Referencia |
 |---|---|---|
-| Pantallas de "mi cuenta" (perfil, correo, sesiones, solicitudes) | PARCIALMENTE IMPLEMENTADO | BUG-004, BUG-005 |
+| Pantallas de "mi cuenta" (perfil, correo, sesiones, solicitudes) | IMPLEMENTADO Y VERIFICADO (2026-10-16; el formulario de cambio de correo no se recorrió en la prueba de interfaz) | BUG-004, BUG-005 corregidos |
 | Traducción de páginas nuevas | PARCIALMENTE IMPLEMENTADO | BUG-016 |
 | Workflows n8n activos | NO DETERMINADO | REQ-F-036 |
 | Pasarela de pagos real | DOCUMENTADO, NO IMPLEMENTADO | REQ-F-040 |

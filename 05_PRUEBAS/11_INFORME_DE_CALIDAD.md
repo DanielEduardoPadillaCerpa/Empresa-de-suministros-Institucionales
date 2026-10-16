@@ -49,7 +49,7 @@ Backend, frontend, base de datos y contratos con n8n del commit `4742737`. **Est
 | Tema | Detalle | Referencia |
 |---|---|---|
 | Integración no reproducida | Transacciones, `FOR UPDATE`, migraciones reales y escenarios A–L solo tienen evidencia histórica | [05_PRUEBAS_DE_INTEGRACION.md](05_PRUEBAS_DE_INTEGRACION.md) |
-| Interfaz sin pruebas hoy | Pantallas sin verificación en esta corrida; Mi cuenta sin pantalla | BUG-004, BUG-005 |
+| Interfaz con prueba parcial | Prueba de interfaz del 2026-10-16 (38/38) solo para Mi cuenta, Mis reportes y los paneles de atención y auditoría; el resto sin verificación de interfaz | BUG-004 y BUG-005 corregidos |
 | Seguridad pendiente | Endpoint público, sesión en `localStorage`, sin TLS/CSP/HSTS, estado en memoria | BUG-001, BUG-010…BUG-012 |
 | Dependencias | `nodemailer` vulnerable | BUG-006 |
 | Rendimiento | Sin medición reproducida | [07_PRUEBAS_DE_RENDIMIENTO.md](07_PRUEBAS_DE_RENDIMIENTO.md) |

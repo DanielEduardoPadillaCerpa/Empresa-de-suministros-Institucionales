@@ -30,10 +30,10 @@ REQ-F-001…040 y REQ-NF-001…018. Rutas de código relativas a la raíz del re
 | REQ-F-007 | UC-004 | DIS-004 | `backend/src/routes/auth.js` (`requiereAutenticacion`) | mi-cuenta.spec | TC-007 | APROBADO | CS |
 | REQ-F-008 | UC-004 | DIS-004 | `backend/src/routes/auth.js`, `frontend/js/auth.js` | — | TC-008 | BLOQUEADO (requiere MySQL de pruebas) | CS |
 | REQ-F-009 | UC-005 | DIS-004 | `backend/src/routes/auth.js`, `backend/src/db.js`, `frontend/cambiar-password.html` | mi-cuenta.spec | TC-009 | APROBADO | GD |
-| REQ-F-010 | UC-006 | DIS-003, DIS-004 | `backend/src/routes/miCuenta.js` | mi-cuenta.spec | TC-010 | APROBADO (API; sin pantalla) | GD |
-| REQ-F-011 | UC-006 | DIS-003, DIS-004 | `backend/src/routes/miCuenta.js` | mi-cuenta.spec | TC-011 | APROBADO (API; sin pantalla) | CI (SMTP) |
-| REQ-F-012 | UC-005, UC-006 | DIS-004 | `backend/src/routes/miCuenta.js`, `frontend/cambiar-password.html` | mi-cuenta.spec | TC-012 | APROBADO | GD |
-| REQ-F-013 | UC-006 | DIS-003 | `backend/src/routes/miCuenta.js` | mi-cuenta.spec | TC-013 | APROBADO (API; sin pantallas) | CI (W8) |
+| REQ-F-010 | UC-006 | DIS-003, DIS-004 | `backend/src/routes/miCuenta.js`, `frontend/mi-cuenta.html` | mi-cuenta.spec; E2E de interfaz 2026-10-16 | TC-010 | APROBADO | GD |
+| REQ-F-011 | UC-006 | DIS-003, DIS-004 | `backend/src/routes/miCuenta.js`, `frontend/mi-cuenta.html` | mi-cuenta.spec | TC-011 | APROBADO (API; el formulario de la pantalla no se recorrió en la E2E) | CI (SMTP) |
+| REQ-F-012 | UC-005, UC-006 | DIS-004 | `backend/src/routes/miCuenta.js`, `frontend/cambiar-password.html`, `frontend/mi-cuenta.html` | mi-cuenta.spec; E2E de interfaz 2026-10-16 (cerrar sesiones) | TC-012 | APROBADO | GD |
+| REQ-F-013 | UC-006 | DIS-003 | `backend/src/routes/miCuenta.js`, `frontend/mi-cuenta.html`, `frontend/admin-contacto.html` | mi-cuenta.spec; reportes-contacto-auditoria.spec; E2E de interfaz 2026-10-16 | TC-013 | APROBADO | CI (SMTP) |
 | REQ-F-014 | UC-007 | DIS-005, DIS-003 | `backend/src/autorizacion.js`, `backend/src/tenancy.js`, `backend/src/routes/productos.js`, `frontend/index.html` | tenancy.test, assistant.spec | TC-014 | APROBADO (reglas) | GD |
 | REQ-F-015 | UC-007 | DIS-003 | `backend/src/routes/productos.js`, `backend/src/routes/categorias.js`, `frontend/producto-detalle.html` | — | TC-015 | BLOQUEADO (requiere MySQL de pruebas) | GD |
 | REQ-F-016 | UC-015 | DIS-003, DIS-005 | `backend/src/routes/productos.js`, `backend/src/routes/categorias.js`, `frontend/admin-productos.html` | — | TC-016 | BLOQUEADO | GD |
@@ -52,9 +52,9 @@ REQ-F-001…040 y REQ-NF-001…018. Rutas de código relativas a la raíz del re
 | REQ-F-029 | UC-014 | DIS-005, DIS-006 | `backend/src/routes/verificacion.js` (compra/autorizacion), `backend/src/routes/checkout.js` | verificacion-compra.test (hash) | TC-029 | BLOQUEADO (parcial APROBADO) | CI (SMTP) |
 | REQ-F-030 | UC-018 | DIS-005 | `backend/src/routes/verificacion.js` (admin/permisos, personal, diagnostico), `backend/scripts/crear-superadmin.js` | — (histórico) | TC-030 | BLOQUEADO | GD (creación de superadmin) |
 | REQ-F-031 | UC-019 | DIS-012 | `backend/src/routes/asistente.js`, `backend/src/assistant/`, `frontend/js/chatbot.js` | assistant.spec | TC-031 | APROBADO | GD |
-| REQ-F-032 | UC-019, UC-020 | DIS-012, DIS-003 | `backend/src/routes/atencion.js`, `frontend/contacto.html` | — | TC-032 | BLOQUEADO (requiere MySQL de pruebas) | GD |
-| REQ-F-033 | UC-021 | DIS-003 | `backend/src/routes/reportes.js`, `backend/src/routes/misreportes.js`, `frontend/reportes.html`, `frontend/mis-reportes.html` | — | TC-033 | BLOQUEADO (BUG-001) | GD |
-| REQ-F-034 | UC-022 | DIS-003 | `backend/src/auditoria.js`, `backend/src/routes/auditoria.js` | mi-cuenta.spec (parcial) | TC-034 | BLOQUEADO (requiere MySQL de pruebas) | GD |
+| REQ-F-032 | UC-019, UC-020 | DIS-012, DIS-003 | `backend/src/routes/atencion.js`, `backend/src/routes/adminContacto.js`, `frontend/contacto.html`, `frontend/admin-contacto.html` | reportes-contacto-auditoria.spec; E2E de interfaz 2026-10-16 | TC-032 | APROBADO | GD |
+| REQ-F-033 | UC-021 | DIS-003 | `backend/src/routes/reportes.js`, `backend/src/routes/misreportes.js`, `frontend/reportes.html`, `frontend/mis-reportes.html`, `frontend/admin-reportes-clientes.html` | reportes-contacto-auditoria.spec; E2E de interfaz 2026-10-16 | TC-033 | APROBADO (BUG-001 corregido) | GD |
+| REQ-F-034 | UC-022 | DIS-003 | `backend/src/auditoria.js`, `backend/src/routes/auditoria.js`, `frontend/admin-auditoria.html` | reportes-contacto-auditoria.spec; mi-cuenta.spec; E2E de interfaz 2026-10-16 | TC-034 | APROBADO | GD |
 | REQ-F-035 | UC-023 | DIS-007 | `backend/src/automationOutbox.js`, `backend/src/automationSignatures.js`, `backend/src/automationAuth.js`, `backend/src/seguridad/avisosN8n.js` | automation.test, registro-verificado.test, verificacion-compra.test | TC-035 | APROBADO | CI |
 | REQ-F-036 | UC-023 | DIS-007 | `n8n/workflows/*.json`, `n8n/docker-compose.yml` | automation.test (solo validez JSON) | TC-036 | BLOQUEADO | CI |
 | REQ-F-037 | UC-023 | DIS-011 | `backend/src/db.js`, `backend/src/migraciones/`, `backend/scripts/migraciones.js` | db-account-migration.spec | TC-037 | APROBADO (reversión BLOQUEADO) | CBD |
@@ -89,22 +89,23 @@ REQ-F-001…040 y REQ-NF-001…018. Rutas de código relativas a la raíz del re
 
 | Resultado (REQ-F) | Cantidad |
 |---|---|
-| APROBADO (total o parcial) | 20 (001, 002, 004, 005, 006, 007, 009, 010*, 011*, 012, 013*, 014, 020, 022, 025, 026, 028, 031, 035, 037) |
+| APROBADO (total o parcial) | 23 (001, 002, 004, 005, 006, 007, 009, 010, 011*, 012, 013, 014, 020, 022, 025, 026, 028, 031, 032, 033, 034, 035, 037) |
 | NO EJECUTADO | 3 (018, 038, 039) |
-| BLOQUEADO | 16 (003, 008, 015, 016, 017, 019, 021, 023, 024, 027, 029, 030, 032, 033, 034, 036) — requieren MySQL de pruebas, SMTP o n8n; criterio alineado con [05_PRUEBAS/03](../05_PRUEBAS/03_CATALOGO_DE_CASOS_DE_PRUEBA.md) |
+| BLOQUEADO | 13 (003, 008, 015, 016, 017, 019, 021, 023, 024, 027, 029, 030, 036) — requieren MySQL de pruebas, SMTP o n8n; criterio alineado con [05_PRUEBAS/03](../05_PRUEBAS/03_CATALOGO_DE_CASOS_DE_PRUEBA.md) |
 | PENDIENTE | 1 (040) |
 | **Total** | **40** |
 
-\* Solo la API; no existe pantalla.
+\* Verificada la API; la pantalla existe (`frontend/mi-cuenta.html`) pero su formulario de cambio de correo no se recorrió en la prueba de interfaz.
+
+Actualización del 2026-10-16: tras crear las pantallas de Mi cuenta, Reportes de clientes, Solicitudes de contacto y Auditoría, pasan a APROBADO REQ-F-010, 013, 032, 033 y 034. Evidencia: `backend/test/reportes-contacto-auditoria.spec.js` (Jest, 23 casos) y las pruebas de punta a punta de API (37/37) e interfaz (38/38) descritas en [05_PRUEBAS/10](../05_PRUEBAS/10_RESULTADOS_DE_EJECUCION.md) §1b.
 
 ## 4. Brechas pendientes
 
 | Brecha | Tipo | Acción propuesta [REC] |
 |---|---|---|
 | REQ-F-019, 017, 024, 027, 029, 030 sin prueba ejecutada en esta auditoría | Verificación | Ejecutar `npm run test:integration` con MySQL Docker local (`../docs/PLAN_PRUEBAS.md`) |
-| REQ-F-008, 015, 018, 023, 032, 033, 034, 039 sin prueba automatizada | Cobertura | Añadir pruebas con supertest y base simulada |
-| REQ-F-010, 011, 013 sin pantalla | Implementación | Diseñar página "Mi cuenta" (BUG-004, BUG-005) |
-| REQ-F-033 expone datos sin autenticación | Defecto | Añadir `requiereAutenticacion` + permiso (BUG-001) |
+| REQ-F-008, 015, 018, 023, 039 sin prueba automatizada | Cobertura | Añadir pruebas con supertest y base simulada |
+| REQ-F-011: formulario de cambio de correo sin prueba de interfaz | Verificación | Agregar el recorrido del código de correo a la prueba de interfaz |
 | REQ-F-036 sin instancia verificable | Integración | Importar workflows en n8n de laboratorio y registrar evidencia |
 | REQ-F-040 | Implementación | Seleccionar y validar un proveedor de pagos |
 | REQ-NF-015, 016 | Seguridad | Planificar despliegue con HTTPS y cookie HttpOnly |

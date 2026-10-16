@@ -49,7 +49,7 @@ Las 20 páginas HTML de `frontend/`, los 13 scripts de `frontend/js/` y las 8 ho
 | `admin-pedidos.html` | (sin título) | ACT-05 | contador, chatbot | `/api/pedidos/todos`, `/api/pedidos/:id` | REQ-F-024 |
 | `reportes.html` | (sin título) | ACT-05 [INF] | Chart.js, reportes.js (sin global-layout) | `/api/reportes/mensual` | REQ-F-033 |
 
-**Pantallas inexistentes [OBS]:** no hay interfaz para ver/editar el perfil, cambiar el correo, cerrar todas las sesiones ni solicitar corrección/eliminación de datos (BUG-004), ni para que el staff resuelva esas solicitudes (BUG-005), ni para consultar la auditoría (`/api/auditoria` no se llama desde el frontend).
+**Pantallas agregadas el 2026-10-16 [OBS]:** `mi-cuenta.html` (perfil, cambio de correo, enlace al cambio de contraseña, cerrar todas las sesiones y solicitudes de corrección o eliminación; corrige BUG-004), `admin-contacto.html` (PQRS y, en la pestaña "Datos de cuenta", la resolución de esas solicitudes; corrige BUG-005), `admin-auditoria.html` (auditoría con filtros) y `admin-reportes-clientes.html` (reportes de los clientes). Se abren desde el menú de la cuenta.
 
 ## 3. Mapa de navegación (enlaces `href` y redirecciones observadas)
 

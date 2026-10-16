@@ -39,7 +39,7 @@ Restricciones de negocio, técnicas, legales y de entorno, y limitaciones del pr
 |---|---|---|
 | LIM-01 | Sin pasarela de pago real; con `NODE_ENV=production` el proveedor mock está prohibido y los demás modos no existen, por lo que el servidor no arranca en modo producción [INF de `../backend/src/paymentProvider.js` y `../backend/server.js`] | REQ-F-040 |
 | LIM-02 | Comprobantes no válidos como factura electrónica (no-DIAN) | REQ-F-025 |
-| LIM-03 | Mi cuenta sin pantalla (salvo cambio de contraseña) | REQ-F-010 a 013, BUG-004, BUG-005 |
+| LIM-03 | ~~Mi cuenta sin pantalla~~ Resuelta el 2026-10-16 (`mi-cuenta.html`, `admin-contacto.html`) | REQ-F-010 a 013, BUG-004, BUG-005 |
 | LIM-04 | Las referencias institucionales sembradas tienen precio 0 y `cotizacion_requerida`: no se compran (409 `COTIZACION_REQUERIDA`), solo se cotizan | `../backend/src/db.js`, `../backend/src/autorizacion.js` |
 | LIM-05 | Traducción incompleta | REQ-F-038, BUG-016 |
 | LIM-06 | `API_BASE` fijo en `http://localhost:8081` | BUG-003 |

@@ -33,7 +33,7 @@ El estado se basa en el código y en las pruebas unitarias ejecutadas el 2026-10
 |---|---|---|---|
 | MOD-01 Autenticación y sesión | IMPLEMENTADO Y VERIFICADO (refresh/logout: IMPLEMENTADO, NO VERIFICADO) | registro-verificado, mi-cuenta | BUG-010, BUG-011 |
 | MOD-02 Registro verificado y padrón | IMPLEMENTADO Y VERIFICADO (sincronización periódica: NO VERIFICADO) | account-registration-phase0, registro-verificado | Padrón de laboratorio en lugar de fuente oficial |
-| MOD-03 Mi cuenta | PARCIALMENTE IMPLEMENTADO (API verificada, sin pantallas salvo cambio de contraseña) | mi-cuenta | BUG-004, BUG-005 |
+| MOD-03 Mi cuenta | IMPLEMENTADO Y VERIFICADO (API y pantalla `mi-cuenta.html`, 2026-10-16) | mi-cuenta, reportes-contacto-auditoria, E2E | BUG-004, BUG-005 corregidos |
 | MOD-04 Verificación institucional y en la compra | IMPLEMENTADO, NO VERIFICADO (tabla de decisión, HMAC y cifrado v2 verificados) | verificacion-compra | Integración MySQL no reproducida; fuentes oficiales sin convenio |
 | MOD-05 Autorización, permisos y segmentación | IMPLEMENTADO Y VERIFICADO (reglas unitarias) | tenancy, account-registration-phase0 | Escenarios HTTP A–L solo históricos |
 | MOD-06 Catálogo | IMPLEMENTADO, NO VERIFICADO (visibilidad verificada) | tenancy, assistant | — |

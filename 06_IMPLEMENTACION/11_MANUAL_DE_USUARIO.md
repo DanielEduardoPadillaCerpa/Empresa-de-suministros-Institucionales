@@ -64,11 +64,16 @@ Pantallas de `../frontend/` servidas por el backend (por ejemplo `http://localho
 ### Pedidos y reportes
 - **Historial de compras** (`historial.html`): seguimiento, cancelación de pedidos permitidos y comprobantes.
 - **Historial de pedidos** (`mis-pedidos.html`).
-- **Mis reportes y sugerencias** (`mis-reportes.html`): crear, editar y eliminar comentarios con calificación.
+- **Mis reportes y sugerencias** (`mis-reportes.html`): enviar observaciones con calificación de 1 a 5. Cada reporte muestra su estado (Enviado, En revisión, Atendido) y la respuesta del equipo; se puede editar o eliminar mientras el equipo no lo haya tomado.
 - **Asistente**: preguntas sobre productos que el usuario puede ver; calificar la atención de 1 a 5.
 
 ### Mi cuenta
-- Solo existe la pantalla de cambio de contraseña. Editar el perfil, cambiar el correo, cerrar todas las sesiones y solicitar corrección o eliminación de datos **no tienen pantalla** (BUG-004); hoy deben hacerse por la API o mediante **Contacto**.
+- **Mi cuenta** (`mi-cuenta.html`, en el menú de la cuenta) reúne:
+  - **Datos de contacto:** nombre, teléfono colombiano y direcciones. El NIT y la entidad no se editan aquí.
+  - **Correo de acceso:** escribe el correo nuevo y tu contraseña; llega un código de 6 dígitos al correo nuevo. Al confirmarlo se cierran todas tus sesiones y se avisa al correo anterior.
+  - **Contraseña:** enlace a `cambiar-password.html`; exige haber entrado con el código en los últimos 15 minutos.
+  - **Sesiones:** "Cerrar todas las sesiones" cierra la sesión en todos los equipos, incluido el actual.
+  - **Solicitudes sobre mis datos:** corregir el NIT o la entidad, otra corrección o eliminar los datos. El administrador la resuelve y te avisa por correo; la respuesta aparece en la misma página.
 
 ## 4. Cliente verificado (productos restringidos)
 
@@ -85,8 +90,11 @@ Pantallas de `../frontend/` servidas por el backend (por ejemplo `http://localho
 | `admin-verificaciones.html` | Cola de verificaciones, comprobaciones, decisión, suspensión, restringidos, cumplimiento de productos, personal y permisos, descarga auditada de documentos | `verificacion.*`, `documentos.ver`, `cuentas.suspender`, `restringidos.autorizar`, `productos.cumplimiento`, `staff.permisos` |
 | `admin-productos.html` | Crear, editar, eliminar productos; inventario bajo | `catalogo.gestionar` |
 | `admin-pedidos.html` | Pedidos de todos los clientes y resumen financiero | `pedidos.gestionar` |
-| `admin-clientes.html` | Clientes, edición, eliminación, compras | `clientes.gestionar` |
-| `reportes.html` | Reporte mensual (clientes atendidos, calificación, sugerencias, más vendidos) | Ninguno en el servidor (BUG-001) |
+| `admin-clientes.html` | Clientes, edición, eliminación, compras y botón "Reportes" con lo que envió cada cliente | `clientes.gestionar` |
+| `reportes.html` | Indicadores: atención del asistente, pedidos por estado, más vendidos y resumen de reportes de clientes | `clientes.gestionar` (BUG-001 corregido) |
+| `admin-reportes-clientes.html` | Reportes de los clientes: leer, marcar en revisión, responder y marcar atendido (el cliente ve la respuesta y recibe un aviso) | `clientes.gestionar` |
+| `admin-contacto.html` | PQRS, soporte y cotizaciones (estado, respuesta y envío opcional al remitente) y, en "Datos de cuenta", las solicitudes de corrección o eliminación | `clientes.gestionar` |
+| `admin-auditoria.html` | Registro de acciones administrativas con filtros por entidad, acción, correo y fechas | `auditoria.ver` |
 
 ## 6. Superadministrador
 

@@ -48,7 +48,7 @@ Mostrar qué archivos del frontend consumen cada endpoint, para evaluar el impac
 
 ## Endpoints sin consumidor en el frontend [OBS]
 
-`GET/PATCH /api/mi-cuenta`, `/api/mi-cuenta/correo/*`, `/api/mi-cuenta/sesiones/cerrar-todas`, `/api/mi-cuenta/solicitud-cambio`, `/api/mi-cuenta/solicitudes*` (BUG-004, BUG-005); `GET /api/productos/bajo-inventario`; `/api/auditoria`; `/api/atencion/mensaje` (ruta heredada); endpoints de máquina (`/api/automatizaciones/*`, `/api/pagos/webhook/*`, resumen semanal).
+`GET /api/productos/bajo-inventario`; `/api/atencion/mensaje` (ruta heredada); endpoints de máquina (`/api/automatizaciones/*`, `/api/pagos/webhook/*`, resumen semanal). Desde el 2026-10-16 `/api/mi-cuenta/*` lo usan `mi-cuenta.html` y `admin-contacto.html`, y `/api/auditoria` lo usa `admin-auditoria.html`.
 
 ## Referencias
 

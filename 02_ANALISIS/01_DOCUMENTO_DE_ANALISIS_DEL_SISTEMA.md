@@ -70,7 +70,7 @@ Ver [04_MAPA_DE_ACTORES_Y_PERMISOS.md](04_MAPA_DE_ACTORES_Y_PERMISOS.md). Resume
 | Pruebas unitarias (Jest 107/107, node:test 51/51) | Aprobadas el 2026-10-16 | Ejecución de `npm test` en esta auditoría |
 | Pruebas de integración con MySQL e interfaz jsdom | No ejecutadas en esta auditoría (evidencia histórica del 2026-10-13) | [docs/RESULTADOS_PRUEBAS.md](../docs/RESULTADOS_PRUEBAS.md) |
 | Pasarela de pagos real | DOCUMENTADO, NO IMPLEMENTADO | `backend/src/paymentProviderInstance.js` |
-| Pantalla "Mi cuenta" | PARCIALMENTE IMPLEMENTADO (solo API, salvo cambio de contraseña) | BUG-004 |
+| Pantalla "Mi cuenta" | IMPLEMENTADO Y VERIFICADO (`mi-cuenta.html`, 2026-10-16) | BUG-004 corregido |
 | Reporte mensual | Expuesto sin autenticación | BUG-001 |
 | Workflows n8n desplegados | NO DETERMINADO | REQ-F-036 |
 

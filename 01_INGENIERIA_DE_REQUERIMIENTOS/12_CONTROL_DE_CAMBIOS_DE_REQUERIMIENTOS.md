@@ -74,7 +74,7 @@ Nota: CR-H-003/004 relajan parcialmente CR-H-001 (de "aprobado para comprar" a "
 | CR-P-001 | ¿W11 debe dejar de enviar el NIT de la entidad a n8n? | `../docs/REGISTRO_VERIFICADO.md` §4 (BUG-014) | PENDIENTE de decisión del interesado |
 | CR-P-002 | ¿Las cuentas existentes antes de la migración 003 (quedaron `activa`) deben pasar por revisión? | `../docs/REGISTRO_VERIFICADO.md` §7 | PENDIENTE |
 | CR-P-003 | Proteger `GET /api/reportes/mensual` | BUG-001 (esta auditoría) | Propuesto [REC] |
-| CR-P-004 | Pantalla "Mi cuenta" | BUG-004 (esta auditoría) | Propuesto [REC] |
+| CR-P-004 | Pantalla "Mi cuenta" | BUG-004 (esta auditoría) | Implementado el 2026-10-16 (commit `4c220b3`) a pedido del usuario |
 
 ## 5. Registro de versiones de este conjunto de requerimientos
 

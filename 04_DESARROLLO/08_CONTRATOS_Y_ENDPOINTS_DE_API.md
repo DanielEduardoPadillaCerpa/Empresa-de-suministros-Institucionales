@@ -77,7 +77,7 @@ Todas exigen JWT válido; la autorización (rol admin, cuenta activa, sin cambio
 | GET | `/api/mi-cuenta/solicitudes` | Staff:`clientes.gestionar` | — | 200 lista | miCuenta.js:520 | ✔ |
 | PATCH | `/api/mi-cuenta/solicitudes/:id` | Staff:`clientes.gestionar` | `{estado: aprobada\|rechazada, respuesta…}` | 200; 400; 404 | miCuenta.js:537 | ✔ |
 
-> **[OBS] BUG-004 / BUG-005:** ninguna pantalla del frontend consume estos endpoints, salvo `POST /password` (`cambiar-password.html`).
+> **[OBS] BUG-004 / BUG-005 corregidos el 2026-10-16:** `frontend/mi-cuenta.html` consume el perfil, el cambio de correo, cerrar sesiones y las solicitudes (`/mis-solicitudes`, `/solicitud-cambio`); `frontend/admin-contacto.html` resuelve `/solicitudes`; `cambiar-password.html` usa `POST /password`.
 
 ## 6. Catálogo — `/api/productos` y `/api/categorias` (MOD-06)
 

@@ -23,7 +23,7 @@ Casos funcionales del [catálogo](03_CATALOGO_DE_CASOS_DE_PRUEBA.md). Las prueba
 |---|---|---|---|
 | Registro verificado y aprobación (UC-001, UC-002) | TC-001…TC-004 | TC-001, TC-002, TC-004 | TC-003 (sincronización del padrón) |
 | Autenticación y sesión (UC-003…UC-005) | TC-005…TC-009 | TC-005, TC-006, TC-007, TC-009 | TC-006.b cancelar, TC-008 refresh/logout |
-| Mi cuenta (UC-006) | TC-010…TC-013 | TC-010…TC-013 (API) | Pantallas inexistentes (BUG-004, BUG-005) |
+| Mi cuenta (UC-006) | TC-010…TC-013 | TC-010…TC-013 (API) y prueba de interfaz del 2026-10-16 | Formulario de cambio de correo sin recorrido de interfaz |
 | Catálogo (UC-007, UC-015) | TC-014…TC-017 | TC-014 (reglas) | TC-014.b, TC-015, TC-016, TC-017 |
 | Compra y pagos (UC-008, UC-009) | TC-018…TC-022, TC-040 | TC-020, TC-021.b, TC-022 | TC-018, TC-019, TC-021; TC-040 no implementado |
 | Pedidos y comprobantes (UC-010, UC-011, UC-016) | TC-023…TC-025 | TC-025 | TC-023, TC-024 |
@@ -46,7 +46,7 @@ Ejecutar solo contra una base **de pruebas** (nunca Clever Cloud de producción)
 
 ## 3. Observaciones funcionales por inspección (no ejecutadas)
 
-- **[OBS]** No existe pantalla para `/api/mi-cuenta` (perfil, correo, cerrar sesiones, solicitudes); solo `frontend/cambiar-password.html` usa `/api/mi-cuenta/password` (BUG-004, BUG-005).
+- **[OBS]** Desde el 2026-10-16 `frontend/mi-cuenta.html` cubre perfil, correo, cerrar sesiones y solicitudes, y `frontend/admin-contacto.html` su resolución (BUG-004 y BUG-005 corregidos).
 - **[OBS]** `frontend/js/auth.js` fija `API_BASE = 'http://localhost:8081'`; las pruebas manuales en otro origen fallarán (BUG-003).
 - **[OBS]** `POST /api/pedidos` y `POST /api/pagos/procesar` responden 410 (retirados); los pedidos solo se crean por `/api/checkout`.
 

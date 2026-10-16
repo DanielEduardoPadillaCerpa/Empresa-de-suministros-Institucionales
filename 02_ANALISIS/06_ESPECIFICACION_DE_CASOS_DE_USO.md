@@ -92,7 +92,7 @@ Excepción común a todas las rutas autenticadas (`requiereAutenticacion`, `rout
 |---|---|
 | Actor | ACT-03 / ACT-04 |
 | REQ | REQ-F-010 a REQ-F-013; RN-021 |
-| Observación | **Sin pantalla** en el frontend (BUG-004); solo API. |
+| Observación | Pantalla `frontend/mi-cuenta.html` desde el 2026-10-16 (BUG-004 corregido); el administrador resuelve las solicitudes en `admin-contacto.html`, pestaña "Datos de cuenta". |
 | Flujo básico (perfil) | `GET /api/mi-cuenta` devuelve el perfil descifrado del `clienteId` de la sesión; `PATCH /api/mi-cuenta` acepta solo `nombreFuncionario`, `telefono`, `direccionEntrega`, `direccionInstalacion`, audita los nombres de campos sin valores. |
 | Flujo cambio de correo | 1. `POST /correo/solicitar` con contraseña actual y correo nuevo: reto `cambio_correo` con destino cifrado; código al correo nuevo. 2. `POST /correo/confirmar` con el código: actualiza `usuarios.correo` y `clientes.correo` en una transacción, revoca sesiones, avisa al correo anterior. |
 | Flujo sesiones | `POST /sesiones/cerrar-todas`: revoca refresh tokens e incrementa `session_version`. |

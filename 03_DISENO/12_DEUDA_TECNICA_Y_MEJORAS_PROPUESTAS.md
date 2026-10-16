@@ -41,7 +41,7 @@ Código, configuración, dependencias y documentación del repositorio. Las prio
 | P2 | BUG-018 Sin etiquetas y sin fusionar | Fusionar `feature/verificacion-seguridad` mediante revisión y etiquetar versiones | Bajo | RSK-017 |
 | P2 | REQ-F-036 Workflows no desplegados | Importar y probar W8, W11, W12 en una instancia controlada; retirar W5 y W9 si se confirma que no se usan | Medio | ADR-006 |
 | P3 | BUG-002 Calificaciones sin límite | Limitador por IP y validación de `conversacionId` | Bajo | — |
-| P3 | BUG-004 / BUG-005 Mi cuenta sin pantallas | Página "Mi cuenta" (perfil, correo, sesiones, solicitudes) y pantalla de resolución para staff | Medio | REQ-F-010…013 |
+| P3 | ~~BUG-004 / BUG-005 Mi cuenta sin pantallas~~ **Atendida el 2026-10-16** | Página "Mi cuenta" (perfil, correo, sesiones, solicitudes) y pantalla de resolución para staff | Medio | REQ-F-010…013 |
 | P3 | BUG-007 Código muerto con hash | Eliminar `USUARIOS_SEED` de `db.js` | Bajo | — |
 | P3 | BUG-008 Documentación previa inconsistente | Actualizar `README.md`, `backend/README.md`, `docs/VARIABLES_ENTORNO.md` y referencias a `mfaCourier.js` | Bajo | RSK-016 |
 | P3 | BUG-009 Archivos residuales | Retirar `file.md`, `backend/scratch_detalle.js`, `backend/probar-mfa-n8n.js` previa confirmación | Bajo | — |

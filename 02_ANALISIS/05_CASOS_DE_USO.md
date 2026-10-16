@@ -26,7 +26,7 @@ Listar los casos de uso del sistema, sus actores y su relación con los requerim
 | UC-003 | Iniciar sesión con MFA | ACT-03 / ACT-04 / ACT-05 / ACT-06 | ACT-10 | 005, 006 | `login.html` | IMPLEMENTADO Y VERIFICADO |
 | UC-004 | Renovar y cerrar sesión | Usuario autenticado | — | 007, 008 | `js/auth.js` | 007 VERIFICADO; 008 NO VERIFICADO |
 | UC-005 | Cambiar contraseña (incl. inicial obligatoria) | Usuario autenticado | ACT-10 | 009, 012 | `cambiar-password.html` | IMPLEMENTADO Y VERIFICADO |
-| UC-006 | Gestionar mi cuenta | ACT-03 / ACT-04 | ACT-10, ACT-05 | 010, 011, 012, 013 | Sin pantalla (BUG-004) | PARCIALMENTE IMPLEMENTADO |
+| UC-006 | Gestionar mi cuenta | ACT-03 / ACT-04 | ACT-10, ACT-05 | 010, 011, 012, 013 | Pantalla `mi-cuenta.html` (2026-10-16) | IMPLEMENTADO Y VERIFICADO |
 | UC-007 | Consultar catálogo y detalle | Todos | — | 014, 015 | `index.html`, `producto-detalle.html`, `landing.html` | 014 VERIFICADO; 015 NO VERIFICADO |
 | UC-008 | Gestionar carrito | ACT-01 a ACT-04 | — | 018 | `js/cart.js` | IMPLEMENTADO, NO VERIFICADO |
 | UC-009 | Realizar checkout y pago (mock) | ACT-03 / ACT-04 | ACT-08 | 019, 020, 021, 040 | `checkout.html` | Mixto (ver REQ) |

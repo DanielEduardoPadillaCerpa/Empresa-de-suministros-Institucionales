@@ -29,7 +29,7 @@ Limitaciones del producto (L-P), limitaciones de la auditoría documental (L-A) 
 | L-P-06 | Máximo 4 conexiones a MySQL (plan gratuito con 5) | `backend/src/db.js` |
 | L-P-07 | Sesión en `localStorage` | `frontend/js/auth.js` |
 | L-P-08 | `API_BASE` fijo en `http://localhost:8081` | `frontend/js/auth.js` |
-| L-P-09 | Sin pantallas para la mayor parte de "mi cuenta" | BUG-004 |
+| L-P-09 | ~~Sin pantallas para la mayor parte de "mi cuenta"~~ Resuelta el 2026-10-16 (`frontend/mi-cuenta.html`) | BUG-004 |
 | L-P-10 | Traducción solo parcial | BUG-016 |
 | L-P-11 | Sin antivirus para documentos cargados | `docs/AUDITORIA_TECNICA.md` §5 |
 | L-P-12 | Sin borrado automático por plazos de conservación | BUG-015 |
